@@ -12,6 +12,13 @@ namespace VocaNerd
         [SerializeField] private Button backButton;
         [SerializeField] private RectTransform gameContainer;
 
+        [Header("Animated Rects")]
+        [SerializeField] private RectTransform titleTextRect;
+        [SerializeField] private RectTransform backButtonRect;
+
+        public RectTransform TitleTextRect => titleTextRect;
+        public RectTransform BackButtonRect => backButtonRect;
+
         private MiniGameData _current;
         private GameObject _spawned;
         private PanelBase _innerPanel;

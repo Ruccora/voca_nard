@@ -23,7 +23,6 @@ namespace VocaNerd
 
         [SerializeField] private ScreenEntry[] screens;
         [SerializeField] private RectTransform root;
-        [SerializeField] private float blackFadeDuration = 0.3f;
 
         private GameObject _current;
         private CancellationTokenSource _transitionCts;
@@ -52,30 +51,12 @@ namespace VocaNerd
             _transitionCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var token = _transitionCts.Token;
 
-            var hasCurrent = _current != null;
+            var outgoing = _current;
+            var outPanel = outgoing != null ? outgoing.GetComponent<PanelBase>() : null;
 
-            // 1) 現Panel の退出演出（ユーザーに見える）
-            if (hasCurrent)
-            {
-                var outPanel = _current.GetComponent<PanelBase>();
-                if (outPanel != null)
-                {
-                    try { await outPanel.PanelOutAsync(token); }
-                    catch (OperationCanceledException) { }
-                }
-
-                // 2) 遷移イン演出（黒フェード）
-                await TransitionInAsync(token);
-
-                // 3) 破棄（黒画面裏）
-                Destroy(_current);
-                _current = null;
-            }
-
-            // 4) 新Panel 生成 + Bind + Setup（黒画面裏 or 初回はそのまま）
+            // 1) 新Panel 生成 (旧 Panel はまだ生きている)
             var prefab = FindPrefab(next);
             if (prefab == null) throw new InvalidOperationException($"Prefab not registered for screen: {next}");
-
             var instance = Instantiate(prefab, root != null ? root : (RectTransform)transform);
             _current = instance;
 
@@ -87,30 +68,25 @@ namespace VocaNerd
                 await inPanel.SetupAsync(token);
             }
 
-            // 5) 遷移アウト演出（黒フェード解除）
-            if (hasCurrent)
+            // 2) 旧 Panel の Out 前フック
+            try
             {
-                await TransitionOutAsync(token);
+                if (outPanel != null) await outPanel.PanelPreOutAsync(token);
             }
+            catch (OperationCanceledException) { }
 
-            // 6) 新Panel の登場演出（ユーザーに見える）
-            if (inPanel != null)
+            // 3) Out と In を並列実行（クロスフェード/クロススライド）
+            try
             {
-                await inPanel.PanelInAsync(token);
+                await UniTask.WhenAll(
+                    outPanel != null ? outPanel.PanelOutAsync(token) : UniTask.CompletedTask,
+                    inPanel != null ? inPanel.PanelInAsync(token) : UniTask.CompletedTask
+                );
             }
-        }
+            catch (OperationCanceledException) { }
 
-        // 遷移演出をここに集約。差し替え時はこの2メソッドを触るだけ。
-        protected virtual async UniTask TransitionInAsync(CancellationToken token)
-        {
-            if (BlackFadeOverlay.Instance == null) return;
-            await BlackFadeOverlay.Instance.FadeInAsync(blackFadeDuration, token);
-        }
-
-        protected virtual async UniTask TransitionOutAsync(CancellationToken token)
-        {
-            if (BlackFadeOverlay.Instance == null) return;
-            await BlackFadeOverlay.Instance.FadeOutAsync(blackFadeDuration, token);
+            // 4) 旧 Panel を破棄
+            if (outgoing != null) Destroy(outgoing);
         }
 
         private GameObject FindPrefab(ScreenType type)

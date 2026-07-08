@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -48,16 +49,18 @@ namespace VocaNerd
 
         [Header("Player 1 (Top)")]
         [SerializeField] private RectTransform player1Track;
-        [SerializeField] private RectTransform player1Marker;
+        [SerializeField] private RectTransform player1Character;
+        [SerializeField] private CanvasGroupBlinker player1CharacterBlinker;
 
         [Header("Player 2 (Bottom)")]
         [SerializeField] private RectTransform player2Track;
-        [SerializeField] private RectTransform player2Marker;
+        [SerializeField] private RectTransform player2Character;
+        [SerializeField] private CanvasGroupBlinker player2CharacterBlinker;
 
         [Header("Config")]
         [SerializeField] private HopscotchCell cellPrefab;
+        [SerializeField] private HopscotchCell startCellPrefab;
         [SerializeField] private int cellCount = 30;
-        [SerializeField] private Vector2 cellOffset = new Vector2(30f, -15f);
         [SerializeField] private float moveDuration = 0.4f;
         [SerializeField] private float missLockDuration = 0.3f;
         [SerializeField] private float toggleInterval = 1f;
@@ -67,24 +70,40 @@ namespace VocaNerd
         [SerializeField] private float countdownStep = 1f;
         [SerializeField] private float goalHoldDuration = 1f;
 
+        [Header("Perspective")]
+        [SerializeField] private Vector2 characterAnchor = new Vector2(-250f, -400f);
+        [SerializeField] private Vector2 cellStepOffset = new Vector2(70f, 70f);
+        [SerializeField, Range(0.5f, 1f)] private float scaleFalloff = 0.85f;
+        [SerializeField, Min(1)] private int maxVisibleAhead = 10;
+        [SerializeField, Min(0)] private int visibleBehind = 2;
+
+        [Header("Character Jump")]
+        [SerializeField] private float jumpHeight = 80f;
+        [SerializeField] private Vector2 feetOffset = new Vector2(0f, -60f);
+
         private Phase _phase;
         private readonly List<CellData> _course = new List<CellData>();
         private readonly List<HopscotchCell> _p1Cells = new List<HopscotchCell>();
         private readonly List<HopscotchCell> _p2Cells = new List<HopscotchCell>();
         private readonly PlayerState _p1 = new PlayerState();
         private readonly PlayerState _p2 = new PlayerState();
+        private Vector2 _p1CharacterRest;
+        private Vector2 _p2CharacterRest;
         private float _playElapsed;
         private CancellationTokenSource _roundCts;
         private InputAction _p1A, _p1D, _p2Left, _p2Right;
         private UniTaskCompletionSource _exitSignal;
         private UniTaskCompletionSource _goalSignal;
-        private int _winner; // 0 = none, 1/2 = player id
+        private int _winner;
         private bool _isSetup;
 
         public override UniTask SetupAsync(CancellationToken token)
         {
             if (_isSetup) return UniTask.CompletedTask;
             _isSetup = true;
+
+            if (player1Character != null) _p1CharacterRest = player1Character.anchoredPosition;
+            if (player2Character != null) _p2CharacterRest = player2Character.anchoredPosition;
 
             _p1A = MakeAction("P1A", "<Keyboard>/a");
             _p1D = MakeAction("P1D", "<Keyboard>/d");
@@ -174,7 +193,8 @@ namespace VocaNerd
                 ResetPlayerStates();
                 GenerateCourse();
                 SpawnCells();
-                MoveMarkersToStart();
+                RefreshCells(_p1Cells, _p1.position, _p1CharacterRest);
+                RefreshCells(_p2Cells, _p2.position, _p2CharacterRest);
 
                 await PlayIntroEffectAsync(token);
                 await PlayCountdownAsync(token);
@@ -216,11 +236,24 @@ namespace VocaNerd
             ClearCells(_p1Cells);
             ClearCells(_p2Cells);
             if (cellPrefab == null) return;
+
+            // Start cell at index 0 (virtual course index -1)
+            if (player1Track != null) _p1Cells.Add(CreateStartCell(player1Track));
+            if (player2Track != null) _p2Cells.Add(CreateStartCell(player2Track));
+
             for (var i = 0; i < _course.Count; i++)
             {
                 if (player1Track != null) _p1Cells.Add(CreateCell(player1Track, i, _course[i]));
                 if (player2Track != null) _p2Cells.Add(CreateCell(player2Track, i, _course[i]));
             }
+        }
+
+        private HopscotchCell CreateStartCell(RectTransform parent)
+        {
+            var prefab = startCellPrefab != null ? startCellPrefab : cellPrefab;
+            var cell = Instantiate(prefab, parent);
+            cell.name = "Cell_Start";
+            return cell;
         }
 
         private static void ClearCells(List<HopscotchCell> list)
@@ -233,22 +266,36 @@ namespace VocaNerd
         {
             var cell = Instantiate(cellPrefab, parent);
             cell.name = $"Cell_{index}";
-            cell.Rect.anchoredPosition = GetCellPosition(index);
             cell.Setup(data.type == CellType.A, data.isToggle);
             return cell;
         }
 
-        private Vector2 GetCellPosition(int index)
+        // -------- Perspective rendering --------
+        // cells[0] は start cell (virtual course index -1)
+        // cells[1..] は _course[0..cellCount-1] に対応
+        private void RefreshCells(List<HopscotchCell> cells, float currentPosition, Vector2 anchor)
         {
-            var pos = new Vector2(cellOffset.x * index, cellOffset.y * index);
-            var center = new Vector2(cellOffset.x * (cellCount - 1) / 2f, cellOffset.y * (cellCount - 1) / 2f);
-            return pos - center;
-        }
+            var feetAnchor = anchor + feetOffset;
+            for (var i = 0; i < cells.Count; i++)
+            {
+                var cell = cells[i];
+                if (cell == null) continue;
+                // cell at cells[i] represents course index (i - 1)
+                // → cell が currentPosition と一致 (足元) のとき distance = 0
+                var virtualIndex = i - 1;
+                var distance = virtualIndex - currentPosition;
 
-        private void MoveMarkersToStart()
-        {
-            if (player1Marker != null) player1Marker.anchoredPosition = GetCellPosition(-1);
-            if (player2Marker != null) player2Marker.anchoredPosition = GetCellPosition(-1);
+                if (distance < -(visibleBehind + 0.5f) || distance > maxVisibleAhead)
+                {
+                    if (cell.gameObject.activeSelf) cell.gameObject.SetActive(false);
+                    continue;
+                }
+                if (!cell.gameObject.activeSelf) cell.gameObject.SetActive(true);
+
+                var scale = Mathf.Pow(scaleFalloff, distance);
+                cell.Rect.localScale = new Vector3(scale, scale, 1f);
+                cell.Rect.anchoredPosition = feetAnchor + cellStepOffset * distance;
+            }
         }
 
         // -------- Stage 1: 開始演出 --------
@@ -256,7 +303,6 @@ namespace VocaNerd
         {
             _phase = Phase.Intro;
             if (introText != null) introText.text = "READY?";
-            // TODO: 開始演出
             await UniTask.Delay(TimeSpan.FromSeconds(introDuration), cancellationToken: token);
             if (introText != null) introText.text = string.Empty;
         }
@@ -297,7 +343,6 @@ namespace VocaNerd
         {
             _phase = Phase.Goal;
             if (goalText != null) goalText.text = $"GOAL! P{_winner}";
-            // TODO: ゴール演出
             await UniTask.Delay(TimeSpan.FromSeconds(goalHoldDuration), cancellationToken: token);
             if (goalText != null) goalText.text = string.Empty;
         }
@@ -313,7 +358,6 @@ namespace VocaNerd
                 resultGroup.interactable = true;
                 resultGroup.blocksRaycasts = true;
             }
-            // TODO: 勝利演出
             await UniTask.Yield(PlayerLoopTiming.Update, token);
         }
 
@@ -329,7 +373,6 @@ namespace VocaNerd
         private async UniTask PlayExitEffectAsync(CancellationToken token)
         {
             _phase = Phase.Exiting;
-            // TODO
             await UniTask.Yield(PlayerLoopTiming.Update, token);
         }
 
@@ -345,11 +388,14 @@ namespace VocaNerd
 
         private void UpdateToggleList(List<HopscotchCell> list, bool on)
         {
-            for (var i = 0; i < list.Count; i++)
+            // list[0] は start cell。list[i+1] が _course[i] に対応するので +1 オフセット。
+            for (var i = 0; i < _course.Count; i++)
             {
-                if (i >= _course.Count || !_course[i].isToggle) continue;
-                if (list[i] == null) continue;
-                list[i].SetToggleState(on);
+                if (!_course[i].isToggle) continue;
+                var cellIndex = i + 1;
+                if (cellIndex >= list.Count) continue;
+                var cell = list[cellIndex];
+                if (cell != null) cell.SetToggleState(on);
             }
         }
 
@@ -379,17 +425,17 @@ namespace VocaNerd
             if (correctKey && !toggleBlocks)
                 MoveAsync(player, state, targetIndex).Forget();
             else
-                StopAsync(state).Forget();
+                StopAsync(player, state).Forget();
         }
 
         private async UniTaskVoid MoveAsync(int player, PlayerState state, int targetIndex)
         {
             state.isMoving = true;
-            var marker = player == 1 ? player1Marker : player2Marker;
-            if (marker == null) { state.isMoving = false; return; }
-
-            var startPos = marker.anchoredPosition;
-            var endPos = GetCellPosition(targetIndex);
+            var cells = player == 1 ? _p1Cells : _p2Cells;
+            var character = player == 1 ? player1Character : player2Character;
+            var restPos = player == 1 ? _p1CharacterRest : _p2CharacterRest;
+            var startCurrent = (float)state.position;
+            var endCurrent = (float)targetIndex;
             var token = _roundCts?.Token ?? default;
 
             try
@@ -400,12 +446,26 @@ namespace VocaNerd
                     token.ThrowIfCancellationRequested();
                     elapsed += Time.deltaTime;
                     var t = Mathf.Clamp01(elapsed / moveDuration);
-                    marker.anchoredPosition = Vector2.Lerp(startPos, endPos, t);
+                    var eased = 1f - Mathf.Pow(1f - t, 3f);
+                    var currentPos = Mathf.Lerp(startCurrent, endCurrent, eased);
+                    RefreshCells(cells, currentPos, restPos);
+
+                    // Character jump — sine wave over the same moveDuration
+                    if (character != null)
+                    {
+                        var jumpY = jumpHeight * Mathf.Sin(t * Mathf.PI);
+                        character.anchoredPosition = restPos + new Vector2(0f, jumpY);
+                    }
+
                     await UniTask.Yield(PlayerLoopTiming.Update, token);
                 }
-                marker.anchoredPosition = endPos;
+                RefreshCells(cells, endCurrent, restPos);
+                if (character != null) character.anchoredPosition = restPos;
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException)
+            {
+                if (character != null) character.anchoredPosition = restPos;
+            }
 
             state.position = targetIndex;
             state.isMoving = false;
@@ -413,15 +473,20 @@ namespace VocaNerd
             if (state.position >= _course.Count - 1 && _winner == 0)
             {
                 _winner = player;
+                Debug.Log($"[Hopscotch] Player {player} CLEAR! (position = {state.position}, course = {_course.Count})");
                 _goalSignal?.TrySetResult();
             }
         }
 
-        private async UniTaskVoid StopAsync(PlayerState state)
+        private async UniTaskVoid StopAsync(int player, PlayerState state)
         {
             state.isStopped = true;
-            // TODO: ミス演出
             var token = _roundCts?.Token ?? default;
+
+            var blinker = player == 1 ? player1CharacterBlinker : player2CharacterBlinker;
+            if (blinker != null)
+                blinker.BlinkAsync(missLockDuration, token).Forget();
+
             try
             {
                 await UniTask.Delay(TimeSpan.FromSeconds(missLockDuration), cancellationToken: token);

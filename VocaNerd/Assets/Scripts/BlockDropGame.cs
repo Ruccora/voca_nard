@@ -43,10 +43,12 @@ namespace VocaNerd
         [Header("Player 1 (Left)")]
         [SerializeField] private RectTransform player1Stack;
         [SerializeField] private RectTransform player1Character;
+        [SerializeField] private CanvasGroupBlinker player1CharacterBlinker;
 
         [Header("Player 2 (Right)")]
         [SerializeField] private RectTransform player2Stack;
         [SerializeField] private RectTransform player2Character;
+        [SerializeField] private CanvasGroupBlinker player2CharacterBlinker;
 
         [Header("Prefab")]
         [SerializeField] private BlockDropBlock blockPrefab;
@@ -56,7 +58,7 @@ namespace VocaNerd
         [SerializeField] private float moveDuration = 0.1f;
         [SerializeField] private float penaltyDuration = 0.5f;
         [SerializeField] private float knockFlyDuration = 0.4f;
-        [SerializeField] private float knockFlyDistance = 500f;
+        [SerializeField] private float knockFlyDistance = 900f;
         [SerializeField] private float blockDropDuration = 0.15f;
         [SerializeField] private Vector2 blockSize = new Vector2(150f, 30f);
         [SerializeField] private float stackBottomY = -450f;
@@ -356,23 +358,29 @@ namespace VocaNerd
             var token = _roundCts?.Token ?? default;
 
             var block = state.blocks[0];
+            var nextBottom = state.blocks.Count > 1 ? state.blocks[1] : null;
             state.blocks.RemoveAt(0);
             state.blocksRemaining = state.blocks.Count;
 
-            var penalty =
-                (block.Type == BlockDropBlock.BlockType.StickLeft && state.side == PlayerSide.Left) ||
-                (block.Type == BlockDropBlock.BlockType.StickRight && state.side == PlayerSide.Right);
+            var penalty = nextBottom != null && (
+                (nextBottom.Type == BlockDropBlock.BlockType.StickLeft  && state.side == PlayerSide.Left) ||
+                (nextBottom.Type == BlockDropBlock.BlockType.StickRight && state.side == PlayerSide.Right));
 
             var flyToRight = state.side == PlayerSide.Left;
 
             try
             {
-                // 飛ばす + 残スタックを1段落下 (並列)
-                var flyTask = block.FlyAwayAsync(flyToRight, knockFlyDistance, knockFlyDuration, token);
-                var dropTasks = new List<UniTask> { flyTask };
-                foreach (var b in state.blocks)
-                    dropTasks.Add(b.DropAsync(blockSize.y, blockDropDuration, token));
-                await UniTask.WhenAll(dropTasks);
+                // 1) 飛ばす演出
+                await block.FlyAwayAsync(flyToRight, knockFlyDistance, knockFlyDuration, token);
+
+                // 2) 残スタック全体を1段落下
+                if (state.blocks.Count > 0)
+                {
+                    var dropTasks = new List<UniTask>(state.blocks.Count);
+                    foreach (var b in state.blocks)
+                        dropTasks.Add(b.DropAsync(blockSize.y, blockDropDuration, token));
+                    await UniTask.WhenAll(dropTasks);
+                }
             }
             catch (OperationCanceledException) { }
 
@@ -380,7 +388,7 @@ namespace VocaNerd
 
             if (penalty)
             {
-                try { await UniTask.Delay(TimeSpan.FromSeconds(penaltyDuration), cancellationToken: token); }
+                try { await BlinkCharacterAsync(player, penaltyDuration, token); }
                 catch (OperationCanceledException) { }
             }
 
@@ -389,8 +397,16 @@ namespace VocaNerd
             if (state.blocksRemaining <= 0 && _winner == 0)
             {
                 _winner = player;
+                Debug.Log($"[BlockDrop] Player {player} CLEAR! (blocks left = {state.blocksRemaining})");
                 _winnerSignal?.TrySetResult();
             }
+        }
+
+        private UniTask BlinkCharacterAsync(int player, float duration, CancellationToken token)
+        {
+            var blinker = player == 1 ? player1CharacterBlinker : player2CharacterBlinker;
+            if (blinker == null) return UniTask.CompletedTask;
+            return blinker.BlinkAsync(duration, token);
         }
 
         private void TryExit()

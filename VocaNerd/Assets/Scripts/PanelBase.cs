@@ -1,6 +1,8 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace VocaNerd
 {
@@ -8,6 +10,7 @@ namespace VocaNerd
     public abstract class PanelBase : MonoBehaviour
     {
         [SerializeField] protected CanvasGroup canvasGroup;
+        [SerializeField] protected Selectable defaultSelected;
         [SerializeField] protected float fadeDuration = 0.25f;
 
         public bool IsAnimating { get; private set; }
@@ -36,6 +39,12 @@ namespace VocaNerd
             }
         }
 
+        public async UniTask PanelPreOutAsync(CancellationToken token)
+        {
+            SetInteractable(false);
+            await OnPanelPreOutAsync(token);
+        }
+
         public async UniTask PanelOutAsync(CancellationToken token)
         {
             IsAnimating = true;
@@ -53,8 +62,18 @@ namespace VocaNerd
         protected virtual async UniTask OnPanelInAsync(CancellationToken token)
         {
             canvasGroup.alpha = 0f;
+            FocusDefaultSelected();
             await FadeAsync(canvasGroup, 0f, 1f, fadeDuration, token);
         }
+
+        protected void FocusDefaultSelected()
+        {
+            if (defaultSelected == null) return;
+            if (EventSystem.current == null) return;
+            EventSystem.current.SetSelectedGameObject(defaultSelected.gameObject);
+        }
+
+        protected virtual UniTask OnPanelPreOutAsync(CancellationToken token) => UniTask.CompletedTask;
 
         protected virtual async UniTask OnPanelOutAsync(CancellationToken token)
         {

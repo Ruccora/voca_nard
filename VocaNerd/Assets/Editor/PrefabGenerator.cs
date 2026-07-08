@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -6,30 +7,71 @@ using UnityEngine.Video;
 
 namespace VocaNerd.EditorTools
 {
-    public static class PrefabGenerator
+    public static partial class PrefabGenerator
     {
         private const string PrefabDir = "Assets/Prefabs";
 
-        [MenuItem("VocaNerd/Generate Sample Prefabs")]
+        [MenuItem("VocaNerd/Generate/All Sample Prefabs")]
         public static void Generate()
+        {
+            RunGenerate("All sample prefabs", () =>
+            {
+                CreateMainCanvas();
+                CreateTitlePanel();
+                CreateSelectPanel();
+                CreateMiniGamePanel();
+                CreateQuickDrawGame();
+                CreateMashRaceGame();
+                CreateHopscotchRaceGame();
+                CreateBlockDropGame();
+                CreateBlackFadeOverlay();
+                CreateAudioManager();
+            });
+        }
+
+        [MenuItem("VocaNerd/Generate/MainCanvas")]
+        public static void GenerateMainCanvas() => RunGenerate("MainCanvas", CreateMainCanvas);
+
+        [MenuItem("VocaNerd/Generate/TitlePanel")]
+        public static void GenerateTitlePanel() => RunGenerate("TitlePanel", CreateTitlePanel);
+
+        [MenuItem("VocaNerd/Generate/SelectPanel (+ExplainPanel)")]
+        public static void GenerateSelectPanel() => RunGenerate("SelectPanel", CreateSelectPanel);
+
+        [MenuItem("VocaNerd/Generate/ExplainPanel")]
+        public static void GenerateExplainPanel() => RunGenerate("ExplainPanel", () => CreateExplainPanel());
+
+        [MenuItem("VocaNerd/Generate/MiniGamePanel")]
+        public static void GenerateMiniGamePanel() => RunGenerate("MiniGamePanel", CreateMiniGamePanel);
+
+        [MenuItem("VocaNerd/Generate/QuickDrawGame")]
+        public static void GenerateQuickDrawGame() => RunGenerate("QuickDrawGame", CreateQuickDrawGame);
+
+        [MenuItem("VocaNerd/Generate/MashRaceGame")]
+        public static void GenerateMashRaceGame() => RunGenerate("MashRaceGame", CreateMashRaceGame);
+
+        [MenuItem("VocaNerd/Generate/HopscotchRaceGame")]
+        public static void GenerateHopscotchRaceGame() => RunGenerate("HopscotchRaceGame", CreateHopscotchRaceGame);
+
+        [MenuItem("VocaNerd/Generate/BlockDropGame")]
+        public static void GenerateBlockDropGame() => RunGenerate("BlockDropGame", CreateBlockDropGame);
+
+        [MenuItem("VocaNerd/Generate/BlackFadeOverlay")]
+        public static void GenerateBlackFadeOverlay() => RunGenerate("BlackFadeOverlay", CreateBlackFadeOverlay);
+
+        [MenuItem("VocaNerd/Generate/AudioManager")]
+        public static void GenerateAudioManager() => RunGenerate("AudioManager", CreateAudioManager);
+
+        private static void RunGenerate(string label, Action body)
         {
             if (!AssetDatabase.IsValidFolder(PrefabDir))
                 AssetDatabase.CreateFolder("Assets", "Prefabs");
 
-            CreateMainCanvas();
-            CreateTitlePanel();
-            CreateSelectPanel();
-            CreateMiniGamePanel();
-            CreateQuickDrawGame();
-            CreateMashRaceGame();
-            CreateHopscotchRaceGame();
-            CreateBlockDropGame();
-            CreateBlackFadeOverlay();
-            CreateAudioManager();
+            body();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"Sample prefabs generated under {PrefabDir}/");
+            Debug.Log($"[PrefabGenerator] {label} generated under {PrefabDir}/");
         }
 
         private static void CreateTitlePanel()
@@ -37,11 +79,40 @@ namespace VocaNerd.EditorTools
             var root = CreatePanelRoot("TitlePanel");
             var panel = root.AddComponent<TitlePanel>();
 
-            CreateTMPText(root.transform, "TitleLabel", "VocaNerd", new Vector2(0, 200), 96);
-            var button = CreateUIButton(root.transform, "StartButton", "Start", new Vector2(0, -100));
+            var titleLeft = CreateTMPText(root.transform, "TitleLabel_Voca", "Voca", new Vector2(-140, 200), 96);
+            var titleRight = CreateTMPText(root.transform, "TitleLabel_Nerd", "Nerd", new Vector2(140, 200), 96);
+            var startBtn = CreateUIButton(root.transform, "StartButton", "Start", new Vector2(0, -100));
+            var exitBtn = CreateUIButton(root.transform, "ExitButton", "Exit", new Vector2(0, -220));
+
+            // 矢印インジケーター (▶) — 選択中のボタンの左に表示、CanvasGroup 付きで Blink 可能
+            var arrowGO = new GameObject("SelectionArrow",
+                typeof(RectTransform), typeof(CanvasGroup), typeof(CanvasGroupBlinker));
+            arrowGO.transform.SetParent(root.transform, false);
+            var arrowRt = (RectTransform)arrowGO.transform;
+            arrowRt.sizeDelta = new Vector2(48, 48);
+            arrowRt.anchoredPosition = Vector2.zero;
+            var arrowTmp = arrowGO.AddComponent<TextMeshProUGUI>();
+            arrowTmp.text = "▶";
+            arrowTmp.alignment = TextAlignmentOptions.Center;
+            arrowTmp.fontSize = 48;
+            arrowTmp.color = Color.white;
+            var arrowBlinker = arrowGO.GetComponent<CanvasGroupBlinker>();
+            AssignField(arrowBlinker, "canvasGroup", arrowGO.GetComponent<CanvasGroup>());
+
+            var indicator = root.AddComponent<SelectionIndicator>();
+            AssignField(indicator, "select", arrowRt);
+            AssignField(indicator, "selectGroup", arrowGO.GetComponent<CanvasGroup>());
+            AssignArray(indicator, "targets", new Selectable[] { startBtn, exitBtn });
+            AssignField(indicator, "blinker", arrowBlinker);
 
             AssignField(panel, "canvasGroup", root.GetComponent<CanvasGroup>());
-            AssignField(panel, "startButton", button);
+            AssignField(panel, "defaultSelected", startBtn);
+            AssignField(panel, "startButton", startBtn);
+            AssignField(panel, "exitButton", exitBtn);
+            AssignField(panel, "selectionIndicator", indicator);
+            AssignArray(panel, "titleLabelRects", new RectTransform[] { titleLeft.rectTransform, titleRight.rectTransform });
+            AssignField(panel, "startButtonRect", (RectTransform)startBtn.transform);
+            AssignField(panel, "exitButtonRect", (RectTransform)exitBtn.transform);
             SavePrefab(root);
         }
 
@@ -52,10 +123,11 @@ namespace VocaNerd.EditorTools
             var root = CreatePanelRoot("SelectPanel");
             var panel = root.AddComponent<SelectPanel>();
 
-            CreateTMPText(root.transform, "Header", "Select MiniGame", new Vector2(0, 350), 56);
+            var header = CreateTMPText(root.transform, "Header", "Select MiniGame", new Vector2(0, 350), 56);
 
             var buttons = new Button[4];
             var thumbs = new Image[4];
+            var buttonRects = new RectTransform[4];
             var positions = new[]
             {
                 new Vector2(-220, 100),
@@ -70,7 +142,29 @@ namespace VocaNerd.EditorTools
                 rt.sizeDelta = new Vector2(320, 180);
                 buttons[i] = b;
                 thumbs[i] = b.GetComponent<Image>();
+                buttonRects[i] = rt;
             }
+
+            // SelectionIndicator の表示要素 — 選択中のミニゲームボタンの左に▶を表示、Blink 可能
+            var arrowGO = new GameObject("SelectionArrow",
+                typeof(RectTransform), typeof(CanvasGroup), typeof(CanvasGroupBlinker));
+            arrowGO.transform.SetParent(root.transform, false);
+            var arrowRt = (RectTransform)arrowGO.transform;
+            arrowRt.sizeDelta = new Vector2(48, 48);
+            arrowRt.anchoredPosition = Vector2.zero;
+            var arrowTmp = arrowGO.AddComponent<TextMeshProUGUI>();
+            arrowTmp.text = "▶";
+            arrowTmp.alignment = TextAlignmentOptions.Center;
+            arrowTmp.fontSize = 48;
+            arrowTmp.color = Color.white;
+            var arrowBlinker = arrowGO.GetComponent<CanvasGroupBlinker>();
+            AssignField(arrowBlinker, "canvasGroup", arrowGO.GetComponent<CanvasGroup>());
+
+            var indicator = root.AddComponent<SelectionIndicator>();
+            AssignField(indicator, "select", arrowRt);
+            AssignField(indicator, "selectGroup", arrowGO.GetComponent<CanvasGroup>());
+            AssignArray(indicator, "targets", buttons);
+            AssignField(indicator, "blinker", arrowBlinker);
 
             // ExplainPanel をここに生成する root
             var explainRootGO = new GameObject("ExplainRoot", typeof(RectTransform));
@@ -82,10 +176,14 @@ namespace VocaNerd.EditorTools
             explainRt.offsetMax = Vector2.zero;
 
             AssignField(panel, "canvasGroup", root.GetComponent<CanvasGroup>());
+            AssignField(panel, "defaultSelected", buttons[0]);
             AssignArray(panel, "miniGameButtons", buttons);
             AssignArray(panel, "miniGameThumbnails", thumbs);
             AssignField(panel, "explainPanelPrefab", explainPrefab);
             AssignField(panel, "explainRoot", explainRt);
+            AssignField(panel, "selectionIndicator", indicator);
+            AssignField(panel, "headerRect", header.rectTransform);
+            AssignArray(panel, "miniGameButtonRects", buttonRects);
             SavePrefab(root);
         }
 
@@ -106,14 +204,15 @@ namespace VocaNerd.EditorTools
             var scrimImg = scrimGO.GetComponent<Image>();
             scrimImg.color = new Color(0f, 0f, 0f, 0.7f);
 
-            var title = CreateTMPText(root.transform, "TitleText", "Title", new Vector2(0, 350), 56);
             var desc = CreateTMPText(root.transform, "DescriptionText", "Description",
-                new Vector2(0, 220), 28);
+                new Vector2(360, 60), 32);
             var descRt = (RectTransform)desc.transform;
-            descRt.sizeDelta = new Vector2(900, 140);
+            descRt.sizeDelta = new Vector2(720, 400);
+            desc.alignment = TextAlignmentOptions.Left;
+            desc.enableWordWrapping = true;
 
             var videoDisplay = CreateRawImage(root.transform, "VideoDisplay",
-                new Vector2(0, -30), new Vector2(640, 360));
+                new Vector2(-360, 60), new Vector2(640, 360));
 
             var videoGO = new GameObject("VideoPlayer", typeof(RectTransform));
             videoGO.transform.SetParent(root.transform, false);
@@ -122,16 +221,42 @@ namespace VocaNerd.EditorTools
             video.renderMode = VideoRenderMode.RenderTexture;
             video.audioOutputMode = VideoAudioOutputMode.Direct;
 
-            var playBtn = CreateUIButton(root.transform, "PlayButton", "Play", new Vector2(150, -320));
-            var backBtn = CreateUIButton(root.transform, "BackButton", "Back", new Vector2(-150, -320));
+            var playBtn = CreateUIButton(root.transform, "PlayButton", "Play", new Vector2(150, -350));
+            var backBtn = CreateUIButton(root.transform, "BackButton", "Back", new Vector2(-150, -350));
+
+            // SelectionIndicator の表示要素 — 選択中のボタンの左に▶を表示、Blink 可能
+            var arrowGO = new GameObject("SelectionArrow",
+                typeof(RectTransform), typeof(CanvasGroup), typeof(CanvasGroupBlinker));
+            arrowGO.transform.SetParent(root.transform, false);
+            var arrowRt = (RectTransform)arrowGO.transform;
+            arrowRt.sizeDelta = new Vector2(48, 48);
+            arrowRt.anchoredPosition = Vector2.zero;
+            var arrowTmp = arrowGO.AddComponent<TextMeshProUGUI>();
+            arrowTmp.text = "▶";
+            arrowTmp.alignment = TextAlignmentOptions.Center;
+            arrowTmp.fontSize = 48;
+            arrowTmp.color = Color.white;
+            var arrowBlinker = arrowGO.GetComponent<CanvasGroupBlinker>();
+            AssignField(arrowBlinker, "canvasGroup", arrowGO.GetComponent<CanvasGroup>());
+
+            var indicator = root.AddComponent<SelectionIndicator>();
+            AssignField(indicator, "select", arrowRt);
+            AssignField(indicator, "selectGroup", arrowGO.GetComponent<CanvasGroup>());
+            AssignArray(indicator, "targets", new Selectable[] { playBtn, backBtn });
+            AssignField(indicator, "blinker", arrowBlinker);
 
             AssignField(panel, "canvasGroup", root.GetComponent<CanvasGroup>());
-            AssignField(panel, "titleText", title);
+            AssignField(panel, "defaultSelected", playBtn);
             AssignField(panel, "descriptionText", desc);
             AssignField(panel, "videoPlayer", video);
             AssignField(panel, "videoDisplay", videoDisplay);
             AssignField(panel, "playButton", playBtn);
             AssignField(panel, "backButton", backBtn);
+            AssignField(panel, "selectionIndicator", indicator);
+            AssignField(panel, "descriptionTextRect", desc.rectTransform);
+            AssignField(panel, "videoDisplayRect", (RectTransform)videoDisplay.transform);
+            AssignField(panel, "playButtonRect", (RectTransform)playBtn.transform);
+            AssignField(panel, "backButtonRect", (RectTransform)backBtn.transform);
             var saved = SavePrefabReturning(root);
             return saved.GetComponent<ExplainPanel>();
         }
@@ -140,7 +265,7 @@ namespace VocaNerd.EditorTools
         {
             var path = $"{PrefabDir}/{root.name}.prefab";
             var saved = PrefabUtility.SaveAsPrefabAsset(root, path);
-            Object.DestroyImmediate(root);
+            UnityEngine.Object.DestroyImmediate(root);
             return saved;
         }
 
@@ -162,9 +287,12 @@ namespace VocaNerd.EditorTools
             var backBtn = CreateUIButton(root.transform, "BackButton", "Back", new Vector2(0, -420));
 
             AssignField(panel, "canvasGroup", root.GetComponent<CanvasGroup>());
+            AssignField(panel, "defaultSelected", backBtn);
             AssignField(panel, "titleText", title);
             AssignField(panel, "backButton", backBtn);
             AssignField(panel, "gameContainer", containerRt);
+            AssignField(panel, "titleTextRect", title.rectTransform);
+            AssignField(panel, "backButtonRect", (RectTransform)backBtn.transform);
             SavePrefab(root);
         }
 
@@ -229,25 +357,6 @@ namespace VocaNerd.EditorTools
             AssignField(game, "playAgainButton", againBtn);
 
             SavePrefab(root);
-        }
-
-        private static MashRaceFlyObject CreateFlyObjectPrefab()
-        {
-            var tmp = new GameObject("MashRaceFlyObject",
-                typeof(RectTransform), typeof(Image), typeof(MashRaceFlyObject));
-            var rt = (RectTransform)tmp.transform;
-            rt.anchorMin = new Vector2(0.5f, 0.5f);
-            rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = new Vector2(200f, 24f);
-            var img = tmp.GetComponent<Image>();
-            img.color = new Color(1f, 1f, 1f, 0.25f);
-            img.raycastTarget = false;
-
-            var path = $"{PrefabDir}/MashRaceFlyObject.prefab";
-            var saved = PrefabUtility.SaveAsPrefabAsset(tmp, path);
-            Object.DestroyImmediate(tmp);
-            return saved.GetComponent<MashRaceFlyObject>();
         }
 
         private static void CreateMashRaceGame()
@@ -452,59 +561,10 @@ namespace VocaNerd.EditorTools
             return (go, group);
         }
 
-        private static HopscotchCell CreateHopscotchCellPrefab()
-        {
-            var tmp = new GameObject("HopscotchCell",
-                typeof(RectTransform), typeof(Image), typeof(HopscotchCell));
-            var rt = (RectTransform)tmp.transform;
-            rt.sizeDelta = new Vector2(40f, 40f);
-            var bg = tmp.GetComponent<Image>();
-            bg.color = Color.white;
-
-            // Toggle mark (child, behind background via SetAsFirstSibling later? no—needs to be visible.
-            // Place as first sibling: appears behind background; place as last: appears above background.
-            // We want it to show as a colored outline; use larger size behind.)
-            var toggleGO = new GameObject("Toggle", typeof(RectTransform), typeof(Image));
-            toggleGO.transform.SetParent(tmp.transform, false);
-            toggleGO.transform.SetAsFirstSibling();
-            var trt = (RectTransform)toggleGO.transform;
-            trt.anchorMin = Vector2.zero;
-            trt.anchorMax = Vector2.one;
-            trt.offsetMin = new Vector2(-6f, -6f);
-            trt.offsetMax = new Vector2(6f, 6f);
-            var toggleImg = toggleGO.GetComponent<Image>();
-            toggleImg.color = new Color(0.3f, 1f, 0.3f, 0.7f);
-            toggleImg.raycastTarget = false;
-            toggleGO.SetActive(false);
-
-            // Label (child, above background)
-            var labelGO = new GameObject("Label", typeof(RectTransform));
-            labelGO.transform.SetParent(tmp.transform, false);
-            var lrt = (RectTransform)labelGO.transform;
-            lrt.anchorMin = Vector2.zero;
-            lrt.anchorMax = Vector2.one;
-            lrt.offsetMin = Vector2.zero;
-            lrt.offsetMax = Vector2.zero;
-            var label = labelGO.AddComponent<TextMeshProUGUI>();
-            label.text = "A";
-            label.alignment = TextAlignmentOptions.Center;
-            label.fontSize = 24;
-            label.color = Color.white;
-
-            var cell = tmp.GetComponent<HopscotchCell>();
-            AssignField(cell, "background", bg);
-            AssignField(cell, "label", label);
-            AssignField(cell, "toggleMark", toggleImg);
-
-            var path = $"{PrefabDir}/HopscotchCell.prefab";
-            var saved = PrefabUtility.SaveAsPrefabAsset(tmp, path);
-            Object.DestroyImmediate(tmp);
-            return saved.GetComponent<HopscotchCell>();
-        }
-
         private static void CreateHopscotchRaceGame()
         {
             var cellPrefab = CreateHopscotchCellPrefab();
+            var startCellPrefab = CreateHopscotchStartCellPrefab();
 
             var root = new GameObject("HopscotchRaceGame", typeof(RectTransform), typeof(CanvasGroup));
             var rt = (RectTransform)root.transform;
@@ -514,25 +574,25 @@ namespace VocaNerd.EditorTools
             rt.offsetMax = Vector2.zero;
             var game = root.AddComponent<HopscotchRaceGame>();
 
-            // Player 1 (top)
-            var p1Area = CreateHalfArea(root.transform, "Player1Area", isTop: true);
-            CreateTMPText(p1Area, "P1Label", "P1 (A / D)", new Vector2(-620, 220), 28);
+            // Player 1 (left half — vertical split)
+            var p1Area = CreateHalfAreaVertical(root.transform, "Player1Area", isLeft: true);
+            CreateTMPText(p1Area, "P1Label", "P1 (A / D)", new Vector2(0, 520), 32);
             var p1Track = CreateTrackContainer(p1Area, "P1Track");
-            var p1Marker = CreatePlayerMarker(p1Track, "P1Marker", new Color(0.3f, 0.9f, 0.4f));
+            var p1Character = CreateHopscotchCharacter(p1Track, "P1Character", new Color(0.3f, 0.9f, 0.4f));
 
-            // Player 2 (bottom)
-            var p2Area = CreateHalfArea(root.transform, "Player2Area", isTop: false);
-            CreateTMPText(p2Area, "P2Label", "P2 (← / →)", new Vector2(-620, 220), 28);
+            // Player 2 (right half — vertical split)
+            var p2Area = CreateHalfAreaVertical(root.transform, "Player2Area", isLeft: false);
+            CreateTMPText(p2Area, "P2Label", "P2 (← / →)", new Vector2(0, 520), 32);
             var p2Track = CreateTrackContainer(p2Area, "P2Track");
-            var p2Marker = CreatePlayerMarker(p2Track, "P2Marker", new Color(0.9f, 0.5f, 0.3f));
+            var p2Character = CreateHopscotchCharacter(p2Track, "P2Character", new Color(0.9f, 0.5f, 0.3f));
 
-            // Divider
+            // Divider (center vertical line)
             var dividerGO = new GameObject("Divider", typeof(RectTransform), typeof(Image));
             dividerGO.transform.SetParent(root.transform, false);
             var divRt = (RectTransform)dividerGO.transform;
-            divRt.anchorMin = new Vector2(0, 0.5f);
-            divRt.anchorMax = new Vector2(1, 0.5f);
-            divRt.sizeDelta = new Vector2(0, 4);
+            divRt.anchorMin = new Vector2(0.5f, 0);
+            divRt.anchorMax = new Vector2(0.5f, 1);
+            divRt.sizeDelta = new Vector2(4, 0);
             divRt.anchoredPosition = Vector2.zero;
             dividerGO.GetComponent<Image>().color = new Color(0.8f, 0.8f, 0.8f, 1f);
 
@@ -562,12 +622,34 @@ namespace VocaNerd.EditorTools
             AssignField(game, "winnerText", winnerText);
             AssignField(game, "playAgainButton", againBtn);
             AssignField(game, "player1Track", p1Track);
-            AssignField(game, "player1Marker", p1Marker);
+            AssignField(game, "player1Character", p1Character);
+            AssignField(game, "player1CharacterBlinker", p1Character.GetComponent<CanvasGroupBlinker>());
             AssignField(game, "player2Track", p2Track);
-            AssignField(game, "player2Marker", p2Marker);
+            AssignField(game, "player2Character", p2Character);
+            AssignField(game, "player2CharacterBlinker", p2Character.GetComponent<CanvasGroupBlinker>());
             AssignField(game, "cellPrefab", cellPrefab);
+            AssignField(game, "startCellPrefab", startCellPrefab);
 
             SavePrefab(root);
+        }
+
+        private static RectTransform CreateHopscotchCharacter(Transform parent, string name, Color color)
+        {
+            var go = new GameObject(name,
+                typeof(RectTransform), typeof(Image), typeof(CanvasGroup), typeof(CanvasGroupBlinker));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(90f, 120f);
+            rt.anchoredPosition = new Vector2(-250f, -350f);
+            var img = go.GetComponent<Image>();
+            img.color = color;
+            img.raycastTarget = false;
+            var blinker = go.GetComponent<CanvasGroupBlinker>();
+            AssignField(blinker, "canvasGroup", go.GetComponent<CanvasGroup>());
+            return rt;
         }
 
         private static RectTransform CreateTrackContainer(Transform parent, string name)
@@ -577,7 +659,8 @@ namespace VocaNerd.EditorTools
             var rt = (RectTransform)go.transform;
             rt.anchorMin = new Vector2(0.5f, 0.5f);
             rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = new Vector2(1400, 500);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(700, 1000);
             rt.anchoredPosition = Vector2.zero;
             return rt;
         }
@@ -592,49 +675,6 @@ namespace VocaNerd.EditorTools
             img.color = color;
             img.raycastTarget = false;
             return rt;
-        }
-
-        private static BlockDropBlock CreateBlockDropBlockPrefab()
-        {
-            var tmp = new GameObject("BlockDropBlock",
-                typeof(RectTransform), typeof(Image), typeof(BlockDropBlock));
-            var rt = (RectTransform)tmp.transform;
-            rt.sizeDelta = new Vector2(150f, 30f);
-            rt.pivot = new Vector2(0.5f, 0.5f);
-            var body = tmp.GetComponent<Image>();
-            body.color = new Color(0.7f, 0.7f, 0.7f);
-
-            var leftStickGO = new GameObject("LeftStick", typeof(RectTransform), typeof(Image));
-            leftStickGO.transform.SetParent(tmp.transform, false);
-            var lsRt = (RectTransform)leftStickGO.transform;
-            lsRt.anchorMin = new Vector2(0f, 0.5f);
-            lsRt.anchorMax = new Vector2(0f, 0.5f);
-            lsRt.pivot = new Vector2(1f, 0.5f);
-            lsRt.sizeDelta = new Vector2(40f, 10f);
-            lsRt.anchoredPosition = Vector2.zero;
-            leftStickGO.GetComponent<Image>().color = new Color(0.95f, 0.75f, 0.2f);
-            leftStickGO.SetActive(false);
-
-            var rightStickGO = new GameObject("RightStick", typeof(RectTransform), typeof(Image));
-            rightStickGO.transform.SetParent(tmp.transform, false);
-            var rsRt = (RectTransform)rightStickGO.transform;
-            rsRt.anchorMin = new Vector2(1f, 0.5f);
-            rsRt.anchorMax = new Vector2(1f, 0.5f);
-            rsRt.pivot = new Vector2(0f, 0.5f);
-            rsRt.sizeDelta = new Vector2(40f, 10f);
-            rsRt.anchoredPosition = Vector2.zero;
-            rightStickGO.GetComponent<Image>().color = new Color(0.95f, 0.75f, 0.2f);
-            rightStickGO.SetActive(false);
-
-            var block = tmp.GetComponent<BlockDropBlock>();
-            AssignField(block, "body", body);
-            AssignField(block, "leftStick", leftStickGO);
-            AssignField(block, "rightStick", rightStickGO);
-
-            var path = $"{PrefabDir}/BlockDropBlock.prefab";
-            var saved = PrefabUtility.SaveAsPrefabAsset(tmp, path);
-            Object.DestroyImmediate(tmp);
-            return saved.GetComponent<BlockDropBlock>();
         }
 
         private static void CreateBlockDropGame()
@@ -696,8 +736,10 @@ namespace VocaNerd.EditorTools
             AssignField(game, "playAgainButton", againBtn);
             AssignField(game, "player1Stack", p1Stack);
             AssignField(game, "player1Character", p1Char);
+            AssignField(game, "player1CharacterBlinker", p1Char.GetComponent<CanvasGroupBlinker>());
             AssignField(game, "player2Stack", p2Stack);
             AssignField(game, "player2Character", p2Char);
+            AssignField(game, "player2CharacterBlinker", p2Char.GetComponent<CanvasGroupBlinker>());
             AssignField(game, "blockPrefab", blockPrefab);
 
             SavePrefab(root);
@@ -718,7 +760,8 @@ namespace VocaNerd.EditorTools
 
         private static RectTransform CreateCharacter(Transform parent, string name, Color color, Vector2 anchoredPos)
         {
-            var go = new GameObject(name, typeof(RectTransform), typeof(Image));
+            var go = new GameObject(name,
+                typeof(RectTransform), typeof(CanvasGroup), typeof(Image), typeof(CanvasGroupBlinker));
             go.transform.SetParent(parent, false);
             var rt = (RectTransform)go.transform;
             rt.anchorMin = new Vector2(0.5f, 0.5f);
@@ -729,6 +772,8 @@ namespace VocaNerd.EditorTools
             var img = go.GetComponent<Image>();
             img.color = color;
             img.raycastTarget = false;
+            var blinker = go.GetComponent<CanvasGroupBlinker>();
+            AssignField(blinker, "canvasGroup", go.GetComponent<CanvasGroup>());
             return rt;
         }
 
@@ -779,6 +824,16 @@ namespace VocaNerd.EditorTools
             // ScreenController attached to AspectFrame with root = self
             var controller = frameGO.AddComponent<ScreenController>();
             AssignField(controller, "root", frameRt);
+
+            // CursorController on root - hide mouse cursor on start
+            root.AddComponent<CursorController>();
+
+            // EventSystem child - required for keyboard/gamepad UI navigation
+            var esGO = new GameObject("EventSystem",
+                typeof(UnityEngine.EventSystems.EventSystem),
+                typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule),
+                typeof(SelectionKeeper));
+            esGO.transform.SetParent(root.transform, false);
 
             SavePrefab(root);
         }
@@ -904,7 +959,7 @@ namespace VocaNerd.EditorTools
             return go.GetComponent<RawImage>();
         }
 
-        private static void AssignField(Object target, string fieldName, Object value)
+        private static void AssignField(UnityEngine.Object target, string fieldName, UnityEngine.Object value)
         {
             var so = new SerializedObject(target);
             var prop = so.FindProperty(fieldName);
@@ -917,7 +972,7 @@ namespace VocaNerd.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static void AssignArray(Object target, string fieldName, Object[] values)
+        private static void AssignArray(UnityEngine.Object target, string fieldName, UnityEngine.Object[] values)
         {
             var so = new SerializedObject(target);
             var arr = so.FindProperty(fieldName);
@@ -931,7 +986,7 @@ namespace VocaNerd.EditorTools
         {
             var path = $"{PrefabDir}/{root.name}.prefab";
             PrefabUtility.SaveAsPrefabAsset(root, path);
-            Object.DestroyImmediate(root);
+            UnityEngine.Object.DestroyImmediate(root);
         }
     }
 }
