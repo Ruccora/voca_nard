@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 594da4319cbcb4ebbbda1494bcf109fe, type: 3}
+  m_Name: Hopscotch
+  m_EditorClassIdentifier: 
+  title: "\u3051\u3093\u3051\u3093\u3071"
+  description: "\u3051\u3093\u3051\u3093\u3071\u3067\u30EC\u30FC\u30B9\uFF01\n\u306F\u3084\u304F\u304B\u3051\u306C\u3051\u3066\uFF01\n\u304A\u306D\u304C\u30FC\u3044\uFF01\uFF01"
+  thumbnail: {fileID: 0}
+  videoClip: {fileID: 32900000, guid: 7348f0221edf54933801483afea38eb0, type: 3}
+  miniGamePrefab: {fileID: 7615164241155189982, guid: dbe041b81e74849ca872aeb6787240a8, type: 3}
