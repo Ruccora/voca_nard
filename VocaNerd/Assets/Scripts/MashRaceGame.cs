@@ -77,6 +77,8 @@ namespace VocaNerd
         [SerializeField] private float objectDespawnY = -700f;
 
         private Phase _phase;
+
+        public override bool CanAcceptBack => _phase == Phase.Winner || _phase == Phase.WaitForExit;
         private readonly PlayerState _p1 = new PlayerState();
         private readonly PlayerState _p2 = new PlayerState();
         private readonly List<MashRaceFlyObject> _p1Objects = new List<MashRaceFlyObject>();
@@ -393,6 +395,7 @@ namespace VocaNerd
                 resultGroup.interactable = true;
                 resultGroup.blocksRaycasts = true;
             }
+            SetFocus(playAgainButton);
             // TODO: 勝敗演出（スポットライト・エフェクトなど）
             await UniTask.Yield(PlayerLoopTiming.Update, token);
         }

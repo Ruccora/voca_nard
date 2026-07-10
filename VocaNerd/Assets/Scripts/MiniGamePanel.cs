@@ -2,6 +2,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace VocaNerd
@@ -22,11 +23,19 @@ namespace VocaNerd
         private MiniGameData _current;
         private GameObject _spawned;
         private PanelBase _innerPanel;
+        private InputAction _backAction;
 
         protected override void Awake()
         {
             base.Awake();
             backButton.onClick.AddListener(OnBack);
+
+            _backAction = new InputAction("Back", InputActionType.Button);
+            _backAction.AddBinding("<Keyboard>/escape");
+            _backAction.AddBinding("<Keyboard>/backspace");
+            _backAction.AddBinding("<Gamepad>/buttonEast");
+            _backAction.AddBinding("<Gamepad>/select");
+            _backAction.performed += _ => OnBack();
         }
 
         public void Bind(MiniGameData data)
@@ -55,19 +64,28 @@ namespace VocaNerd
 
         protected override async UniTask OnPanelInAsync(CancellationToken token)
         {
+            _backAction?.Enable();
             await base.OnPanelInAsync(token);
             if (_innerPanel != null) await _innerPanel.PanelInAsync(token);
         }
 
         protected override async UniTask OnPanelOutAsync(CancellationToken token)
         {
+            _backAction?.Disable();
             if (_innerPanel != null) await _innerPanel.PanelOutAsync(token);
             await base.OnPanelOutAsync(token);
+        }
+
+        private void OnDestroy()
+        {
+            _backAction?.Dispose();
+            _backAction = null;
         }
 
         private void OnBack()
         {
             if (IsAnimating) return;
+            if (_innerPanel != null && !_innerPanel.CanAcceptBack) return;
             ScreenController.Instance.ShowAsync(ScreenType.Select).Forget();
         }
     }

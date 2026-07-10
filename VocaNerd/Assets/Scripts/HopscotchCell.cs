@@ -47,7 +47,6 @@ namespace VocaNerd
                 secondaryImage.color = color;
             if (secondaryRect != null && !isTypeA)
             {
-                toggleMarkRect.anchoredPosition = secondaryOffset;
                 secondaryRect.anchoredPosition = secondaryOffset;
             }
             if (secondaryToggleMark != null)

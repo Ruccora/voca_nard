@@ -43,6 +43,8 @@ namespace VocaNerd
         [SerializeField] private float introDuration = 1.2f;
 
         private Phase _phase;
+
+        public override bool CanAcceptBack => _phase == Phase.Winner || _phase == Phase.WaitForExit;
         private InputAction _p1Action;
         private InputAction _p2Action;
         private CancellationTokenSource _roundCts;
@@ -239,6 +241,7 @@ namespace VocaNerd
                 resultGroup.interactable = true;
                 resultGroup.blocksRaycasts = true;
             }
+            SetFocus(playAgainButton);
             // TODO: 勝利演出（スポットライト・BGM切替・エフェクトなど）
             await UniTask.Yield(PlayerLoopTiming.Update, token);
         }

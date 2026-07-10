@@ -82,6 +82,8 @@ namespace VocaNerd
         [SerializeField] private Vector2 feetOffset = new Vector2(0f, -60f);
 
         private Phase _phase;
+
+        public override bool CanAcceptBack => _phase == Phase.Winner || _phase == Phase.WaitForExit;
         private readonly List<CellData> _course = new List<CellData>();
         private readonly List<HopscotchCell> _p1Cells = new List<HopscotchCell>();
         private readonly List<HopscotchCell> _p2Cells = new List<HopscotchCell>();
@@ -358,6 +360,7 @@ namespace VocaNerd
                 resultGroup.interactable = true;
                 resultGroup.blocksRaycasts = true;
             }
+            SetFocus(playAgainButton);
             await UniTask.Yield(PlayerLoopTiming.Update, token);
         }
 

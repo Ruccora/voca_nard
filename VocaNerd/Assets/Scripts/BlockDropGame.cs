@@ -72,6 +72,9 @@ namespace VocaNerd
         [SerializeField] private float countdownStep = 1f;
 
         private Phase _phase;
+
+        public override bool CanAcceptBack => _phase == Phase.Winner || _phase == Phase.WaitForExit;
+
         private readonly PlayerState _p1 = new PlayerState();
         private readonly PlayerState _p2 = new PlayerState();
         private InputAction _p1Left, _p1Right, _p1Knock, _p1KnockAlt;
@@ -241,6 +244,7 @@ namespace VocaNerd
                 resultGroup.interactable = true;
                 resultGroup.blocksRaycasts = true;
             }
+            SetFocus(playAgainButton);
             await UniTask.Yield(PlayerLoopTiming.Update, token);
         }
 

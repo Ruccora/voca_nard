@@ -15,6 +15,8 @@ namespace VocaNerd
 
         public bool IsAnimating { get; private set; }
 
+        public virtual bool CanAcceptBack => true;
+
         protected virtual void Awake()
         {
             if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
@@ -71,6 +73,13 @@ namespace VocaNerd
             if (defaultSelected == null) return;
             if (EventSystem.current == null) return;
             EventSystem.current.SetSelectedGameObject(defaultSelected.gameObject);
+        }
+
+        protected void SetFocus(Selectable target)
+        {
+            if (target == null) return;
+            if (EventSystem.current == null) return;
+            EventSystem.current.SetSelectedGameObject(target.gameObject);
         }
 
         protected virtual UniTask OnPanelPreOutAsync(CancellationToken token) => UniTask.CompletedTask;
