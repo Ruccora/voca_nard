@@ -398,6 +398,45 @@ TransitionOut (黒フェード解除)
 
 ---
 
+## Phase 14: セッションログ整備と /exit-log スキル
+
+**日付**: 2026-07-13
+**目的**: 開発ログを継続的に残す仕組み化 (作業終了時の自動追記スキル整備) と、ログ配置の適正化。
+
+**実装:**
+- 新スキル `.claude/skills/exit-log/SKILL.md` を作成
+  - `/exit-log [ヒント]` で起動、セッション内容を自動分析して `SESSION_LOG.md` に新 Phase を追記
+  - フロー: パス取得 → git status/diff/log 収集 → Phase 番号決定 → テンプレート組立 → コミット履歴表更新 → Edit で追記 → AskUserQuestion で commit/push 確認
+  - 既存の `wt` スキルと同じ SKILL.md フォーマット (frontmatter: name/description/argument-hint/user-invocable/allowed-tools)
+- `SESSION_LOG.md` を `Assets/Scripts/` → `.claude/` に移動 (`git mv`, 履歴保持 99%)
+  - Unity の Asset tree 外に置くことで .meta 生成不要、Editor import 対象外に
+  - Claude Code 関連ファイルを `.claude/` に集約
+- 内部相互参照の更新
+  - `SESSION_LOG.md` の `REQUIREMENTS.md` / `SETUP.md` 参照 → `Assets/Scripts/` 付きの明示パスに
+  - `exit-log/SKILL.md` の `Assets/Scripts/SESSION_LOG.md` 参照 → `.claude/SESSION_LOG.md` に一括置換
+
+**設計判断:**
+- ログ配置場所: `.claude/` 採用 — Unity Asset ツリー外に出すことで .meta 管理不要、Claude Code 関連メタデータと集約
+- コミット確認: 常に AskUserQuestion 経由 — 「勝手にコミット・push しない」原則を skill レベルに明文化
+- Phase 追記方針: 既存 Phase を書き換えず末尾に append — 履歴の破壊を防止
+
+**触ったファイル:**
+- `.claude/skills/exit-log/SKILL.md` — 新規作成
+- `.claude/SESSION_LOG.md` — 移動 + 相互参照パス更新
+- `Assets/Font/NotoSansJP-VariableFont_wght SDF.asset` — Unity 側 SDF atlas 再生成 (副作用)
+- `Assets/Material/QuickDraw/Sparkle_ball.mat` — マテリアル再シリアライズ (副作用)
+- `Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF - Fallback.asset` — Unity 側再シリアライズ (副作用)
+
+**コミット:**
+- `0f41f3e` 2026-07-13 Add SESSION_LOG.md and per-gamepad routing in QuickDrawGame
+- `dd415d7` 2026-07-13 Move SESSION_LOG under .claude, add exit-log skill
+
+**未着手 / 積み残し:**
+- `/exit-log` の本番動作検証 (今回はドライラン)
+- ログ肥大化対策 (Phase 数増加時の分割戦略)
+
+---
+
 ## コミット履歴
 
 | Commit | Date | Summary |
@@ -413,6 +452,8 @@ TransitionOut (黒フェード解除)
 | `3ac29aa` | 2026-07-08 | Add explain video: dance.mp4 |
 | `75bbd8d` | 2026-07-11 | Add SpriteAnimation, Back input, Enter=PlayAgain focus, QuickDraw textures |
 | `a713b3c` | 2026-07-11 | Add UI Sparkle/Bloom shader and MIKIRI mask texture |
+| `0f41f3e` | 2026-07-13 | Add SESSION_LOG.md and per-gamepad routing in QuickDrawGame |
+| `dd415d7` | 2026-07-13 | Move SESSION_LOG under .claude, add exit-log skill |
 
 ---
 
@@ -426,6 +467,8 @@ TransitionOut (黒フェード解除)
 - BlockDropGame は左右移動 + ノック + 棒ペナルティ
 - Prefab 生成は Editor メニューで一括再生成可能
 - 日本語 TMP 全対応
+- 開発ログを `.claude/SESSION_LOG.md` に集約 (Unity Asset 外)
+- `/exit-log` スキルで作業終了時に Phase 自動追記可能
 
 ## 進行中/未着手
 
