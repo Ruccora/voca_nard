@@ -1,6 +1,6 @@
 # VocaNerd 開発セッションログ
 
-Claude Code を使った VocaNerd プロジェクトの開発作業を、実装順にまとめたログ。要件と実装対応は `REQUIREMENTS.md`、Unity 側の手順は `SETUP.md` を参照。
+Claude Code を使った VocaNerd プロジェクトの開発作業を、実装順にまとめたログ。要件と実装対応は `Assets/Scripts/REQUIREMENTS.md`、Unity 側の手順は `Assets/Scripts/SETUP.md` を参照。
 
 ---
 
