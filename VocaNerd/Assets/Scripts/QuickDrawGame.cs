@@ -65,7 +65,7 @@ namespace VocaNerd
 
             _p2Action = new InputAction("Player2", InputActionType.Button);
             _p2Action.AddBinding("<Keyboard>/l");
-            _p2Action.AddBinding("<Gamepad>/buttonEast");
+            _p2Action.AddBinding("<Gamepad>/buttonSouth");
             _p2Action.performed += OnP2;
 
             if (playAgainButton != null)
@@ -263,8 +263,39 @@ namespace VocaNerd
         }
 
         // -------- 入力処理 --------
-        private void OnP1(InputAction.CallbackContext ctx) => HandlePress(1);
-        private void OnP2(InputAction.CallbackContext ctx) => HandlePress(2);
+        private void OnP1(InputAction.CallbackContext ctx)
+        {
+            if (!IsDeviceForPlayer(ctx.control.device, 1)) return;
+            HandlePress(1);
+        }
+
+        private void OnP2(InputAction.CallbackContext ctx)
+        {
+            if (!IsDeviceForPlayer(ctx.control.device, 2)) return;
+            HandlePress(2);
+        }
+
+        // Keyboard は常に有効。Gamepad は接続順で player を割り当て
+        private static bool IsDeviceForPlayer(InputDevice device, int player)
+        {
+            if (device is Keyboard) return true;
+            if (device is Gamepad gp)
+            {
+                var idx = GamepadIndexOf(gp);
+                return idx == player - 1;
+            }
+            return false;
+        }
+
+        private static int GamepadIndexOf(Gamepad gp)
+        {
+            var all = Gamepad.all;
+            for (var i = 0; i < all.Count; i++)
+            {
+                if (all[i] == gp) return i;
+            }
+            return -1;
+        }
 
         private void HandlePress(int player)
         {
