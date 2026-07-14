@@ -41,6 +41,8 @@ namespace VocaNerd
         [SerializeField] private float minWait = 3f;
         [SerializeField] private float maxWait = 5f;
         [SerializeField] private float introDuration = 1.2f;
+        [SerializeField] private float winnerDelay = 1.5f;
+        [SerializeField] private float winnerUiDelay = 1.5f;
 
         private Phase _phase;
 
@@ -144,6 +146,10 @@ namespace VocaNerd
                 // 4) 押下時演出
                 await PlayPressEffectAsync(_pressResult, token);
 
+                // 4.5) 勝利フェーズへ移行する前に一拍待機
+                if (winnerDelay > 0f)
+                    await UniTask.Delay(TimeSpan.FromSeconds(winnerDelay), cancellationToken: token);
+
                 // 5) 勝利者演出
                 await PlayWinnerEffectAsync(_pressResult, token);
 
@@ -235,6 +241,11 @@ namespace VocaNerd
                 resultText.text = result.Foul
                     ? $"FOUL! Player {result.Winner} Wins"
                     : $"Player {result.Winner} Wins!";
+
+            // 勝利者表示のあと、UI(resultGroup/PlayAgain)を出す前に一拍待機
+            if (winnerUiDelay > 0f)
+                await UniTask.Delay(TimeSpan.FromSeconds(winnerUiDelay), cancellationToken: token);
+
             if (resultGroup != null)
             {
                 resultGroup.alpha = 1f;
