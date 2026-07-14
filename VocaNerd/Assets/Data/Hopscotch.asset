@@ -15,5 +15,5 @@ MonoBehaviour:
   title: "\u3051\u3093\u3051\u3093\u3071"
   description: "\u3051\u3093\u3051\u3093\u3071\u3067\u30EC\u30FC\u30B9\uFF01\n\u306F\u3084\u304F\u304B\u3051\u306C\u3051\u3066\uFF01\n\u304A\u306D\u304C\u30FC\u3044\uFF01\uFF01"
   thumbnail: {fileID: 0}
-  videoClip: {fileID: 32900000, guid: 7348f0221edf54933801483afea38eb0, type: 3}
+  videoFileName: race.mp4
   miniGamePrefab: {fileID: 7615164241155189982, guid: dbe041b81e74849ca872aeb6787240a8, type: 3}

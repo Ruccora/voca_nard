@@ -15,5 +15,5 @@ MonoBehaviour:
   title: "\u30C0\u30D6\u30EB\u30E9\u30EA\u30A2\u30C3\u30C8"
   description: "\u305F\u304F\u3055\u3093\u56DE\u305B\uFF01\uFF01\uFF01\n\u3068\u3079\u3068\u3079\uFF01\uFF01\n\u305F\u304B\u304F\u3044\u3051\uFF01\uFF01\n\u3084\u308C\u3088\uFF01\uFF01\uFF01\uFF01"
   thumbnail: {fileID: 0}
-  videoClip: {fileID: 32900000, guid: 1d22b832d9c20421b876919b5af3988d, type: 3}
+  videoFileName: dowble.mp4
   miniGamePrefab: {fileID: 2206495110539589600, guid: 59298e912831c4642a4ab90c937de25e, type: 3}
