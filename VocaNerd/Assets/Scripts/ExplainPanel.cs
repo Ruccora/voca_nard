@@ -73,15 +73,12 @@ namespace VocaNerd
 
             CancelVideoPrepare();
             videoPlayer.Stop();
-            var videoUrl = GetVideoUrl(_current.VideoFileName);
-            if (string.IsNullOrEmpty(videoUrl))
+            if (!ConfigureVideoSource())
             {
-                Debug.LogWarning($"[ExplainPanel] Video file is not configured: {_current.name}");
+                Debug.LogWarning($"[ExplainPanel] Video is not configured: {_current.name}");
                 return UniTask.CompletedTask;
             }
 
-            videoPlayer.source = VideoSource.Url;
-            videoPlayer.url = videoUrl;
             videoPlayer.isLooping = true;
             videoPlayer.errorReceived -= OnVideoError;
             videoPlayer.errorReceived += OnVideoError;
@@ -99,10 +96,10 @@ namespace VocaNerd
 
         private async UniTaskVoid PrepareAndPlayVideoAsync(CancellationToken token)
         {
-            if (videoPlayer == null || string.IsNullOrEmpty(videoPlayer.url))
+            if (videoPlayer == null || !HasVideoSource())
                 return;
 
-            var videoUrl = videoPlayer.url;
+            var videoLabel = GetVideoLabel();
 
             try
             {
@@ -120,7 +117,7 @@ namespace VocaNerd
 
                 if (!videoPlayer.isPrepared)
                 {
-                    Debug.LogWarning($"[ExplainPanel] Video prepare timed out: {videoUrl}");
+                    Debug.LogWarning($"[ExplainPanel] Video prepare timed out: {videoLabel}");
                     return;
                 }
 
@@ -132,7 +129,7 @@ namespace VocaNerd
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[ExplainPanel] Video playback failed: {videoUrl}\n{ex}");
+                Debug.LogWarning($"[ExplainPanel] Video playback failed: {videoLabel}\n{ex}");
             }
         }
 
@@ -148,8 +145,59 @@ namespace VocaNerd
 
         private void OnVideoError(VideoPlayer source, string message)
         {
-            var videoUrl = source != null ? source.url : string.Empty;
-            Debug.LogWarning($"[ExplainPanel] Video error: {videoUrl} ({message})");
+            var videoLabel = source != null ? GetVideoLabel(source) : string.Empty;
+            Debug.LogWarning($"[ExplainPanel] Video error: {videoLabel} ({message})");
+        }
+
+        private bool ConfigureVideoSource()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            return ConfigureVideoUrlSource();
+#else
+            if (_current.VideoClip != null)
+            {
+                videoPlayer.source = VideoSource.VideoClip;
+                videoPlayer.url = string.Empty;
+                videoPlayer.clip = _current.VideoClip;
+                return true;
+            }
+
+            return ConfigureVideoUrlSource();
+#endif
+        }
+
+        private bool ConfigureVideoUrlSource()
+        {
+            var videoUrl = GetVideoUrl(_current.VideoFileName);
+            if (string.IsNullOrEmpty(videoUrl))
+                return false;
+
+            videoPlayer.source = VideoSource.Url;
+            videoPlayer.clip = null;
+            videoPlayer.url = videoUrl;
+            return true;
+        }
+
+        private bool HasVideoSource()
+        {
+            return videoPlayer.source == VideoSource.Url
+                ? !string.IsNullOrEmpty(videoPlayer.url)
+                : videoPlayer.clip != null;
+        }
+
+        private string GetVideoLabel()
+        {
+            return GetVideoLabel(videoPlayer);
+        }
+
+        private static string GetVideoLabel(VideoPlayer source)
+        {
+            if (source == null)
+                return string.Empty;
+
+            return source.source == VideoSource.Url
+                ? source.url
+                : source.clip != null ? source.clip.name : string.Empty;
         }
 
         private static string GetVideoUrl(string fileName)

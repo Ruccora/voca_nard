@@ -16,4 +16,5 @@ MonoBehaviour:
   description: "\u307D\u3093\u307D\u3093\u307D\u30FC\u3093\uFF01\uFF01\n\u304A\u3068\u3059\u304A\u3068\u3059\n\u3042\u305F\u308B\u306A\u3042\u305F\u308B\u306A"
   thumbnail: {fileID: 0}
   videoFileName: block.mp4
+  videoClip: {fileID: 32900000, guid: 99f6b0c026a0e444e8bf99e3edae6052, type: 3}
   miniGamePrefab: {fileID: 8166487412412768842, guid: 3d248f0cd73204133a42635b67e8c728, type: 3}

@@ -16,4 +16,5 @@ MonoBehaviour:
   description: "\u5408\u56F3\u306E\u5F8C\u306B\u3060\u308C\u3088\u308A\u3082\u65E9\u304F\u8E0A\u308C\uFF01\uFF01\uFF01\n\u304A\u3069\u308C\uFF01\uFF01\uFF01\uFF01\n\u30B8\u30E3\u30B9\u30C8\u3067\uFF01\uFF01\uFF01\n\u3060\u3093\u3059\u3060\uFF01\uFF01\uFF01"
   thumbnail: {fileID: 0}
   videoFileName: dance.mp4
+  videoClip: {fileID: 32900000, guid: 7f7722343b0864162b44c90ee615f376, type: 3}
   miniGamePrefab: {fileID: 3934120544816053625, guid: a33dc15480b90497e94bed4a79157a6d, type: 3}
