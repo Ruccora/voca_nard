@@ -230,7 +230,12 @@ namespace VocaNerd
             _phase = Phase.Playing;
             _winner = 0;
             _winnerSignal = new UniTaskCompletionSource();
+            var startTime = Time.time;
             await _winnerSignal.Task.AttachExternalCancellation(token);
+
+            var clearTime = Time.time - startTime;
+            if (SaveData.TrySetBestTime(SaveData.GameId.BlockDrop, clearTime))
+                Debug.Log($"[BlockDrop] New best time: {clearTime:0.00}s");
         }
 
         // -------- 勝利演出 --------

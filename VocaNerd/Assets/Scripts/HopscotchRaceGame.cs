@@ -338,6 +338,9 @@ namespace VocaNerd
                 UpdateToggleVisuals();
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }
+
+            if (SaveData.TrySetBestTime(SaveData.GameId.HopscotchRace, _playElapsed))
+                Debug.Log($"[Hopscotch] New best time: {_playElapsed:0.00}s");
         }
 
         // -------- Stage 4: ゴール演出 --------
