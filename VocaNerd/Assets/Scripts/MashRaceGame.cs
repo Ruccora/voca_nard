@@ -65,23 +65,31 @@ namespace VocaNerd
         [SerializeField] private float loserFallDuration = 0.7f;
         [SerializeField, Range(0.3f, 1f)] private float charShrinkScale = 0.7f; // 星と一緒に少し縮む
 
-        [Header("Result Sequence")]
+        [Header("Power (連打 = 演出予算)")]
+        // 連打 = パワー。maxPower * (白到達尺 / whiteReachAlternations) 秒ぶん演出を進めて、
+        // 使い切ったら演出停止(その画面状態で固定)。whiteReachAlternations 連打で白に到達 (80 → 15秒)。
+        // それ未満は途中停止(白に届かない)、超過ぶんは白到達後のキャラ回転に回る。
+        [SerializeField] private int whiteReachAlternations = 80;
+        [SerializeField] private float postWhiteSpinSpeed = 180f;   // 白到達後のキャラ Z 回転 (deg/s)
+
+        [Header("Result Sequence (白到達まで 15 秒)")]
+        // 各尺の合計 = 白到達までの時間 (1.0+3.0+1.8+3.2+3.2+1.6+1.2 = 15.0 秒)
         [SerializeField] private float starsSpinSpeed = 40f;        // 星の Z 回転 (deg/s)
         [SerializeField] private float groundRiseHeight = 120f;     // 地面が少し上がる量
-        [SerializeField] private float groundRiseDuration = 0.5f;
-        [SerializeField] private float groundShrinkDuration = 1.5f; // 地面 scale 縮小
+        [SerializeField] private float groundRiseDuration = 1.0f;
+        [SerializeField] private float groundShrinkDuration = 3.0f; // 地面 scale 縮小
         [SerializeField, Range(0.05f, 1f)] private float groundMinScale = 0.2f;
-        [SerializeField] private float groundDescendDuration = 0.9f; // 下に移動して消える
+        [SerializeField] private float groundDescendDuration = 1.8f; // 下に移動して消える
         [SerializeField] private float groundMoveUnitPerPower = 4f;  // プレイヤー移動量換算 (px / power)
         [SerializeField] private float groundMoveMin = 400f;
         [SerializeField] private float groundMoveMax = 1600f;
-        [SerializeField] private float starsShrinkDuration = 1.6f;  // 星ゆっくり縮小
+        [SerializeField] private float starsShrinkDuration = 3.2f;  // 星ゆっくり縮小
         [SerializeField, Range(0.05f, 1f)] private float starsMinScale = 0.3f;
         [SerializeField] private float earthStartY = -1600f;        // 地球の初期位置 (下)
         [SerializeField] private float earthRiseY = -200f;          // 競り上がる先
-        [SerializeField] private float earthRiseDuration = 1.6f;
-        [SerializeField] private float earthHoldBeforeWhite = 0.8f; // 一定秒数
-        [SerializeField] private float whiteFadeDuration = 0.6f;    // 白 fadein
+        [SerializeField] private float earthRiseDuration = 3.2f;
+        [SerializeField] private float earthHoldBeforeWhite = 1.6f; // 一定秒数
+        [SerializeField] private float whiteFadeDuration = 1.2f;    // 白 fadein
 
         private Phase _phase;
 
@@ -281,12 +289,19 @@ namespace VocaNerd
                 FallLoserAsync(loserChar, token).Forget();
             }
 
-            // 背景シーケンス + 星回転を専用 CTS で開始。maxPower を渡して駆動する。
+            // 連打 = パワー = 演出予算。背景シーケンス(白まで15秒)を effectToken で走らせ、
+            // maxPower ぶんの時間が経ったら _effectCts を破棄して「その画面状態で停止」する。
             _effectCts?.Dispose();
             _effectCts = CancellationTokenSource.CreateLinkedTokenSource(token);
             var effectToken = _effectCts.Token;
 
             SpinStarsAsync(effectToken).Forget();
+
+            // 予算 = maxPower * (白到達尺 / whiteReachAlternations)。
+            // 80連打 → 白到達尺ちょうど(=白に到達)。40連打 → その半分で途中停止。
+            var secondsPerAlternation = ToWhiteSeconds() / Mathf.Max(1, whiteReachAlternations);
+            var budget = maxPower * secondsPerAlternation;
+            BudgetStopAsync(budget, _effectCts).Forget();
 
             try
             {
@@ -294,9 +309,9 @@ namespace VocaNerd
             }
             catch (OperationCanceledException)
             {
+                // 予算切れ(=連打パワー消費)でキャンセル → その画面状態で固定
             }
 
-            // 完了 → UniTask を破棄して演出停止 (その時の画面状態で固定)
             _effectCts?.Cancel();
             _effectCts?.Dispose();
             _effectCts = null;
@@ -383,7 +398,43 @@ namespace VocaNerd
             // 7) 画面が白くなる fadein
             await FadeGroupAsync(whiteFade, 0f, 1f, whiteFadeDuration, token);
 
-            // fadein 後は何も演出しない
+            // 8) 白到達後: 残った(=勝った)キャラが回転するだけ。予算(連打パワー)が尽きるまで続ける。
+            await SpinRemainCharsAsync(token);
+        }
+
+        // 白到達までの基準尺(秒)。連打パワーの換算に使う (whiteReachAlternations 連打でこの秒数)。
+        private float ToWhiteSeconds()
+            => groundRiseDuration + groundShrinkDuration + groundDescendDuration
+             + starsShrinkDuration + earthRiseDuration + earthHoldBeforeWhite + whiteFadeDuration;
+
+        // 予算(連打パワー)ぶんの時間が経ったら演出停止(その画面状態で固定)する監視。
+        private async UniTaskVoid BudgetStopAsync(float seconds, CancellationTokenSource cts)
+        {
+            if (cts == null) return;
+            try
+            {
+                if (seconds > 0f)
+                    await UniTask.Delay(TimeSpan.FromSeconds(seconds), cancellationToken: cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return; // 既に停止済み
+            }
+            cts.Cancel();
+        }
+
+        // 残ったキャラを Z 回転させ続ける (予算切れのキャンセルで止まる)
+        private async UniTask SpinRemainCharsAsync(CancellationToken token)
+        {
+            if (_shrinkCharA == null && _shrinkCharB == null) return;
+            while (true)
+            {
+                token.ThrowIfCancellationRequested();
+                var dz = -postWhiteSpinSpeed * Time.deltaTime;
+                if (_shrinkCharA != null) _shrinkCharA.Rotate(0f, 0f, dz);
+                if (_shrinkCharB != null) _shrinkCharB.Rotate(0f, 0f, dz);
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+            }
         }
 
         // 星の縮小と残ったキャラの縮小を同時進行
@@ -554,6 +605,7 @@ namespace VocaNerd
             if (character == null) return;
             character.gameObject.SetActive(true);
             character.localScale = Vector3.one;
+            character.localRotation = Quaternion.identity;
             SetAnchoredY(character, charRestY);
         }
 

@@ -388,6 +388,18 @@ namespace VocaNerd.EditorTools
             ((RectTransform)earth.transform).anchoredPosition = new Vector2(0, -1600);
             earth.SetActive(false);
 
+            // ---- 白 fadein オーバーレイ (背景の直上 = キャラより下) ----
+            // 白到達後もキャラは白の上に残って回転するので、白は背景だけを覆う
+            var whiteGO = new GameObject("WhiteFade", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
+            whiteGO.transform.SetParent(root.transform, false);
+            StretchFull((RectTransform)whiteGO.transform);
+            var whiteImg = whiteGO.GetComponent<Image>();
+            whiteImg.color = Color.white;
+            whiteImg.raycastTarget = false;
+            var whiteGroup = whiteGO.GetComponent<CanvasGroup>();
+            whiteGroup.alpha = 0f;
+            whiteGroup.blocksRaycasts = false;
+
             // ---- 自キャラ (SpriteAnimation) ----
             var rukaFrames = LoadSprites(new[]
             {
@@ -407,17 +419,6 @@ namespace VocaNerd.EditorTools
             // Miss バッジ
             var (_, p1MissGroup) = CreateMissBadge(root.transform, "P1Miss", new Vector2(-420, 360));
             var (_, p2MissGroup) = CreateMissBadge(root.transform, "P2Miss", new Vector2(420, 360));
-
-            // ---- 白 fadein オーバーレイ (全画面) ----
-            var whiteGO = new GameObject("WhiteFade", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
-            whiteGO.transform.SetParent(root.transform, false);
-            StretchFull((RectTransform)whiteGO.transform);
-            var whiteImg = whiteGO.GetComponent<Image>();
-            whiteImg.color = Color.white;
-            whiteImg.raycastTarget = false;
-            var whiteGroup = whiteGO.GetComponent<CanvasGroup>();
-            whiteGroup.alpha = 0f;
-            whiteGroup.blocksRaycasts = false;
 
             // ---- 中央オーバーレイ ----
             var introText = CreateTMPText(root.transform, "IntroText", "", Vector2.zero, 72);

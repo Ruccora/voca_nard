@@ -188,7 +188,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 533505714629595446}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
@@ -291,9 +291,15 @@ MonoBehaviour:
   resultGroup: {fileID: 4767767235609181995}
   resultText: {fileID: 572444357998976910}
   playAgainButton: {fileID: 4323224135232578845}
+  player1Character: {fileID: 7311631454532235649}
+  player2Character: {fileID: 2366524751761041195}
+  moveToCenterDuration: 0.3
+  centerX: 0
   minWait: 3
   maxWait: 5
   introDuration: 1.2
+  winnerDelay: 1.5
+  winnerUiDelay: 1.5
 --- !u!1 &4726959983431471538
 GameObject:
   m_ObjectHideFlags: 0
@@ -737,7 +743,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -100}
+  m_AnchoredPosition: {x: 0, y: 200}
   m_SizeDelta: {x: 1000, y: 400}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!225 &4767767235609181995
@@ -1165,11 +1171,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 8317618713900502389}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0}
-  m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -350, y: 180}
-  m_SizeDelta: {x: 105, y: 170}
-  m_Pivot: {x: 1, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 430, y: -470}
+  m_SizeDelta: {x: 300, y: 340}
+  m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &6170015795975629084
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1376,11 +1382,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 8317618713900502389}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 350, y: 180}
-  m_SizeDelta: {x: 132, y: 169}
-  m_Pivot: {x: 0, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -420, y: -470}
+  m_SizeDelta: {x: 300, y: 340}
+  m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &1488498110408471309
 CanvasRenderer:
   m_ObjectHideFlags: 0

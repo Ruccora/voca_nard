@@ -37,6 +37,12 @@ namespace VocaNerd
         [SerializeField] private TMP_Text resultText;
         [SerializeField] private Button playAgainButton;
 
+        [Header("Players")]
+        [SerializeField] private RectTransform player1Character;
+        [SerializeField] private RectTransform player2Character;
+        [SerializeField] private float moveToCenterDuration = 0.5f;
+        [SerializeField] private float centerX = 0f;
+
         [Header("Timing")]
         [SerializeField] private float minWait = 3f;
         [SerializeField] private float maxWait = 5f;
@@ -53,6 +59,8 @@ namespace VocaNerd
         private UniTaskCompletionSource _pressSignal;
         private PressResult _pressResult;
         private readonly System.Random _rng = new System.Random();
+        private Vector2 _p1Home;
+        private Vector2 _p2Home;
         private bool _isSetup;
 
         public override UniTask SetupAsync(CancellationToken token)
@@ -72,6 +80,10 @@ namespace VocaNerd
 
             if (playAgainButton != null)
                 playAgainButton.onClick.AddListener(OnPlayAgain);
+
+            // キャラの初期位置（左右）を記録。以後ラウンド毎にここへ戻す。
+            if (player1Character != null) _p1Home = player1Character.anchoredPosition;
+            if (player2Character != null) _p2Home = player2Character.anchoredPosition;
 
             ResetInitialView();
             return UniTask.CompletedTask;
@@ -229,8 +241,38 @@ namespace VocaNerd
             _phase = Phase.Reaction;
             if (targetImage != null) targetImage.enabled = false;
             if (statusText != null) statusText.text = string.Empty;
-            // TODO: 押下演出（フラッシュ・カメラシェイク・SEなど）
-            await UniTask.Yield(PlayerLoopTiming.Update, token);
+
+            // 早押しに成功した方(勝者)を中央へ移動
+            var winnerChar = result.Winner == 1 ? player1Character
+                : result.Winner == 2 ? player2Character
+                : null;
+            if (winnerChar != null)
+                await MoveToCenterAsync(winnerChar, token);
+            else
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+        }
+
+        private async UniTask MoveToCenterAsync(RectTransform character, CancellationToken token)
+        {
+            var from = character.anchoredPosition;
+            var to = new Vector2(centerX, from.y);
+            if (moveToCenterDuration <= 0f)
+            {
+                character.anchoredPosition = to;
+                return;
+            }
+
+            var elapsed = 0f;
+            while (elapsed < moveToCenterDuration)
+            {
+                token.ThrowIfCancellationRequested();
+                elapsed += Time.deltaTime;
+                var t = Mathf.Clamp01(elapsed / moveToCenterDuration);
+                var eased = 1f - Mathf.Pow(1f - t, 3f); // EaseOutCubic
+                character.anchoredPosition = Vector2.LerpUnclamped(from, to, eased);
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+            }
+            character.anchoredPosition = to;
         }
 
         // -------- Stage 5: 勝利者演出 --------
@@ -351,6 +393,8 @@ namespace VocaNerd
 
         private void ResetRoundView()
         {
+            if (player1Character != null) player1Character.anchoredPosition = _p1Home;
+            if (player2Character != null) player2Character.anchoredPosition = _p2Home;
             if (targetImage != null) targetImage.enabled = false;
             if (resultGroup != null)
             {
