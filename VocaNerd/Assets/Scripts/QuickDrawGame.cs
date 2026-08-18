@@ -13,6 +13,7 @@ namespace VocaNerd
         private enum Phase
         {
             Idle,
+            Opening,
             Intro,
             Waiting,
             Ready,
@@ -40,8 +41,19 @@ namespace VocaNerd
         [Header("Players")]
         [SerializeField] private RectTransform player1Character;
         [SerializeField] private RectTransform player2Character;
+        [SerializeField] private SpriteAnimation player1WinAnim; // 勝利アニメ (loop=false 推奨)
+        [SerializeField] private SpriteAnimation player2WinAnim;
         [SerializeField] private float moveToCenterDuration = 0.5f;
         [SerializeField] private float centerX = 0f;
+        [SerializeField] private float characterEnterDuration = 0.1f; // 開始演出後のバン!と登場
+        [SerializeField] private float characterEnterOffsetX = 1400f; // 画面外スタートの横距離
+        [SerializeField] private float enterOvershoot = 1.7f;         // バン! のオーバーシュート量 (0で無し)
+        [SerializeField] private float openingHoldDuration = 1f;      // 登場後の待機
+        [SerializeField] private float characterExitDuration = 0.25f; // 外へはける
+
+        [Header("Opening")]
+        // 別 prefab で作った開始演出を子として当てこんで参照する (未設定なら演出なし)
+        [SerializeField] private OpeningEffect openingEffect;
 
         [Header("Timing")]
         [SerializeField] private float minWait = 3f;
@@ -63,9 +75,9 @@ namespace VocaNerd
         private Vector2 _p2Home;
         private bool _isSetup;
 
-        public override UniTask SetupAsync(CancellationToken token)
+        public override async UniTask SetupAsync(CancellationToken token)
         {
-            if (_isSetup) return UniTask.CompletedTask;
+            if (_isSetup) return;
             _isSetup = true;
 
             _p1Action = new InputAction("Player1", InputActionType.Button);
@@ -86,7 +98,9 @@ namespace VocaNerd
             if (player2Character != null) _p2Home = player2Character.anchoredPosition;
 
             ResetInitialView();
-            return UniTask.CompletedTask;
+
+            if (openingEffect != null)
+                await openingEffect.SetupAsync(token);
         }
 
         protected override async UniTask OnPanelInAsync(CancellationToken token)
@@ -141,6 +155,9 @@ namespace VocaNerd
                 ResetRoundView();
                 _pressResult = default;
 
+                // 0) 開始演出 (READY? の前)
+                await PlayOpeningEffectAsync(token);
+
                 // 1) 開始演出
                 await PlayIntroEffectAsync(token);
 
@@ -155,8 +172,11 @@ namespace VocaNerd
                     await WaitForPressAsync(token);
                 }
 
-                // 4) 押下時演出
+                // 4) 押下時演出 (勝者が中央へ移動)
                 await PlayPressEffectAsync(_pressResult, token);
+
+                // 4.3) 勝者の勝利アニメ (完了で戻る)
+                await PlayWinAnimationAsync(_pressResult, token);
 
                 // 4.5) 勝利フェーズへ移行する前に一拍待機
                 if (winnerDelay > 0f)
@@ -178,6 +198,52 @@ namespace VocaNerd
             catch (OperationCanceledException)
             {
             }
+        }
+
+        // -------- Stage 0: 開始演出 (READY? の前) --------
+        private async UniTask PlayOpeningEffectAsync(CancellationToken token)
+        {
+            _phase = Phase.Opening;
+
+            // 1) 斜め線を露出 (マスク端→中央)。表示したまま。
+            if (openingEffect != null)
+                await openingEffect.PlayAsync(token);
+
+            // 2) 1P=左 / 2P=右 から バン! と登場
+            await PlayCharacterEnterAsync(token);
+
+            // 3) 1秒待機
+            if (openingHoldDuration > 0f)
+                await UniTask.Delay(TimeSpan.FromSeconds(openingHoldDuration), cancellationToken: token);
+
+            // 4) マスクが左右にはける + キャラも外へ (同時) → READY へ
+            var maskExit = openingEffect != null ? openingEffect.ExitAsync(token) : UniTask.CompletedTask;
+            var charExit = PlayCharacterExitAsync(token);
+            await UniTask.WhenAll(maskExit, charExit);
+        }
+
+        // 1P=左 / 2P=右 から自ホーム位置へ登場
+        private async UniTask PlayCharacterEnterAsync(CancellationToken token)
+        {
+            var t1 = player1Character != null
+                ? MoveAnchoredXAsync(player1Character, _p1Home.x, characterEnterDuration, token, EaseOutBack)
+                : UniTask.CompletedTask;
+            var t2 = player2Character != null
+                ? MoveAnchoredXAsync(player2Character, _p2Home.x, characterEnterDuration, token, EaseOutBack)
+                : UniTask.CompletedTask;
+            await UniTask.WhenAll(t1, t2);
+        }
+
+        // 1P=左 / 2P=右 の画面外へ退場
+        private async UniTask PlayCharacterExitAsync(CancellationToken token)
+        {
+            var t1 = player1Character != null
+                ? MoveAnchoredXAsync(player1Character, _p1Home.x - characterEnterOffsetX, characterExitDuration, token)
+                : UniTask.CompletedTask;
+            var t2 = player2Character != null
+                ? MoveAnchoredXAsync(player2Character, _p2Home.x + characterEnterOffsetX, characterExitDuration, token)
+                : UniTask.CompletedTask;
+            await UniTask.WhenAll(t1, t2);
         }
 
         // -------- Stage 1: 開始演出 --------
@@ -252,27 +318,60 @@ namespace VocaNerd
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
         }
 
-        private async UniTask MoveToCenterAsync(RectTransform character, CancellationToken token)
+        private UniTask MoveToCenterAsync(RectTransform character, CancellationToken token)
+            => MoveAnchoredXAsync(character, centerX, moveToCenterDuration, token);
+
+        // anchoredPosition の X だけを targetX へ (Y は保持)。easing 省略時は EaseOutCubic。
+        private async UniTask MoveAnchoredXAsync(RectTransform rt, float targetX, float duration, CancellationToken token, Func<float, float> easing = null)
         {
-            var from = character.anchoredPosition;
-            var to = new Vector2(centerX, from.y);
-            if (moveToCenterDuration <= 0f)
+            if (rt == null) return;
+            easing ??= EaseOutCubic;
+            var from = rt.anchoredPosition;
+            var to = new Vector2(targetX, from.y);
+            if (duration <= 0f)
             {
-                character.anchoredPosition = to;
+                rt.anchoredPosition = to;
                 return;
             }
 
             var elapsed = 0f;
-            while (elapsed < moveToCenterDuration)
+            while (elapsed < duration)
             {
                 token.ThrowIfCancellationRequested();
                 elapsed += Time.deltaTime;
-                var t = Mathf.Clamp01(elapsed / moveToCenterDuration);
-                var eased = 1f - Mathf.Pow(1f - t, 3f); // EaseOutCubic
-                character.anchoredPosition = Vector2.LerpUnclamped(from, to, eased);
+                var t = Mathf.Clamp01(elapsed / duration);
+                rt.anchoredPosition = Vector2.LerpUnclamped(from, to, easing(t)); // LerpUnclamped でオーバーシュート可
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }
-            character.anchoredPosition = to;
+            rt.anchoredPosition = to;
+        }
+
+        private static float EaseOutCubic(float t) => 1f - Mathf.Pow(1f - t, 3f);
+
+        // EaseOutBack: 目標を少し行き過ぎてから戻る (バン! の当たり)。enterOvershoot で強さ調整。
+        private float EaseOutBack(float t)
+        {
+            var c1 = enterOvershoot;
+            var c3 = c1 + 1f;
+            var p = t - 1f;
+            return 1f + c3 * p * p * p + c1 * p * p;
+        }
+
+        // -------- Stage 4.3: 勝者の勝利アニメ --------
+        private async UniTask PlayWinAnimationAsync(PressResult result, CancellationToken token)
+        {
+            var anim = result.Winner == 1 ? player1WinAnim
+                : result.Winner == 2 ? player2WinAnim
+                : null;
+            if (anim == null || anim.Length == 0)
+            {
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+                return;
+            }
+
+            anim.Play();
+            if (anim.TotalDuration > 0f)
+                await UniTask.Delay(TimeSpan.FromSeconds(anim.TotalDuration), cancellationToken: token);
         }
 
         // -------- Stage 5: 勝利者演出 --------
@@ -393,8 +492,9 @@ namespace VocaNerd
 
         private void ResetRoundView()
         {
-            if (player1Character != null) player1Character.anchoredPosition = _p1Home;
-            if (player2Character != null) player2Character.anchoredPosition = _p2Home;
+            // 開始演出で登場させるため、ラウンド開始時は画面外に置く
+            if (player1Character != null) player1Character.anchoredPosition = _p1Home + new Vector2(-characterEnterOffsetX, 0f);
+            if (player2Character != null) player2Character.anchoredPosition = _p2Home + new Vector2(characterEnterOffsetX, 0f);
             if (targetImage != null) targetImage.enabled = false;
             if (resultGroup != null)
             {

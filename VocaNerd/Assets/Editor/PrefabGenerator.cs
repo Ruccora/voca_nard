@@ -47,6 +47,86 @@ namespace VocaNerd.EditorTools
         [MenuItem("VocaNerd/Generate/QuickDrawGame")]
         public static void GenerateQuickDrawGame() => RunGenerate("QuickDrawGame", CreateQuickDrawGame);
 
+        [MenuItem("VocaNerd/Generate/MikiriOpening")]
+        public static void GenerateMikiriOpening() => RunGenerate("MikiriOpening", CreateMikiriOpening);
+
+        // 既存 QuickDrawGame プレハブ(手編集)をその場パッチ: P1C=Miku / P2C=Teto の勝利アニメを組み込む
+        [MenuItem("VocaNerd/Patch/QuickDraw Win Anim (Miku_Teto)")]
+        public static void PatchQuickDrawWinAnim()
+        {
+            var path = $"{PrefabDir}/QuickDrawGame.prefab";
+            var root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                var game = root.GetComponentInChildren<QuickDrawGame>(true);
+                var p1c = FindDescendant(root.transform, "P1C");
+                var p2c = FindDescendant(root.transform, "P2C");
+                if (game == null || p1c == null || p2c == null)
+                {
+                    Debug.LogError($"[Patch] not found: game={game != null}, P1C={p1c != null}, P2C={p2c != null}");
+                    return;
+                }
+
+                var miku = LoadSpritesInFolder("Assets/Texture/QuickDrawGame/Miku", "miku_motion");
+                var teto = LoadSpritesInFolder("Assets/Texture/QuickDrawGame/Teto", "teto_motion");
+
+                var p1Anim = SetupWinAnim(p1c.gameObject, miku);
+                var p2Anim = SetupWinAnim(p2c.gameObject, teto);
+                AssignField(game, "player1WinAnim", p1Anim);
+                AssignField(game, "player2WinAnim", p2Anim);
+
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+                Debug.Log($"[Patch] QuickDraw win anim done: Miku={miku.Length}, Teto={teto.Length}");
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        private static SpriteAnimation SetupWinAnim(GameObject go, Sprite[] frames)
+        {
+            var img = go.GetComponent<Image>();
+            if (img == null) img = go.AddComponent<Image>();
+            var anim = go.GetComponent<SpriteAnimation>();
+            if (anim == null) anim = go.AddComponent<SpriteAnimation>();
+            AssignField(anim, "image", img);
+            AssignArray(anim, "sprites", frames);
+            AssignFloat(anim, "frameDuration", 0.06f);
+            AssignBool(anim, "loop", false);       // 最後まで再生して停止 (完了検知)
+            AssignBool(anim, "playOnAwake", false); // 勝った時だけ再生
+            return anim;
+        }
+
+        private static Transform FindDescendant(Transform root, string name)
+        {
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                if (t.name == name) return t;
+            return null;
+        }
+
+        // フォルダ内の指定プレフィックスの Sprite を名前順で読み込む
+        private static Sprite[] LoadSpritesInFolder(string folder, string prefix)
+        {
+            var guids = AssetDatabase.FindAssets("t:Texture2D", new[] { folder });
+            var paths = new System.Collections.Generic.List<string>();
+            foreach (var g in guids)
+            {
+                var p = AssetDatabase.GUIDToAssetPath(g);
+                if (System.IO.Path.GetFileNameWithoutExtension(p).StartsWith(prefix))
+                    paths.Add(p);
+            }
+            paths.Sort(System.StringComparer.Ordinal);
+
+            var list = new System.Collections.Generic.List<Sprite>();
+            foreach (var p in paths)
+            {
+                var sp = LoadSprite(p);
+                if (sp != null) list.Add(sp);
+            }
+            return list.ToArray();
+        }
+
         [MenuItem("VocaNerd/Generate/MashRaceGame")]
         public static void GenerateMashRaceGame() => RunGenerate("MashRaceGame", CreateMashRaceGame);
 
@@ -359,6 +439,80 @@ namespace VocaNerd.EditorTools
             SavePrefab(root);
         }
 
+        // 刹那の見切りの開始演出 (別 prefab)。QuickDrawGame に手動で当てこむ。
+        private static void CreateMikiriOpening()
+        {
+            const float tilt = 20f;
+
+            var root = new GameObject("MikiriOpening", typeof(RectTransform), typeof(MikiriOpeningEffect));
+            StretchFull((RectTransform)root.transform);
+            var fx = root.GetComponent<MikiriOpeningEffect>();
+
+            // 斜め用の傾いた土台 (+20°)。この中は水平に組む。
+            var tiltGO = new GameObject("Tilt", typeof(RectTransform));
+            tiltGO.transform.SetParent(root.transform, false);
+            var tiltRt = (RectTransform)tiltGO.transform;
+            tiltRt.anchorMin = new Vector2(0.5f, 0.5f);
+            tiltRt.anchorMax = new Vector2(0.5f, 0.5f);
+            tiltRt.sizeDelta = new Vector2(3000f, 2400f);
+            tiltRt.anchoredPosition = Vector2.zero;
+            tiltRt.localEulerAngles = new Vector3(0f, 0f, tilt);
+
+            // 黒い線 (Tilt 内では水平 → 画面上は 20°)
+            var lineGO = new GameObject("Line", typeof(RectTransform), typeof(Image));
+            lineGO.transform.SetParent(tiltGO.transform, false);
+            var lineRt = (RectTransform)lineGO.transform;
+            lineRt.anchorMin = new Vector2(0.5f, 0.5f);
+            lineRt.anchorMax = new Vector2(0.5f, 0.5f);
+            lineRt.sizeDelta = new Vector2(3000f, 24f);
+            lineRt.anchoredPosition = Vector2.zero;
+            var lineImg = lineGO.GetComponent<Image>();
+            lineImg.color = Color.black;
+            lineImg.raycastTarget = false;
+
+            // カバー(マスク) 2枚。逆方向 (-20°) に傾けて画面に対して真っ直ぐにする。
+            var coverColor = new Color(0.06f, 0.06f, 0.09f); // TODO: 背景色に合わせる
+            var leftMask = CreateMikiriCover(tiltGO.transform, "LeftMask", coverColor, -tilt);
+            var rightMask = CreateMikiriCover(tiltGO.transform, "RightMask", coverColor, -tilt);
+
+            // Closed=線を覆う / Open=露出 / Exit=左右へはける (暫定値。Inspector で詰める)
+            var leftClosed = new Vector2(-900f, 0f);
+            var leftOpen = new Vector2(-1900f, 0f);
+            var leftExit = new Vector2(-3400f, 0f);
+            var rightClosed = new Vector2(900f, 0f);
+            var rightOpen = new Vector2(1900f, 0f);
+            var rightExit = new Vector2(3400f, 0f);
+            leftMask.anchoredPosition = leftClosed;
+            rightMask.anchoredPosition = rightClosed;
+
+            AssignField(fx, "leftMask", leftMask);
+            AssignField(fx, "rightMask", rightMask);
+            AssignVector2(fx, "leftClosed", leftClosed);
+            AssignVector2(fx, "leftOpen", leftOpen);
+            AssignVector2(fx, "leftExit", leftExit);
+            AssignVector2(fx, "rightClosed", rightClosed);
+            AssignVector2(fx, "rightOpen", rightOpen);
+            AssignVector2(fx, "rightExit", rightExit);
+
+            root.SetActive(false); // 通常は非表示。再生時に PlayAsync が有効化。
+            SavePrefab(root);
+        }
+
+        private static RectTransform CreateMikiriCover(Transform parent, string name, Color color, float zRotation)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(2000f, 2600f);
+            rt.localEulerAngles = new Vector3(0f, 0f, zRotation);
+            var img = go.GetComponent<Image>();
+            img.color = color;
+            img.raycastTarget = false;
+            return rt;
+        }
+
         private static void CreateMashRaceGame()
         {
             var root = new GameObject("MashRaceGame", typeof(RectTransform), typeof(CanvasGroup));
@@ -556,6 +710,15 @@ namespace VocaNerd.EditorTools
             var prop = so.FindProperty(fieldName);
             if (prop == null) return;
             prop.boolValue = value;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void AssignVector2(UnityEngine.Object target, string fieldName, Vector2 value)
+        {
+            var so = new SerializedObject(target);
+            var prop = so.FindProperty(fieldName);
+            if (prop == null) return;
+            prop.vector2Value = value;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

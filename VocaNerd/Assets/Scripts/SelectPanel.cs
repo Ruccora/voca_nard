@@ -158,9 +158,6 @@ namespace VocaNerd
         {
             if (_activeExplain != null) return;
 
-            if (selectionIndicator != null)
-                await selectionIndicator.BlinkAsync(0.5f, token);
-
             if (selectionIndicator != null) selectionIndicator.Hide();
             await ExpandSelectedAsync(token);
             HideSelected();

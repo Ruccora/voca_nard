@@ -18,6 +18,8 @@ namespace VocaNerd
         private int _fixedIndex = -1;
 
         public int Length => sprites != null ? sprites.Length : 0;
+        public float FrameDuration => frameDuration;
+        public float TotalDuration => Length * Mathf.Max(0f, frameDuration); // 1周ぶんの秒数
         public bool IsPlaying => _isPlaying && _fixedIndex < 0;
         public int CurrentIndex => _fixedIndex >= 0 ? _fixedIndex : _currentIndex;
 

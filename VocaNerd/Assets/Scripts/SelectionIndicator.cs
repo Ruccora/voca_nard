@@ -22,6 +22,7 @@ namespace VocaNerd
         [SerializeField] private float paddingX = 20f;
         [SerializeField] private bool hideWhenNoMatch = true;
         [SerializeField] private CanvasGroupBlinker blinker;
+        [SerializeField] private ShinyOutline shinyOutline;
 
         private bool _isVisible;
         private GameObject _lastSelected;
@@ -39,6 +40,7 @@ namespace VocaNerd
 
         public void Show()
         {
+            if(shinyOutline != null) shinyOutline.Apply();
             _isVisible = true;
             _lastSelected = null;
             _lastMatched = false;
