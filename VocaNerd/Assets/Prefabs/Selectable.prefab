@@ -61,7 +61,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.30081883, g: 0.83695847, b: 0.9811321, a: 0.29803923}
+  m_Color: {r: 0.38679248, g: 0.38679248, b: 0.38679248, a: 0.29803923}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -103,11 +103,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uiEffect: {fileID: 3203921089877741150}
-  edgeWidth: 0.15
+  edgeWidth: 0.2
   useCustomColor: 1
-  edgeColor: {r: 0, g: 0.6006255, b: 1, a: 1}
+  edgeColor: {r: 1, g: 0.3780804, b: 0.3537736, a: 1}
   glow: 1
-  shinyWidth: 0.5
+  shinyWidth: 0.7
   speed: 1.5
 --- !u!114 &3203921089877741150
 MonoBehaviour:
@@ -240,12 +240,12 @@ MonoBehaviour:
   m_GradationReverse: 0
   m_AllowToModifyMeshShape: 1
   m_EdgeMode: 2
-  m_EdgeWidth: 0.15
+  m_EdgeWidth: 0.2
   m_EdgeColorFilter: 4
-  m_EdgeColor: {r: 0, g: 0.6006255, b: 1, a: 1}
+  m_EdgeColor: {r: 1, g: 0.3780804, b: 0.3537736, a: 1}
   m_EdgeColorGlow: 1
   m_EdgeShinyRate: 0
-  m_EdgeShinyWidth: 0.5
+  m_EdgeShinyWidth: 0.7
   m_EdgeShinyAutoPlaySpeed: 1.5
   m_PatternArea: 1
   m_DetailFilter: 0

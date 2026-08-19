@@ -13,6 +13,13 @@ namespace VocaNerd
         [SerializeField] protected Selectable defaultSelected;
         [SerializeField] protected float fadeDuration = 0.25f;
 
+        [Header("Audio")]
+        [Tooltip("配下の Button 押下時に SE を自動再生する")]
+        [SerializeField] private bool autoButtonSe = true;
+
+        [Tooltip("自動再生する SE キー。個別に変えたいボタンには ButtonSeKey を付ける")]
+        [SerializeField] private string buttonSeKey = SeKey.Decide;
+
         public bool IsAnimating { get; private set; }
 
         public virtual bool CanAcceptBack => true;
@@ -22,6 +29,42 @@ namespace VocaNerd
             if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
             if (canvasGroup != null) canvasGroup.alpha = 0f;
             SetInteractable(false);
+            HookButtonSe();
+        }
+
+        /// <summary>
+        /// 配下の Button 全てに SE 再生リスナーを差す。
+        /// 派生クラスの Awake より先に呼ばれる（base.Awake() 経由）ので、SE が本処理より先に鳴る。
+        /// </summary>
+        private void HookButtonSe()
+        {
+            if (!autoButtonSe) return;
+
+            foreach (var button in GetComponentsInChildren<Button>(true))
+            {
+                // 入れ子の Panel 配下のボタンは、その Panel 自身に任せる
+                if (FindPanelOwner(button.transform) != this) continue;
+
+                var over = button.GetComponent<ButtonSeKey>();
+                var key = over != null ? over.Key : buttonSeKey;
+                if (string.IsNullOrEmpty(key)) continue;
+
+                button.onClick.AddListener(() =>
+                {
+                    if (IsAnimating) return;
+                    Audio.PlaySE(key);
+                });
+            }
+        }
+
+        private static PanelBase FindPanelOwner(Transform target)
+        {
+            for (var cur = target; cur != null; cur = cur.parent)
+            {
+                var panel = cur.GetComponent<PanelBase>();
+                if (panel != null) return panel;
+            }
+            return null;
         }
 
         public virtual UniTask SetupAsync(CancellationToken token) => UniTask.CompletedTask;

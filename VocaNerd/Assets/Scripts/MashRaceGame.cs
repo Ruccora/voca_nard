@@ -58,7 +58,6 @@ namespace VocaNerd
         [SerializeField] private float missLockDuration = 0.2f;
 
         [Header("Character Fly")]
-        [SerializeField] private float charRestY = -500f;      // 待機位置
         [SerializeField] private float winnerRiseY = -150f;    // 勝者が上がって残る位置
         [SerializeField] private float winnerRiseDuration = 0.6f;
         [SerializeField] private float loserFallY = -1400f;    // 敗者の落下先 (画面外)
@@ -98,12 +97,23 @@ namespace VocaNerd
         private readonly PlayerState _p2 = new PlayerState();
         private InputAction _p1Left, _p1Right, _p2Left, _p2Right;
         private CancellationTokenSource _roundCts;
-        private CancellationTokenSource _effectCts; // 背景シーケンス+星回転専用。破棄=その状態で演出停止
+        private CancellationTokenSource _effectCts; // 背景シーケンス専用。破棄=その状態で演出停止 (星の回転は止めない)
         private UniTaskCompletionSource _exitSignal;
 
         // 星と一緒に縮む「残ったキャラ」。敗者は含めない。
         private RectTransform _shrinkCharA;
         private RectTransform _shrinkCharB;
+
+        // prefab で設定された初期 scale/位置/回転 (リセットで復元する)
+        private Vector3 _starsHomeScale = Vector3.one;
+        private Vector3 _groundHomeScale = Vector3.one;
+        private Vector2 _groundHomePos;
+        private Vector3 _p1HomeScale = Vector3.one;
+        private Vector2 _p1HomePos;
+        private Quaternion _p1HomeRot = Quaternion.identity;
+        private Vector3 _p2HomeScale = Vector3.one;
+        private Vector2 _p2HomePos;
+        private Quaternion _p2HomeRot = Quaternion.identity;
         private bool _isSetup;
 
         public override UniTask SetupAsync(CancellationToken token)
@@ -124,6 +134,7 @@ namespace VocaNerd
             if (playAgainButton != null)
                 playAgainButton.onClick.AddListener(OnPlayAgain);
 
+            CaptureHome();
             ResetInitialView();
             return UniTask.CompletedTask;
         }
@@ -140,6 +151,13 @@ namespace VocaNerd
             CancelRound();
             DisableInputs();
             await base.OnPanelOutAsync(token);
+        }
+
+        // 星(回転する背景)はゲームの進行/演出停止に関係なく常に等速で回し続ける。
+        private void Update()
+        {
+            if (starsRect != null)
+                starsRect.Rotate(0f, 0f, -starsSpinSpeed * Time.deltaTime);
         }
 
         private void OnDestroy()
@@ -295,8 +313,6 @@ namespace VocaNerd
             _effectCts = CancellationTokenSource.CreateLinkedTokenSource(token);
             var effectToken = _effectCts.Token;
 
-            SpinStarsAsync(effectToken).Forget();
-
             // 予算 = maxPower * (白到達尺 / whiteReachAlternations)。
             // 80連打 → 白到達尺ちょうど(=白に到達)。40連打 → その半分で途中停止。
             var secondsPerAlternation = ToWhiteSeconds() / Mathf.Max(1, whiteReachAlternations);
@@ -315,22 +331,6 @@ namespace VocaNerd
             _effectCts?.Cancel();
             _effectCts?.Dispose();
             _effectCts = null;
-        }
-
-        // 星を Z 軸で回し続ける (effect 停止で止まる)
-        private async UniTaskVoid SpinStarsAsync(CancellationToken token)
-        {
-            if (starsRect == null) return;
-            try
-            {
-                while (true)
-                {
-                    token.ThrowIfCancellationRequested();
-                    starsRect.Rotate(0f, 0f, -starsSpinSpeed * Time.deltaTime);
-                    await UniTask.Yield(PlayerLoopTiming.Update, token);
-                }
-            }
-            catch (OperationCanceledException) { }
         }
 
         // 勝者(残る側): 上に少し上がってその場に残る。SpriteAnimation は回り続ける。
@@ -368,8 +368,9 @@ namespace VocaNerd
                 await LerpAnchoredYAsync(groundRect, y0, y0 + groundRiseHeight, groundRiseDuration, EaseOutCubic, token);
             }
 
-            // 2) 地面: scale が徐々に最小まで縮小
-            await LerpScaleAsync(groundRect, 1f, groundMinScale, groundShrinkDuration, EaseInOutSine, token);
+            // 2) 地面: scale が徐々に最小まで縮小 (home scale 基準)
+            var gFrom = groundRect != null ? groundRect.localScale.x : 1f;
+            await LerpScaleAsync(groundRect, gFrom, gFrom * groundMinScale, groundShrinkDuration, EaseInOutSine, token);
 
             // 3) 地面: プレイヤー移動量に合わせて下に移動して消える
             var moveAmount = Mathf.Clamp(maxPower * groundMoveUnitPerPower, groundMoveMin, groundMoveMax);
@@ -380,8 +381,8 @@ namespace VocaNerd
                 groundRect.gameObject.SetActive(false);
             }
 
-            // 4) 星: ゆっくり縮小 (残ったキャラも一緒に少し縮小)
-            await ShrinkStarsAndCharsAsync(starsMinScale, starsShrinkDuration, token);
+            // 4) 星: ゆっくり縮小 (残ったキャラも一緒に少し縮小)。いずれも現在(home)scale 基準の比率。
+            await ShrinkStarsAndCharsAsync(starsMinScale, charShrinkScale, starsShrinkDuration, token);
 
             // 5) 地球: 下から競り上がる
             if (earthRect != null)
@@ -437,15 +438,21 @@ namespace VocaNerd
             }
         }
 
-        // 星の縮小と残ったキャラの縮小を同時進行
-        private async UniTask ShrinkStarsAndCharsAsync(float starsTo, float duration, CancellationToken token)
+        // 星の縮小と残ったキャラの縮小を同時進行。いずれも現在(home)scale に比率を掛けた相対縮小。
+        private async UniTask ShrinkStarsAndCharsAsync(float starsRatio, float charRatio, float duration, CancellationToken token)
         {
             var starsFrom = starsRect != null ? starsRect.localScale.x : 1f;
+            var aFrom = _shrinkCharA != null ? _shrinkCharA.localScale.x : 1f;
+            var bFrom = _shrinkCharB != null ? _shrinkCharB.localScale.x : 1f;
+            var starsTo = starsFrom * starsRatio;
+            var aTo = aFrom * charRatio;
+            var bTo = bFrom * charRatio;
+
             if (duration <= 0f)
             {
                 SetScale(starsRect, starsTo);
-                SetScale(_shrinkCharA, charShrinkScale);
-                SetScale(_shrinkCharB, charShrinkScale);
+                SetScale(_shrinkCharA, aTo);
+                SetScale(_shrinkCharB, bTo);
                 return;
             }
 
@@ -456,14 +463,13 @@ namespace VocaNerd
                 elapsed += Time.deltaTime;
                 var t = EaseInOutSine(Mathf.Clamp01(elapsed / duration));
                 SetScale(starsRect, Mathf.Lerp(starsFrom, starsTo, t));
-                var charScale = Mathf.Lerp(1f, charShrinkScale, t);
-                SetScale(_shrinkCharA, charScale);
-                SetScale(_shrinkCharB, charScale);
+                SetScale(_shrinkCharA, Mathf.Lerp(aFrom, aTo, t));
+                SetScale(_shrinkCharB, Mathf.Lerp(bFrom, bTo, t));
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }
             SetScale(starsRect, starsTo);
-            SetScale(_shrinkCharA, charShrinkScale);
-            SetScale(_shrinkCharB, charShrinkScale);
+            SetScale(_shrinkCharA, aTo);
+            SetScale(_shrinkCharB, bTo);
         }
 
         // -------- Stage 5: 勝敗演出 --------
@@ -563,18 +569,18 @@ namespace VocaNerd
             if (countdownText != null) countdownText.text = string.Empty;
             if (timerText != null) timerText.text = $"{playDuration:0.0}";
 
-            // 背景初期化
+            // 背景初期化 (prefab の初期 scale/位置を復元)
             if (starsRect != null)
             {
                 starsRect.gameObject.SetActive(true);
-                starsRect.localRotation = Quaternion.identity;
-                starsRect.localScale = Vector3.one;
+                // localRotation はリセットしない (常時回転を途切れさせないため)
+                starsRect.localScale = _starsHomeScale;
             }
             if (groundRect != null)
             {
                 groundRect.gameObject.SetActive(true);
-                groundRect.localScale = Vector3.one;
-                SetAnchoredY(groundRect, 0f);
+                groundRect.localScale = _groundHomeScale;
+                groundRect.anchoredPosition = _groundHomePos;
             }
             if (earthRect != null)
             {
@@ -583,11 +589,11 @@ namespace VocaNerd
             }
             if (whiteFade != null) whiteFade.alpha = 0f;
 
-            // キャラ初期化
+            // キャラ初期化 (prefab の初期 scale/位置/回転を復元)
             _shrinkCharA = null;
             _shrinkCharB = null;
-            ResetCharacter(player1Character);
-            ResetCharacter(player2Character);
+            ResetCharacter(player1Character, _p1HomeScale, _p1HomePos, _p1HomeRot);
+            ResetCharacter(player2Character, _p2HomeScale, _p2HomePos, _p2HomeRot);
 
             if (player1MissGroup != null) player1MissGroup.alpha = 0f;
             if (player2MissGroup != null) player2MissGroup.alpha = 0f;
@@ -600,13 +606,36 @@ namespace VocaNerd
             }
         }
 
-        private void ResetCharacter(RectTransform character)
+        private void ResetCharacter(RectTransform character, Vector3 homeScale, Vector2 homePos, Quaternion homeRot)
         {
             if (character == null) return;
             character.gameObject.SetActive(true);
-            character.localScale = Vector3.one;
-            character.localRotation = Quaternion.identity;
-            SetAnchoredY(character, charRestY);
+            character.localScale = homeScale;
+            character.localRotation = homeRot;
+            character.anchoredPosition = homePos;
+        }
+
+        // prefab で設定された初期 scale/位置/回転を記録し、以後のリセットで復元する。
+        private void CaptureHome()
+        {
+            if (starsRect != null) _starsHomeScale = starsRect.localScale;
+            if (groundRect != null)
+            {
+                _groundHomeScale = groundRect.localScale;
+                _groundHomePos = groundRect.anchoredPosition;
+            }
+            if (player1Character != null)
+            {
+                _p1HomeScale = player1Character.localScale;
+                _p1HomePos = player1Character.anchoredPosition;
+                _p1HomeRot = player1Character.localRotation;
+            }
+            if (player2Character != null)
+            {
+                _p2HomeScale = player2Character.localScale;
+                _p2HomePos = player2Character.anchoredPosition;
+                _p2HomeRot = player2Character.localRotation;
+            }
         }
 
         private void ResetPlayerStates()

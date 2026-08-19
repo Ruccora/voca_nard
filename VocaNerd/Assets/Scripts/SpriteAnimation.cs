@@ -105,6 +105,7 @@ namespace VocaNerd
             if (image == null) return;
             if (sprites == null || index < 0 || index >= sprites.Length) return;
             image.sprite = sprites[index];
+            image.SetNativeSize();
         }
     }
 }

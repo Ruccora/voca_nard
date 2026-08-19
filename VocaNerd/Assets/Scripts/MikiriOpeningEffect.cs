@@ -22,8 +22,8 @@ namespace VocaNerd
         [SerializeField] private Vector2 rightExit;   // 右へはけた位置
 
         [Header("Timing")]
-        [SerializeField] private float revealDuration = 0.5f; // 端→中央の露出
-        [SerializeField] private float exitDuration = 0.25f;  // 左右へはける
+        [SerializeField] private float revealDuration = 1.2f; // 端→中央の露出
+        [SerializeField] private float exitDuration = 0.6f;   // 左右へはける
 
         // 端→中央に露出。表示したまま戻る (待機/退場は呼び出し側が制御)。
         public override async UniTask PlayAsync(CancellationToken token)

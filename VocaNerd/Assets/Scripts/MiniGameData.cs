@@ -17,6 +17,9 @@ namespace VocaNerd
 #endif
         [SerializeField] private GameObject miniGamePrefab;
 
+        [Tooltip("このミニゲーム中に流す BGM キー（BgmKey の定数）。空なら直前の BGM を継続")]
+        [SerializeField] private string bgmKey;
+
         public string Title => title;
         public string Description => description;
         public Sprite Thumbnail => thumbnail;
@@ -25,5 +28,6 @@ namespace VocaNerd
         public VideoClip VideoClip => videoClip;
 #endif
         public GameObject MiniGamePrefab => miniGamePrefab;
+        public string BgmKey => bgmKey;
     }
 }

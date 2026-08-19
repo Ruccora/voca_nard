@@ -24,6 +24,9 @@ namespace VocaNerd
         [SerializeField] private CanvasGroupBlinker blinker;
         [SerializeField] private ShinyOutline shinyOutline;
 
+        [Tooltip("選択が別の target へ移ったときに鳴らす SE キー。空なら無音")]
+        [SerializeField] private string cursorSeKey = SeKey.Cursor;
+
         private bool _isVisible;
         private GameObject _lastSelected;
         private bool _lastMatched;
@@ -82,6 +85,10 @@ namespace VocaNerd
 
             if (current != _lastSelected || matched != _lastMatched)
             {
+                // Show() 直後の初回確定（_lastSelected == null）は移動ではないので鳴らさない
+                if (matched && _lastSelected != null && current != _lastSelected)
+                    Audio.PlaySE(cursorSeKey);
+
                 _lastSelected = current;
                 _lastMatched = matched;
                 if (selectGroup != null)

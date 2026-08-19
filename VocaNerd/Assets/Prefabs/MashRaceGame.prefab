@@ -299,8 +299,8 @@ RectTransform:
   m_GameObject: {fileID: 153253691740542872}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1.3, y: 1.3, z: 1.3}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 4237044859519154325}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1389,22 +1389,24 @@ MonoBehaviour:
   loserFallY: -1400
   loserFallDuration: 0.7
   charShrinkScale: 0.7
+  whiteReachAlternations: 80
+  postWhiteSpinSpeed: 180
   starsSpinSpeed: 40
   groundRiseHeight: 120
-  groundRiseDuration: 0.5
-  groundShrinkDuration: 1.5
-  groundMinScale: 0.2
-  groundDescendDuration: 0.9
+  groundRiseDuration: 3
+  groundShrinkDuration: 2
+  groundMinScale: 0.65
+  groundDescendDuration: 2
   groundMoveUnitPerPower: 4
   groundMoveMin: 400
   groundMoveMax: 1600
-  starsShrinkDuration: 1.6
-  starsMinScale: 0.3
+  starsShrinkDuration: 2
+  starsMinScale: 1
   earthStartY: -1600
   earthRiseY: -200
   earthRiseDuration: 1.6
   earthHoldBeforeWhite: 0.8
-  whiteFadeDuration: 0.6
+  whiteFadeDuration: 2
 --- !u!1 &2887713998739157768
 GameObject:
   m_ObjectHideFlags: 0
@@ -2225,15 +2227,15 @@ RectTransform:
   m_GameObject: {fileID: 9030932246530403472}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.65, y: 0.65, z: 0.65}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 8460082649547339750}
   m_Father: {fileID: 4237044859519154325}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 100}
+  m_AnchoredPosition: {x: 0, y: 200}
   m_SizeDelta: {x: 2600, y: 1760}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &5400058878962474258

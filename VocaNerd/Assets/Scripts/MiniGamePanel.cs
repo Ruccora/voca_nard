@@ -59,6 +59,10 @@ namespace VocaNerd
         public override async UniTask SetupAsync(CancellationToken token)
         {
             await base.SetupAsync(token);
+
+            // BGM はミニゲームごとに MiniGameData で決める（ScreenController の MiniGame 枠は空にしておく）
+            if (_current != null) Audio.PlayBgm(_current.BgmKey);
+
             if (_innerPanel != null) await _innerPanel.SetupAsync(token);
         }
 

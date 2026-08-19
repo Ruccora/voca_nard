@@ -92,18 +92,63 @@
 
 ---
 
-## 4. AudioManager (`AudioManager.cs`)
+## 4. サウンド (`AudioManager.cs` / `AudioLibrary.cs` / `Audio.cs` / `AudioKeys.cs`)
+
+### 4.0 全体構成
+- **要件**: SE と BGM を再生できる仕組み。呼び出し側は AudioClip を持ち回らず、文字列キーで鳴らす
+- **実装**: 4 レイヤ
+  | ファイル | 役割 |
+  |---|---|
+  | `AudioKeys.cs` | `BgmKey` / `SeKey` の string 定数（`SaveData` と同じ定数クラス方式）。`All` 配列は AudioLibrary 自動生成用 |
+  | `AudioLibrary.cs` | ScriptableObject。キー → AudioClip + 個別音量倍率 の対応表。Dictionary をキャッシュ（`OnValidate` で破棄） |
+  | `AudioManager.cs` | singleton。AudioSource を持ち、ライブラリを引いて実再生 |
+  | `Audio.cs` | スタティック窓口。`AudioManager` 不在なら全て無処理なので呼び出し側は存在チェック不要 |
+
+```csharp
+Audio.PlaySE(SeKey.Decide);
+Audio.PlayBgm(BgmKey.Title);                          // 投げっぱなし
+await Audio.PlayBgmAsync(BgmKey.Select, 1f, token);   // フェード完了まで待つ
+Audio.StopBgm(0.5f);
+```
+
+音源は `Assets/Audio/`（`Assets/Audio/README.md` に追加手順と Import 設定の目安）。
 
 ### 4.1 BGM
 - **要件**: BGM とその再生機構
-- **実装**: `PlayBgmAsync(clip, fadeDuration)` / `StopBgmAsync(fadeDuration)` を提供、AudioSource×2 を使ってクロスフェード
+- **実装**: `PlayBgmAsync(key | clip, fadeDuration)` / `StopBgmAsync(fadeDuration)`、AudioSource×2 でクロスフェード
+- 同じキーが既に鳴っていれば **no-op**（画面遷移で BGM が鳴り直さない）
+- 空キーは no-op = 「BGM 据え置き」の意味
 
 ### 4.2 SE
 - **要件**: SE 再生機構
-- **実装**: `PlaySE(clip, volumeScale)` で `PlayOneShot`、`PlaySEAt` で 3D 再生
+- **実装**: `PlaySE(key | clip, volumeScale)` で `PlayOneShot`（多重再生可）、`PlaySEAt` で 3D 再生
+- 最終音量 = `Master × Se × ライブラリの volumeScale × 引数の volumeScale`
 
 ### 4.3 ボリューム
-- **実装**: MasterVolume / BgmVolume / SeVolume を 0-1 で保持、即時反映
+- **実装**: MasterVolume / BgmVolume / SeVolume を 0-1 で保持、setter で即時反映
+- `persistVolumes` ON（既定）で `SaveData` (PlayerPrefs) に永続化、`Awake` で読み戻す
+- キー: `VocaNerd.Audio.MasterVolume` / `.BgmVolume` / `.SeVolume`
+
+### 4.4 UI ボタン SE の自動化
+- **要件**: 各画面で SE 呼び出しを書かなくても決定音が鳴る
+- **実装**: `PanelBase.Awake` が配下の `Button` 全てに SE リスナーを差す（`autoButtonSe` / `buttonSeKey`）
+  - `base.Awake()` が先に走るので、SE は派生クラスの本処理より先に鳴る
+  - `IsAnimating` 中は鳴らさない
+  - 入れ子 Panel 配下のボタンは所有 Panel 側に任せる（二重登録防止）
+  - 個別に変えたいボタンには `ButtonSeKey` コンポーネントでキーを上書き（空文字 = 無音）。PrefabGenerator は Back ボタンに `SeKey.Cancel` を付ける
+
+### 4.5 カーソル移動 SE の自動化
+- **実装**: `SelectionIndicator.LateUpdate` で選択対象が別 target に移った瞬間に `cursorSeKey` を再生
+  - `Show()` 直後の初回確定（`_lastSelected == null`）は移動ではないので鳴らさない
+
+### 4.6 画面ごとの BGM 自動切替
+- **実装**:
+  - `ScreenController.ScreenEntry.bgmKey` — Title / Select はここで指定。`ShowAsync` が Instantiate 直後に投げっぱなしで再生し、遷移演出と並行してクロスフェードする
+  - `MiniGameData.bgmKey` — ミニゲームは ScriptableObject 側で持ち、`MiniGamePanel.SetupAsync` が再生（ScreenController の MiniGame 枠は**空にしておく**）
+
+### 4.7 ミニゲーム内 SE
+- 自動化対象外。`SeKey.Countdown` / `Start` / `Win` / `Lose` / `Miss` / `Hit` を用意してあるので、
+  各ミニゲームの演出メソッド内から `Audio.PlaySE(...)` を直接呼ぶ
 
 ---
 
@@ -352,7 +397,7 @@ Idle → Intro → Countdown (該当時) → Playing → Winner → WaitForExit 
 - `VocaNerd > Generate Sample Prefabs`
 
 ### 11.2 生成対象 Prefab
-- MainCanvas / BlackFadeOverlay / AudioManager
+- MainCanvas / BlackFadeOverlay / AudioManager（+ `Assets/Data/AudioLibrary.asset`）
 - TitlePanel / SelectPanel / ExplainPanel / MiniGamePanel
 - QuickDrawGame / MashRaceGame / HopscotchRaceGame / BlockDropGame
 - MashRaceFlyObject / HopscotchCell / BlockDropBlock
@@ -391,4 +436,5 @@ Idle → Intro → Countdown (該当時) → Playing → Winner → WaitForExit 
 | ExplainPanel モーダル化 | Screen ではなく SelectPanel 子に |
 | SerializeField Prefab 統一 | ランタイム AddComponent 全廃 |
 | ScreenController の Transition 抽象化 | TransitionIn/OutAsync 抜き出し |
+| サウンドを string キー化 | AudioLibrary(SO) + AudioKeys 定数 + Audio スタティック窓口。UI SE / 画面 BGM を自動化、ボリュームを SaveData 永続化 |
 | Panel In/Out を Transition 外に | 見える演出と隠す演出を分離 |

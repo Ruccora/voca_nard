@@ -16,6 +16,7 @@ Project ビューで右クリック → `Create > VocaNerd > MiniGameData` を 4
 - **Thumbnail**: 選択画面用のサムネ Sprite
 - **Video File Name**: WebGL 用に `Assets/Video/` からコピーする説明動画のファイル名（例: `dance.mp4`）
 - **Video Clip**: Editor / 通常ビルドで再生する説明動画
+- **Bgm Key**: ミニゲーム中の BGM キー（`BgmKey.QuickDraw` などの文字列。空なら BGM 据え置き）
 
 ## 3. Panel Prefab を生成
 
@@ -119,12 +120,40 @@ MainCanvas とは別に **シーン直下に配置**する。コードからは
 
 `AspectFrame` の `ScreenController` の Inspector:
 - **Root**: Panel を Instantiate する親 RectTransform（Canvas 直下でよい）
-- **Screens** 配列に 4 要素:
-  - `Title` → TitlePanel.prefab
-  - `Select` → SelectPanel.prefab
-  - `Explain` → ExplainPanel.prefab
-  - `MiniGame` → MiniGamePanel.prefab
-- **Fade Duration**: 0.25 など
+- **Screens** 配列に 3 要素（Prefab と Bgm Key）:
+  | Type | Prefab | Bgm Key |
+  |---|---|---|
+  | `Title` | TitlePanel.prefab | `bgm_title` |
+  | `Select` | SelectPanel.prefab | `bgm_select` |
+  | `MiniGame` | MiniGamePanel.prefab | **空**（MiniGameData 側で決めるため） |
+- **Bgm Fade Duration**: 0.8 など
+
+`AudioManager.prefab` もシーン直下に置く（`Assets/Data/AudioLibrary.asset` は生成時に自動アサイン済み）。
+
+## 4.5 サウンドのセットアップ
+
+1. **`VocaNerd > Generate > AudioManager (+AudioLibrary)`** を実行
+   → `Assets/Prefabs/AudioManager.prefab` と `Assets/Data/AudioLibrary.asset` が出来る
+   （AudioLibrary は既にあれば作り直さないので、アサインした AudioClip は保持される）
+2. `AudioManager.prefab` をシーン直下にドラッグ
+3. 音源を `Assets/Audio/BGM/` `Assets/Audio/SE/` に入れる（Import 設定の目安は `Assets/Audio/README.md`）
+4. `AudioLibrary.asset` を開き、各行の **Clip** に AudioClip をアサイン
+   - キー行は `AudioKeys.cs` の `BgmKey.All` / `SeKey.All` から自動で並んでいる
+   - 音が大きすぎる素材は行ごとの **Volume Scale** で個別に絞る
+5. キーを増やす場合は `Assets/Scripts/AudioKeys.cs` に定数を足し、AudioLibrary に同じキーの行を追加
+
+これで以下は**コードを書かずに**鳴る:
+
+| 音 | 鳴るタイミング | 変えたい場所 |
+|---|---|---|
+| `se_decide` | 任意の UI ボタン押下 | Panel の `Button Se Key` |
+| `se_cancel` | Back ボタン押下 | そのボタンの `ButtonSeKey` |
+| `se_cursor` | カーソル移動 | `SelectionIndicator` の `Cursor Se Key` |
+| `bgm_title` / `bgm_select` | 画面遷移 | `ScreenController` の Screens |
+| ミニゲームの BGM | ミニゲーム開始 | `MiniGameData` の `Bgm Key` |
+
+ミニゲーム内の SE（カウントダウン・ヒット・勝敗）は自動化していないので、
+各ミニゲームの演出メソッドから `Audio.PlaySE(SeKey.Win)` のように直接呼ぶ。
 
 ## 5. 動作フロー
 

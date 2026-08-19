@@ -139,8 +139,12 @@ namespace VocaNerd.EditorTools
         [MenuItem("VocaNerd/Generate/BlackFadeOverlay")]
         public static void GenerateBlackFadeOverlay() => RunGenerate("BlackFadeOverlay", CreateBlackFadeOverlay);
 
-        [MenuItem("VocaNerd/Generate/AudioManager")]
+        [MenuItem("VocaNerd/Generate/AudioManager (+AudioLibrary)")]
         public static void GenerateAudioManager() => RunGenerate("AudioManager", CreateAudioManager);
+
+        [MenuItem("VocaNerd/Generate/AudioLibrary")]
+        public static void GenerateAudioLibrary()
+            => RunGenerate("AudioLibrary", () => Selection.activeObject = GetOrCreateAudioLibrary());
 
         private static void RunGenerate(string label, Action body)
         {
@@ -302,7 +306,7 @@ namespace VocaNerd.EditorTools
             video.audioOutputMode = VideoAudioOutputMode.Direct;
 
             var playBtn = CreateUIButton(root.transform, "PlayButton", "Play", new Vector2(150, -350));
-            var backBtn = CreateUIButton(root.transform, "BackButton", "Back", new Vector2(-150, -350));
+            var backBtn = CreateUIButton(root.transform, "BackButton", "Back", new Vector2(-150, -350), SeKey.Cancel);
 
             // SelectionIndicator の表示要素 — 選択中のボタンの左に▶を表示、Blink 可能
             var arrowGO = new GameObject("SelectionArrow",
@@ -364,7 +368,7 @@ namespace VocaNerd.EditorTools
             containerRt.sizeDelta = new Vector2(1200, 700);
             containerRt.anchoredPosition = Vector2.zero;
 
-            var backBtn = CreateUIButton(root.transform, "BackButton", "Back", new Vector2(0, -420));
+            var backBtn = CreateUIButton(root.transform, "BackButton", "Back", new Vector2(0, -420), SeKey.Cancel);
 
             AssignField(panel, "canvasGroup", root.GetComponent<CanvasGroup>());
             AssignField(panel, "defaultSelected", backBtn);
@@ -458,30 +462,22 @@ namespace VocaNerd.EditorTools
             tiltRt.anchoredPosition = Vector2.zero;
             tiltRt.localEulerAngles = new Vector3(0f, 0f, tilt);
 
-            // 黒い線 (Tilt 内では水平 → 画面上は 20°)
-            var lineGO = new GameObject("Line", typeof(RectTransform), typeof(Image));
-            lineGO.transform.SetParent(tiltGO.transform, false);
-            var lineRt = (RectTransform)lineGO.transform;
-            lineRt.anchorMin = new Vector2(0.5f, 0.5f);
-            lineRt.anchorMax = new Vector2(0.5f, 0.5f);
-            lineRt.sizeDelta = new Vector2(3000f, 24f);
-            lineRt.anchoredPosition = Vector2.zero;
-            var lineImg = lineGO.GetComponent<Image>();
-            lineImg.color = Color.black;
-            lineImg.raycastTarget = false;
+            // 斜めの黒線を Mask(回転対応) でクリップし、左右から入れて中央で合流。
+            // マスク窓は固定。中の線バーがスライドして「端→中央」にワイプ描画される。
+            var lineColor = Color.black;
+            const float half = 1600f;
+            var leftClip = CreateMikiriClip(tiltGO.transform, "LeftClip", new Vector2(-half * 0.5f, 0f), new Vector2(half, 2000f));
+            var rightClip = CreateMikiriClip(tiltGO.transform, "RightClip", new Vector2(half * 0.5f, 0f), new Vector2(half, 2000f));
+            var leftMask = CreateMikiriLineBar(leftClip, "LeftLine", lineColor);
+            var rightMask = CreateMikiriLineBar(rightClip, "RightLine", lineColor);
 
-            // カバー(マスク) 2枚。逆方向 (-20°) に傾けて画面に対して真っ直ぐにする。
-            var coverColor = new Color(0.06f, 0.06f, 0.09f); // TODO: 背景色に合わせる
-            var leftMask = CreateMikiriCover(tiltGO.transform, "LeftMask", coverColor, -tilt);
-            var rightMask = CreateMikiriCover(tiltGO.transform, "RightMask", coverColor, -tilt);
-
-            // Closed=線を覆う / Open=露出 / Exit=左右へはける (暫定値。Inspector で詰める)
-            var leftClosed = new Vector2(-900f, 0f);
-            var leftOpen = new Vector2(-1900f, 0f);
-            var leftExit = new Vector2(-3400f, 0f);
-            var rightClosed = new Vector2(900f, 0f);
-            var rightOpen = new Vector2(1900f, 0f);
-            var rightExit = new Vector2(3400f, 0f);
+            // 位置はクリップ窓ローカル。Closed=窓外(クリップされ不可視) → Open=窓を満たす(線が描かれる) → Exit=反対へ抜けて消える
+            var leftClosed = new Vector2(-half, 0f);
+            var leftOpen = Vector2.zero;
+            var leftExit = new Vector2(half, 0f);
+            var rightClosed = new Vector2(half, 0f);
+            var rightOpen = Vector2.zero;
+            var rightExit = new Vector2(-half, 0f);
             leftMask.anchoredPosition = leftClosed;
             rightMask.anchoredPosition = rightClosed;
 
@@ -498,15 +494,33 @@ namespace VocaNerd.EditorTools
             SavePrefab(root);
         }
 
-        private static RectTransform CreateMikiriCover(Transform parent, string name, Color color, float zRotation)
+        // 線をワイプ描画するためのマスク窓 (Mask, 回転対応)。中の線バーをクリップする。
+        private static Transform CreateMikiriClip(Transform parent, string name, Vector2 anchoredPos, Vector2 size)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Mask));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = size;
+            rt.anchoredPosition = anchoredPos;
+            var img = go.GetComponent<Image>();
+            img.color = Color.white;      // マスク形状 (矩形)
+            img.raycastTarget = false;
+            go.GetComponent<Mask>().showMaskGraphic = false; // 窓自体は描画しない
+            return go.transform;
+        }
+
+        // 黒線を描く「線バー」(半分ぶん)。Tilt(+20°) を継承して斜めのまま。
+        private static RectTransform CreateMikiriLineBar(Transform parent, string name, Color color)
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(Image));
             go.transform.SetParent(parent, false);
             var rt = (RectTransform)go.transform;
             rt.anchorMin = new Vector2(0.5f, 0.5f);
             rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = new Vector2(2000f, 2600f);
-            rt.localEulerAngles = new Vector3(0f, 0f, zRotation);
+            rt.sizeDelta = new Vector2(1600f, 24f);
             var img = go.GetComponent<Image>();
             img.color = color;
             img.raycastTarget = false;
@@ -1169,8 +1183,54 @@ namespace VocaNerd.EditorTools
             AssignField(manager, "bgmSourceA", bgmA);
             AssignField(manager, "bgmSourceB", bgmB);
             AssignField(manager, "seSource", se);
+            AssignField(manager, "library", GetOrCreateAudioLibrary());
 
             SavePrefab(root);
+        }
+
+        /// <summary>
+        /// Assets/Data/AudioLibrary.asset を取得する。無ければ BgmKey / SeKey の既定キーで
+        /// 行だけ並べた空アセットを作る。既にあるものは AudioClip のアサインを壊さないよう手を付けない。
+        /// </summary>
+        private static AudioLibrary GetOrCreateAudioLibrary()
+        {
+            const string dir = "Assets/Data";
+            const string path = dir + "/AudioLibrary.asset";
+
+            var existing = AssetDatabase.LoadAssetAtPath<AudioLibrary>(path);
+            if (existing != null) return existing;
+
+            if (!AssetDatabase.IsValidFolder(dir))
+                AssetDatabase.CreateFolder("Assets", "Data");
+
+            var library = ScriptableObject.CreateInstance<AudioLibrary>();
+            var so = new SerializedObject(library);
+            FillAudioEntries(so, "bgmEntries", BgmKey.All);
+            FillAudioEntries(so, "seEntries", SeKey.All);
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            AssetDatabase.CreateAsset(library, path);
+            Debug.Log($"[PrefabGenerator] AudioLibrary created at {path} (AudioClip は手でアサインすること)");
+            return library;
+        }
+
+        private static void FillAudioEntries(SerializedObject so, string fieldName, string[] keys)
+        {
+            var arr = so.FindProperty(fieldName);
+            if (arr == null)
+            {
+                Debug.LogError($"Field '{fieldName}' not found on AudioLibrary");
+                return;
+            }
+
+            arr.arraySize = keys.Length;
+            for (var i = 0; i < keys.Length; i++)
+            {
+                var element = arr.GetArrayElementAtIndex(i);
+                element.FindPropertyRelative("key").stringValue = keys[i];
+                element.FindPropertyRelative("clip").objectReferenceValue = null;
+                element.FindPropertyRelative("volumeScale").floatValue = 1f;
+            }
         }
 
         private static AudioSource CreateAudioSourceChild(Transform parent, string name, bool loop, float volume)
@@ -1196,10 +1256,18 @@ namespace VocaNerd.EditorTools
             return go;
         }
 
-        private static Button CreateUIButton(Transform parent, string name, string label, Vector2 anchoredPos)
+        /// <param name="seKey">
+        /// 押下 SE を既定 (SeKey.Decide) 以外にしたい場合のキー。指定すると ButtonSeKey が付く。
+        /// </param>
+        private static Button CreateUIButton(Transform parent, string name, string label, Vector2 anchoredPos, string seKey = null)
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
             go.transform.SetParent(parent, false);
+            if (seKey != null)
+            {
+                var seOverride = go.AddComponent<ButtonSeKey>();
+                AssignString(seOverride, "key", seKey);
+            }
             var rt = (RectTransform)go.transform;
             rt.sizeDelta = new Vector2(220, 80);
             rt.anchoredPosition = anchoredPos;
@@ -1254,6 +1322,19 @@ namespace VocaNerd.EditorTools
                 return;
             }
             prop.objectReferenceValue = value;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void AssignString(UnityEngine.Object target, string fieldName, string value)
+        {
+            var so = new SerializedObject(target);
+            var prop = so.FindProperty(fieldName);
+            if (prop == null)
+            {
+                Debug.LogError($"Field '{fieldName}' not found on {target.GetType().Name}");
+                return;
+            }
+            prop.stringValue = value;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

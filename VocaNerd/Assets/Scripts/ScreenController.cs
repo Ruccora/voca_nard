@@ -19,10 +19,14 @@ namespace VocaNerd
         {
             public ScreenType type;
             public GameObject prefab;
+
+            [Tooltip("この画面へ遷移したときに流す BGM キー（BgmKey の定数）。空なら BGM を触らない")]
+            public string bgmKey;
         }
 
         [SerializeField] private ScreenEntry[] screens;
         [SerializeField] private RectTransform root;
+        [SerializeField] private float bgmFadeDuration = 0.8f;
 
         private GameObject _current;
         private CancellationTokenSource _transitionCts;
@@ -55,12 +59,17 @@ namespace VocaNerd
             var outPanel = outgoing != null ? outgoing.GetComponent<PanelBase>() : null;
 
             // 1) 新Panel 生成 (旧 Panel はまだ生きている)
-            var prefab = FindPrefab(next);
+            var entry = FindEntry(next);
+            var prefab = entry != null ? entry.prefab : null;
             if (prefab == null) throw new InvalidOperationException($"Prefab not registered for screen: {next}");
             var instance = Instantiate(prefab, root != null ? root : (RectTransform)transform);
             _current = instance;
 
             onInstantiated?.Invoke(instance);
+
+            // BGM は遷移演出と並行してクロスフェードさせる（待たない）。
+            // 空キーなら据え置き = Panel 側 (MiniGamePanel など) が自分で決める。
+            Audio.PlayBgm(entry.bgmKey, bgmFadeDuration);
 
             var inPanel = instance.GetComponent<PanelBase>();
             if (inPanel != null)
@@ -89,11 +98,11 @@ namespace VocaNerd
             if (outgoing != null) Destroy(outgoing);
         }
 
-        private GameObject FindPrefab(ScreenType type)
+        private ScreenEntry FindEntry(ScreenType type)
         {
             foreach (var entry in screens)
             {
-                if (entry.type == type) return entry.prefab;
+                if (entry.type == type) return entry;
             }
             return null;
         }
