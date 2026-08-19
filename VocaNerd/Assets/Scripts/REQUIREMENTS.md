@@ -111,7 +111,7 @@
 
 - **要件**: ScriptableObject でミニゲーム情報を保持、prefab 参照を含む
 - **実装**: `[CreateAssetMenu(menuName = "VocaNerd/MiniGameData")]`
-  - Title / Description / Thumbnail / VideoClip / MiniGamePrefab
+  - Title / Description / Thumbnail / VideoFileName / VideoClip / MiniGamePrefab
 
 ---
 

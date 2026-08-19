@@ -14,7 +14,8 @@ Project ビューで右クリック → `Create > VocaNerd > MiniGameData` を 4
 - **Title**: ミニゲーム名
 - **Description**: 説明文
 - **Thumbnail**: 選択画面用のサムネ Sprite
-- **VideoClip**: 説明画面で流す .mp4（Import すると VideoClip として扱われる）
+- **Video File Name**: WebGL 用に `Assets/Video/` からコピーする説明動画のファイル名（例: `dance.mp4`）
+- **Video Clip**: Editor / 通常ビルドで再生する説明動画
 
 ## 3. Panel Prefab を生成
 
