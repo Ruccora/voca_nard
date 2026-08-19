@@ -47,6 +47,86 @@ namespace VocaNerd.EditorTools
         [MenuItem("VocaNerd/Generate/QuickDrawGame")]
         public static void GenerateQuickDrawGame() => RunGenerate("QuickDrawGame", CreateQuickDrawGame);
 
+        [MenuItem("VocaNerd/Generate/MikiriOpening")]
+        public static void GenerateMikiriOpening() => RunGenerate("MikiriOpening", CreateMikiriOpening);
+
+        // 既存 QuickDrawGame プレハブ(手編集)をその場パッチ: P1C=Miku / P2C=Teto の勝利アニメを組み込む
+        [MenuItem("VocaNerd/Patch/QuickDraw Win Anim (Miku_Teto)")]
+        public static void PatchQuickDrawWinAnim()
+        {
+            var path = $"{PrefabDir}/QuickDrawGame.prefab";
+            var root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                var game = root.GetComponentInChildren<QuickDrawGame>(true);
+                var p1c = FindDescendant(root.transform, "P1C");
+                var p2c = FindDescendant(root.transform, "P2C");
+                if (game == null || p1c == null || p2c == null)
+                {
+                    Debug.LogError($"[Patch] not found: game={game != null}, P1C={p1c != null}, P2C={p2c != null}");
+                    return;
+                }
+
+                var miku = LoadSpritesInFolder("Assets/Texture/QuickDrawGame/Miku", "miku_motion");
+                var teto = LoadSpritesInFolder("Assets/Texture/QuickDrawGame/Teto", "teto_motion");
+
+                var p1Anim = SetupWinAnim(p1c.gameObject, miku);
+                var p2Anim = SetupWinAnim(p2c.gameObject, teto);
+                AssignField(game, "player1WinAnim", p1Anim);
+                AssignField(game, "player2WinAnim", p2Anim);
+
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+                Debug.Log($"[Patch] QuickDraw win anim done: Miku={miku.Length}, Teto={teto.Length}");
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        private static SpriteAnimation SetupWinAnim(GameObject go, Sprite[] frames)
+        {
+            var img = go.GetComponent<Image>();
+            if (img == null) img = go.AddComponent<Image>();
+            var anim = go.GetComponent<SpriteAnimation>();
+            if (anim == null) anim = go.AddComponent<SpriteAnimation>();
+            AssignField(anim, "image", img);
+            AssignArray(anim, "sprites", frames);
+            AssignFloat(anim, "frameDuration", 0.06f);
+            AssignBool(anim, "loop", false);       // 最後まで再生して停止 (完了検知)
+            AssignBool(anim, "playOnAwake", false); // 勝った時だけ再生
+            return anim;
+        }
+
+        private static Transform FindDescendant(Transform root, string name)
+        {
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                if (t.name == name) return t;
+            return null;
+        }
+
+        // フォルダ内の指定プレフィックスの Sprite を名前順で読み込む
+        private static Sprite[] LoadSpritesInFolder(string folder, string prefix)
+        {
+            var guids = AssetDatabase.FindAssets("t:Texture2D", new[] { folder });
+            var paths = new System.Collections.Generic.List<string>();
+            foreach (var g in guids)
+            {
+                var p = AssetDatabase.GUIDToAssetPath(g);
+                if (System.IO.Path.GetFileNameWithoutExtension(p).StartsWith(prefix))
+                    paths.Add(p);
+            }
+            paths.Sort(System.StringComparer.Ordinal);
+
+            var list = new System.Collections.Generic.List<Sprite>();
+            foreach (var p in paths)
+            {
+                var sp = LoadSprite(p);
+                if (sp != null) list.Add(sp);
+            }
+            return list.ToArray();
+        }
+
         [MenuItem("VocaNerd/Generate/MashRaceGame")]
         public static void GenerateMashRaceGame() => RunGenerate("MashRaceGame", CreateMashRaceGame);
 
@@ -359,10 +439,82 @@ namespace VocaNerd.EditorTools
             SavePrefab(root);
         }
 
+        // 刹那の見切りの開始演出 (別 prefab)。QuickDrawGame に手動で当てこむ。
+        private static void CreateMikiriOpening()
+        {
+            const float tilt = 20f;
+
+            var root = new GameObject("MikiriOpening", typeof(RectTransform), typeof(MikiriOpeningEffect));
+            StretchFull((RectTransform)root.transform);
+            var fx = root.GetComponent<MikiriOpeningEffect>();
+
+            // 斜め用の傾いた土台 (+20°)。この中は水平に組む。
+            var tiltGO = new GameObject("Tilt", typeof(RectTransform));
+            tiltGO.transform.SetParent(root.transform, false);
+            var tiltRt = (RectTransform)tiltGO.transform;
+            tiltRt.anchorMin = new Vector2(0.5f, 0.5f);
+            tiltRt.anchorMax = new Vector2(0.5f, 0.5f);
+            tiltRt.sizeDelta = new Vector2(3000f, 2400f);
+            tiltRt.anchoredPosition = Vector2.zero;
+            tiltRt.localEulerAngles = new Vector3(0f, 0f, tilt);
+
+            // 黒い線 (Tilt 内では水平 → 画面上は 20°)
+            var lineGO = new GameObject("Line", typeof(RectTransform), typeof(Image));
+            lineGO.transform.SetParent(tiltGO.transform, false);
+            var lineRt = (RectTransform)lineGO.transform;
+            lineRt.anchorMin = new Vector2(0.5f, 0.5f);
+            lineRt.anchorMax = new Vector2(0.5f, 0.5f);
+            lineRt.sizeDelta = new Vector2(3000f, 24f);
+            lineRt.anchoredPosition = Vector2.zero;
+            var lineImg = lineGO.GetComponent<Image>();
+            lineImg.color = Color.black;
+            lineImg.raycastTarget = false;
+
+            // カバー(マスク) 2枚。逆方向 (-20°) に傾けて画面に対して真っ直ぐにする。
+            var coverColor = new Color(0.06f, 0.06f, 0.09f); // TODO: 背景色に合わせる
+            var leftMask = CreateMikiriCover(tiltGO.transform, "LeftMask", coverColor, -tilt);
+            var rightMask = CreateMikiriCover(tiltGO.transform, "RightMask", coverColor, -tilt);
+
+            // Closed=線を覆う / Open=露出 / Exit=左右へはける (暫定値。Inspector で詰める)
+            var leftClosed = new Vector2(-900f, 0f);
+            var leftOpen = new Vector2(-1900f, 0f);
+            var leftExit = new Vector2(-3400f, 0f);
+            var rightClosed = new Vector2(900f, 0f);
+            var rightOpen = new Vector2(1900f, 0f);
+            var rightExit = new Vector2(3400f, 0f);
+            leftMask.anchoredPosition = leftClosed;
+            rightMask.anchoredPosition = rightClosed;
+
+            AssignField(fx, "leftMask", leftMask);
+            AssignField(fx, "rightMask", rightMask);
+            AssignVector2(fx, "leftClosed", leftClosed);
+            AssignVector2(fx, "leftOpen", leftOpen);
+            AssignVector2(fx, "leftExit", leftExit);
+            AssignVector2(fx, "rightClosed", rightClosed);
+            AssignVector2(fx, "rightOpen", rightOpen);
+            AssignVector2(fx, "rightExit", rightExit);
+
+            root.SetActive(false); // 通常は非表示。再生時に PlayAsync が有効化。
+            SavePrefab(root);
+        }
+
+        private static RectTransform CreateMikiriCover(Transform parent, string name, Color color, float zRotation)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(2000f, 2600f);
+            rt.localEulerAngles = new Vector3(0f, 0f, zRotation);
+            var img = go.GetComponent<Image>();
+            img.color = color;
+            img.raycastTarget = false;
+            return rt;
+        }
+
         private static void CreateMashRaceGame()
         {
-            var flyObjectPrefab = CreateFlyObjectPrefab();
-
             var root = new GameObject("MashRaceGame", typeof(RectTransform), typeof(CanvasGroup));
             var rt = (RectTransform)root.transform;
             rt.anchorMin = Vector2.zero;
@@ -371,40 +523,63 @@ namespace VocaNerd.EditorTools
             rt.offsetMax = Vector2.zero;
             var game = root.AddComponent<MashRaceGame>();
 
-            // Player 1 area (left half)
-            var p1Area = CreateHalfAreaVertical(root.transform, "Player1Area", isLeft: true);
-            CreateSolidBase(p1Area, "P1Base", new Color(0.15f, 0.25f, 0.45f));
-            var p1Bg = CreateBackgroundLayer(p1Area, "P1Background");
-            var p1ObjLayer = CreateObjectLayer(p1Area, "P1ObjectLayer");
-            CreateTMPText(p1Area, "P1Label", "P1 (A / D)", new Vector2(0, 520), 36);
-            var p1Fly = CreateFlyIcon(p1Area, "P1FlyIcon", new Color(0.4f, 0.7f, 1f), new Vector2(0, -500));
-            var (_, p1MissGroup) = CreateMissBadge(p1Area, "P1Miss", new Vector2(0, 380));
+            // ---- 共有背景 (全画面) ----
+            var bg = new GameObject("Background", typeof(RectTransform));
+            bg.transform.SetParent(root.transform, false);
+            StretchFull((RectTransform)bg.transform);
 
-            // Player 2 area (right half)
-            var p2Area = CreateHalfAreaVertical(root.transform, "Player2Area", isLeft: false);
-            CreateSolidBase(p2Area, "P2Base", new Color(0.4f, 0.2f, 0.2f));
-            var p2Bg = CreateBackgroundLayer(p2Area, "P2Background");
-            var p2ObjLayer = CreateObjectLayer(p2Area, "P2ObjectLayer");
-            CreateTMPText(p2Area, "P2Label", "P2 (← / →)", new Vector2(0, 520), 36);
-            var p2Fly = CreateFlyIcon(p2Area, "P2FlyIcon", new Color(1f, 0.5f, 0.4f), new Vector2(0, -500));
-            var (_, p2MissGroup) = CreateMissBadge(p2Area, "P2Miss", new Vector2(0, 380));
+            // 星 (BACK): 中央・正方形。Z 回転し続け、後半ゆっくり縮小
+            var stars = CreateBgImage(bg.transform, "Stars", "Assets/Texture/MashRace/BACK.jpg",
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(1600, 1600));
 
-            // Divider line at center (vertical)
-            var dividerGO = new GameObject("Divider", typeof(RectTransform), typeof(Image));
-            dividerGO.transform.SetParent(root.transform, false);
-            var divRt = (RectTransform)dividerGO.transform;
-            divRt.anchorMin = new Vector2(0.5f, 0);
-            divRt.anchorMax = new Vector2(0.5f, 1);
-            divRt.sizeDelta = new Vector2(4, 0);
-            divRt.anchoredPosition = Vector2.zero;
-            dividerGO.GetComponent<Image>().color = new Color(0.8f, 0.8f, 0.8f, 1f);
+            // 地面 (machi): 下起点アンカー (pivot/anchor 下中央)。上昇→縮小→下降で消える
+            var ground = CreateBgImage(bg.transform, "Ground", "Assets/Texture/MashRace/machi.png",
+                new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(2600, 1760));
 
-            // Center overlays
+            // 地球 (earth): 中央・正方形。下から競り上がる (初期は下 & 非表示)
+            var earth = CreateBgImage(bg.transform, "Earth", "Assets/Texture/MashRace/earth.png",
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(1100, 1100));
+            ((RectTransform)earth.transform).anchoredPosition = new Vector2(0, -1600);
+            earth.SetActive(false);
+
+            // ---- 白 fadein オーバーレイ (背景の直上 = キャラより下) ----
+            // 白到達後もキャラは白の上に残って回転するので、白は背景だけを覆う
+            var whiteGO = new GameObject("WhiteFade", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
+            whiteGO.transform.SetParent(root.transform, false);
+            StretchFull((RectTransform)whiteGO.transform);
+            var whiteImg = whiteGO.GetComponent<Image>();
+            whiteImg.color = Color.white;
+            whiteImg.raycastTarget = false;
+            var whiteGroup = whiteGO.GetComponent<CanvasGroup>();
+            whiteGroup.alpha = 0f;
+            whiteGroup.blocksRaycasts = false;
+
+            // ---- 自キャラ (SpriteAnimation) ----
+            var rukaFrames = LoadSprites(new[]
+            {
+                "Assets/Texture/MashRace/ruka_01.png",
+                "Assets/Texture/MashRace/ruka_02.png",
+                "Assets/Texture/MashRace/ruka_03.png",
+                "Assets/Texture/MashRace/ruka_04.png",
+                "Assets/Texture/MashRace/ruka_05.png",
+            });
+            var (p1Char, p1Anim) = CreateSpriteAnimCharacter(root.transform, "P1Character", rukaFrames, new Vector2(-420, -500));
+            var (p2Char, p2Anim) = CreateSpriteAnimCharacter(root.transform, "P2Character", rukaFrames, new Vector2(420, -500));
+
+            // ラベル
+            CreateTMPText(root.transform, "P1Label", "P1 (A / D)", new Vector2(-420, 520), 32);
+            CreateTMPText(root.transform, "P2Label", "P2 (← / →)", new Vector2(420, 520), 32);
+
+            // Miss バッジ
+            var (_, p1MissGroup) = CreateMissBadge(root.transform, "P1Miss", new Vector2(-420, 360));
+            var (_, p2MissGroup) = CreateMissBadge(root.transform, "P2Miss", new Vector2(420, 360));
+
+            // ---- 中央オーバーレイ ----
             var introText = CreateTMPText(root.transform, "IntroText", "", Vector2.zero, 72);
             var countdownText = CreateTMPText(root.transform, "CountdownText", "", Vector2.zero, 128);
             var timerText = CreateTMPText(root.transform, "TimerText", "10.0", new Vector2(0, -560), 48);
 
-            // Result group
+            // ---- Result ----
             var resultGO = new GameObject("Result", typeof(RectTransform), typeof(CanvasGroup));
             resultGO.transform.SetParent(root.transform, false);
             var resultRt = (RectTransform)resultGO.transform;
@@ -417,6 +592,7 @@ namespace VocaNerd.EditorTools
             var winnerText = CreateTMPText(resultGO.transform, "WinnerText", "", new Vector2(0, 60), 72);
             var againBtn = CreateUIButton(resultGO.transform, "PlayAgainButton", "Play Again", new Vector2(0, -100));
 
+            // ---- Assign ----
             AssignField(game, "canvasGroup", root.GetComponent<CanvasGroup>());
             AssignField(game, "introText", introText);
             AssignField(game, "countdownText", countdownText);
@@ -424,17 +600,126 @@ namespace VocaNerd.EditorTools
             AssignField(game, "resultGroup", resultGroup);
             AssignField(game, "winnerText", winnerText);
             AssignField(game, "playAgainButton", againBtn);
-            AssignField(game, "player1FlyIcon", p1Fly);
-            AssignField(game, "player1Background", p1Bg);
-            AssignField(game, "player1ObjectLayer", p1ObjLayer);
+            AssignField(game, "starsRect", (RectTransform)stars.transform);
+            AssignField(game, "groundRect", (RectTransform)ground.transform);
+            AssignField(game, "earthRect", (RectTransform)earth.transform);
+            AssignField(game, "whiteFade", whiteGroup);
+            AssignField(game, "player1Character", p1Char);
+            AssignField(game, "player2Character", p2Char);
+            AssignField(game, "player1Anim", p1Anim);
+            AssignField(game, "player2Anim", p2Anim);
             AssignField(game, "player1MissGroup", p1MissGroup);
-            AssignField(game, "player2FlyIcon", p2Fly);
-            AssignField(game, "player2Background", p2Bg);
-            AssignField(game, "player2ObjectLayer", p2ObjLayer);
             AssignField(game, "player2MissGroup", p2MissGroup);
-            AssignField(game, "flyObjectPrefab", flyObjectPrefab);
 
             SavePrefab(root);
+        }
+
+        private static void StretchFull(RectTransform rt)
+        {
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+        }
+
+        private static GameObject CreateBgImage(Transform parent, string name, string spritePath,
+            Vector2 pivot, Vector2 anchor, Vector2 size)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = anchor;
+            rt.anchorMax = anchor;
+            rt.pivot = pivot;
+            rt.sizeDelta = size;
+            rt.anchoredPosition = Vector2.zero;
+            var img = go.GetComponent<Image>();
+            img.sprite = LoadSprite(spritePath);
+            img.raycastTarget = false;
+            img.preserveAspect = true;
+            return go;
+        }
+
+        private static (RectTransform rt, SpriteAnimation anim) CreateSpriteAnimCharacter(
+            Transform parent, string name, Sprite[] frames, Vector2 anchoredPos)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(SpriteAnimation));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            rt.sizeDelta = new Vector2(220, 320);
+            rt.anchoredPosition = anchoredPos;
+            var img = go.GetComponent<Image>();
+            img.raycastTarget = false;
+            img.preserveAspect = true;
+            if (frames != null && frames.Length > 0) img.sprite = frames[0];
+
+            var anim = go.GetComponent<SpriteAnimation>();
+            AssignField(anim, "image", img);
+            AssignArray(anim, "sprites", frames);
+            AssignFloat(anim, "frameDuration", 0.12f);
+            AssignBool(anim, "loop", true);
+            AssignBool(anim, "playOnAwake", true);
+            return (rt, anim);
+        }
+
+        private static Sprite LoadSprite(string path)
+        {
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (sprite != null) return sprite;
+
+            // Multiple モード等でメインが Sprite でない場合はサブアセットを探す
+            foreach (var rep in AssetDatabase.LoadAllAssetRepresentationsAtPath(path))
+                if (rep is Sprite s) return s;
+
+            // それでも取れなければ Sprite(Single) に矯正して再インポート
+            if (AssetImporter.GetAtPath(path) is TextureImporter importer)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.SaveAndReimport();
+                return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            }
+
+            Debug.LogWarning($"[PrefabGenerator] Sprite not found: {path}");
+            return null;
+        }
+
+        private static Sprite[] LoadSprites(string[] paths)
+        {
+            var list = new System.Collections.Generic.List<Sprite>();
+            foreach (var p in paths)
+            {
+                var s = LoadSprite(p);
+                if (s != null) list.Add(s);
+            }
+            return list.ToArray();
+        }
+
+        private static void AssignFloat(UnityEngine.Object target, string fieldName, float value)
+        {
+            var so = new SerializedObject(target);
+            var prop = so.FindProperty(fieldName);
+            if (prop == null) return;
+            prop.floatValue = value;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void AssignBool(UnityEngine.Object target, string fieldName, bool value)
+        {
+            var so = new SerializedObject(target);
+            var prop = so.FindProperty(fieldName);
+            if (prop == null) return;
+            prop.boolValue = value;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void AssignVector2(UnityEngine.Object target, string fieldName, Vector2 value)
+        {
+            var so = new SerializedObject(target);
+            var prop = so.FindProperty(fieldName);
+            if (prop == null) return;
+            prop.vector2Value = value;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void CreateSolidBase(Transform parent, string name, Color color)

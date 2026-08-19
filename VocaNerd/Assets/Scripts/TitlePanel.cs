@@ -1,6 +1,7 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace VocaNerd
@@ -36,6 +37,28 @@ namespace VocaNerd
             isStart = true;
             startButton.onClick.AddListener(OnStart);
             exitButton.onClick.AddListener(OnExit);
+        }
+
+        private void Update()
+        {
+            CheckClearSaveDataShortcut();
+        }
+
+        // タイトル画面で ⌘(Ctrl) + Ctrl + D を押すとセーブデータを全削除するデバッグ用ショートカット。
+        private void CheckClearSaveDataShortcut()
+        {
+            var kb = Keyboard.current;
+            if (kb == null) return;
+
+            var cmd = kb.leftCommandKey.isPressed || kb.rightCommandKey.isPressed;
+            var ctrl = kb.leftCtrlKey.isPressed || kb.rightCtrlKey.isPressed;
+            if (cmd && ctrl && kb.dKey.wasPressedThisFrame)
+            {
+                SaveData.ClearGame(SaveData.GameId.BlockDrop);
+                SaveData.ClearGame(SaveData.GameId.HopscotchRace);
+                SaveData.ClearGame(SaveData.GameId.MashRace);
+                Debug.Log("[Title] Save data cleared.");
+            }
         }
 
         private void OnStart()

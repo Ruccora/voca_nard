@@ -1367,7 +1367,7 @@ MonoBehaviour:
   goalHoldDuration: 1
   characterAnchor: {x: -170, y: -350}
   cellStepOffset: {x: 60, y: 130}
-  scaleFalloff: 0.93
+  scaleFalloff: 0.882
   maxVisibleAhead: 10
   visibleBehind: 2
   jumpHeight: 80

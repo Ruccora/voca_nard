@@ -1,3 +1,4 @@
+using Coffee.UIEffects;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -7,6 +8,14 @@ namespace VocaNerd.EditorTools
 {
     public static partial class PrefabGenerator
     {
+        // セル配下の全 Graphic に UIEffect をベイク (奥行きの明暗 SetDarken 用)
+        private static void AddUIEffectToGraphics(GameObject root)
+        {
+            foreach (var g in root.GetComponentsInChildren<Graphic>(true))
+                if (g.GetComponent<UIEffect>() == null)
+                    g.gameObject.AddComponent<UIEffect>();
+        }
+
         // -------- MashRaceFlyObject --------
         private static MashRaceFlyObject CreateFlyObjectPrefab()
         {
@@ -105,6 +114,8 @@ namespace VocaNerd.EditorTools
             AssignField(cell, "secondaryRect", srt);
             AssignField(cell, "secondaryToggleMark", secondaryToggleImg);
 
+            AddUIEffectToGraphics(tmp);
+
             var path = $"{PrefabDir}/HopscotchCell.prefab";
             var saved = PrefabUtility.SaveAsPrefabAsset(tmp, path);
             UnityEngine.Object.DestroyImmediate(tmp);
@@ -126,6 +137,8 @@ namespace VocaNerd.EditorTools
 
             var cell = tmp.GetComponent<HopscotchCell>();
             AssignField(cell, "background", bg);
+
+            AddUIEffectToGraphics(tmp);
 
             var path = $"{PrefabDir}/HopscotchStartCell.prefab";
             var saved = PrefabUtility.SaveAsPrefabAsset(tmp, path);

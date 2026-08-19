@@ -70,16 +70,17 @@ namespace VocaNerd
         [SerializeField] private float countdownStep = 1f;
         [SerializeField] private float goalHoldDuration = 1f;
 
-        [Header("Perspective")]
-        [SerializeField] private Vector2 characterAnchor = new Vector2(-250f, -400f);
-        [SerializeField] private Vector2 cellStepOffset = new Vector2(70f, 70f);
-        [SerializeField, Range(0.5f, 1f)] private float scaleFalloff = 0.85f;
-        [SerializeField, Min(1)] private int maxVisibleAhead = 10;
-        [SerializeField, Min(0)] private int visibleBehind = 2;
+        [Header("Depth (DOOM64-style)")]
+        [SerializeField, Min(1)] private int visibleAhead = 4;                    // 前方に見せる障害物数 (敵4体)
+        [SerializeField, Min(0)] private int visibleBehind = 0;
+        [SerializeField] private Vector2 nearSlotOffset = new Vector2(0f, 0f);    // 最手前(足元)スロットの相対位置
+        [SerializeField] private Vector2 vanishingOffset = new Vector2(0f, 480f); // 消失点の相対位置 (奥・画面中央上)
+        [SerializeField, Range(0.3f, 1f)] private float depthFalloff = 0.72f;     // 1段奥ごとのスケール
+        [SerializeField, Range(0f, 1f)] private float darkSlot3 = 0.7f;           // 3体目の明暗 (Multiply)
+        [SerializeField, Range(0f, 1f)] private float darkSlot4 = 0.45f;          // 4体目の明暗 (Multiply)
 
         [Header("Character Jump")]
         [SerializeField] private float jumpHeight = 80f;
-        [SerializeField] private Vector2 feetOffset = new Vector2(0f, -60f);
 
         private Phase _phase;
 
@@ -195,8 +196,8 @@ namespace VocaNerd
                 ResetPlayerStates();
                 GenerateCourse();
                 SpawnCells();
-                RefreshCells(_p1Cells, _p1.position, _p1CharacterRest);
-                RefreshCells(_p2Cells, _p2.position, _p2CharacterRest);
+                RefreshCells(_p1Cells, _p1.position, _p1CharacterRest, player1Character);
+                RefreshCells(_p2Cells, _p2.position, _p2CharacterRest, player2Character);
 
                 await PlayIntroEffectAsync(token);
                 await PlayCountdownAsync(token);
@@ -275,29 +276,48 @@ namespace VocaNerd
         // -------- Perspective rendering --------
         // cells[0] は start cell (virtual course index -1)
         // cells[1..] は _course[0..cellCount-1] に対応
-        private void RefreshCells(List<HopscotchCell> cells, float currentPosition, Vector2 anchor)
+        private void RefreshCells(List<HopscotchCell> cells, float currentPosition, Vector2 anchor, RectTransform character)
         {
-            var feetAnchor = anchor + feetOffset;
+            var near = anchor + nearSlotOffset;
+            var vanish = anchor + vanishingOffset;
+            var span = Mathf.Max(1, visibleAhead);
+
             for (var i = 0; i < cells.Count; i++)
             {
                 var cell = cells[i];
                 if (cell == null) continue;
-                // cell at cells[i] represents course index (i - 1)
-                // → cell が currentPosition と一致 (足元) のとき distance = 0
+                // cells[i] = course index (i - 1)。distance 0 = 足元, 正 = 前方
                 var virtualIndex = i - 1;
                 var distance = virtualIndex - currentPosition;
 
-                if (distance < -(visibleBehind + 0.5f) || distance > maxVisibleAhead)
+                if (distance < -(visibleBehind + 0.5f) || distance > visibleAhead + 0.5f)
                 {
                     if (cell.gameObject.activeSelf) cell.gameObject.SetActive(false);
                     continue;
                 }
                 if (!cell.gameObject.activeSelf) cell.gameObject.SetActive(true);
 
-                var scale = Mathf.Pow(scaleFalloff, distance);
+                // DOOM64 風: 手前→奥で消失点(中央上)へ収束しつつスケール縮小
+                var t = Mathf.Clamp01(distance / span);
+                cell.Rect.anchoredPosition = Vector2.LerpUnclamped(near, vanish, t);
+                var scale = Mathf.Pow(depthFalloff, Mathf.Max(0f, distance));
                 cell.Rect.localScale = new Vector3(scale, scale, 1f);
-                cell.Rect.anchoredPosition = feetAnchor + cellStepOffset * distance;
+
+                // 明暗: 1,2体目=通常 / 3体目=少し暗く / 4体目=さらに暗く
+                var rank = Mathf.Clamp(Mathf.CeilToInt(distance), 1, 4);
+                var darken = rank <= 2 ? 1f : (rank == 3 ? darkSlot3 : darkSlot4);
+                cell.SetDarken(darken);
             }
+
+            // 描画順: 手前(index 小)を最前面へ。上から見下ろして近い対象が重なりの上に来る。
+            for (var i = cells.Count - 1; i >= 0; i--)
+            {
+                var cell = cells[i];
+                if (cell == null || !cell.gameObject.activeSelf) continue;
+                cell.Rect.SetAsLastSibling();
+            }
+            // 自キャラは最前面
+            if (character != null) character.SetAsLastSibling();
         }
 
         // -------- Stage 1: 開始演出 --------
@@ -338,6 +358,9 @@ namespace VocaNerd
                 UpdateToggleVisuals();
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }
+
+            if (SaveData.TrySetBestTime(SaveData.GameId.HopscotchRace, _playElapsed))
+                Debug.Log($"[Hopscotch] New best time: {_playElapsed:0.00}s");
         }
 
         // -------- Stage 4: ゴール演出 --------
@@ -451,7 +474,7 @@ namespace VocaNerd
                     var t = Mathf.Clamp01(elapsed / moveDuration);
                     var eased = 1f - Mathf.Pow(1f - t, 3f);
                     var currentPos = Mathf.Lerp(startCurrent, endCurrent, eased);
-                    RefreshCells(cells, currentPos, restPos);
+                    RefreshCells(cells, currentPos, restPos, character);
 
                     // Character jump — sine wave over the same moveDuration
                     if (character != null)
@@ -462,7 +485,7 @@ namespace VocaNerd
 
                     await UniTask.Yield(PlayerLoopTiming.Update, token);
                 }
-                RefreshCells(cells, endCurrent, restPos);
+                RefreshCells(cells, endCurrent, restPos, character);
                 if (character != null) character.anchoredPosition = restPos;
             }
             catch (OperationCanceledException)

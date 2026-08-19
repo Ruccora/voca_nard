@@ -1,3 +1,4 @@
+using Coffee.UIEffects;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -62,6 +63,41 @@ namespace VocaNerd
             var color = on ? toggleOnColor : toggleOffColor;
             if (toggleMark != null) toggleMark.color = color;
             if (secondaryToggleMark != null) secondaryToggleMark.color = color;
+        }
+
+        private UIEffect[] _depthEffects;
+
+        // 奥行きの明暗。配下の全 Graphic に UIEffect(Multiply) を当てて暗くする。
+        // multiplier = 1 で通常、小さいほど暗い。
+        public void SetDarken(float multiplier)
+        {
+            if (_depthEffects == null)
+            {
+                var graphics = GetComponentsInChildren<Graphic>(true);
+                _depthEffects = new UIEffect[graphics.Length];
+                for (var i = 0; i < graphics.Length; i++)
+                {
+                    var fx = graphics[i].GetComponent<UIEffect>();
+                    if (fx == null) fx = graphics[i].gameObject.AddComponent<UIEffect>();
+                    _depthEffects[i] = fx;
+                }
+            }
+
+            var m = Mathf.Clamp01(multiplier);
+            var darken = m < 0.999f;
+            foreach (var fx in _depthEffects)
+            {
+                if (fx == null) continue;
+                if (darken)
+                {
+                    fx.colorFilter = ColorFilter.Multiply;
+                    fx.color = new Color(m, m, m, 1f);
+                }
+                else
+                {
+                    fx.colorFilter = ColorFilter.None;
+                }
+            }
         }
     }
 }
