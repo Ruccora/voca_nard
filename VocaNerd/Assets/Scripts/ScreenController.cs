@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace VocaNerd
 {
@@ -28,8 +29,24 @@ namespace VocaNerd
         [SerializeField] private RectTransform root;
         [SerializeField] private float bgmFadeDuration = 0.8f;
 
+        [Header("Transition Fade")]
+        [Tooltip("暗転に使う全画面の黒 Image。未設定なら実行時に自動生成する")]
+        [SerializeField] private Image transitionFadeImage;
+
+        [Tooltip("ShowAsync(fadeToBlack: true) のときの暗転秒数 (画面 → 黒)")]
+        [SerializeField] private float fadeToBlackDuration = 0.5f;
+
+        [Tooltip("パネル入れ替え後の明転秒数 (黒 → 画面)")]
+        [SerializeField] private float fadeFromBlackDuration = 3f;
+
+        [Tooltip("アプリ全体のフレームレート上限。0 以下なら変更しない")]
+        [SerializeField] private int targetFrameRate = 24;
+
         private GameObject _current;
         private CancellationTokenSource _transitionCts;
+
+        // 明転の完了を待たせるための signal。暗転を始めた時点で作り、明転しきったら完了させる。
+        private UniTaskCompletionSource _fadeCompletion;
 
         public static ScreenController Instance { get; private set; }
 
@@ -41,6 +58,17 @@ namespace VocaNerd
                 return;
             }
             Instance = this;
+            ApplyTargetFrameRate();
+        }
+
+        private void ApplyTargetFrameRate()
+        {
+            if (targetFrameRate <= 0)
+                return;
+
+            // vSync が有効だとリフレッシュレート基準になり targetFrameRate が無視される
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = targetFrameRate;
         }
 
         private void Start()
@@ -48,12 +76,17 @@ namespace VocaNerd
             ShowAsync(ScreenType.Title).Forget();
         }
 
-        public async UniTask ShowAsync(ScreenType next, Action<GameObject> onInstantiated = null, CancellationToken cancellationToken = default)
+        public async UniTask ShowAsync(ScreenType next, Action<GameObject> onInstantiated = null, bool fadeToBlack = false, CancellationToken cancellationToken = default)
         {
             _transitionCts?.Cancel();
             _transitionCts?.Dispose();
             _transitionCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var token = _transitionCts.Token;
+
+            // 0) 暗転。以降パネルの入れ替えは黒の裏で行う
+            var fade = fadeToBlack ? EnsureTransitionFade() : null;
+            _fadeCompletion = fade != null ? new UniTaskCompletionSource() : null;
+            if (fade != null) await FadeToBlackAsync(fade, token);
 
             var outgoing = _current;
             var outPanel = outgoing != null ? outgoing.GetComponent<PanelBase>() : null;
@@ -64,6 +97,9 @@ namespace VocaNerd
             if (prefab == null) throw new InvalidOperationException($"Prefab not registered for screen: {next}");
             var instance = Instantiate(prefab, root != null ? root : (RectTransform)transform);
             _current = instance;
+
+            // 生成した Panel が黒より後ろの兄弟になるよう、黒を最前面に持ち直す
+            if (fade != null) fade.rectTransform.SetAsLastSibling();
 
             onInstantiated?.Invoke(instance);
 
@@ -96,6 +132,101 @@ namespace VocaNerd
 
             // 4) 旧 Panel を破棄
             if (outgoing != null) Destroy(outgoing);
+
+            // 5) 明転。待っている画面 (WaitForTransitionFadeAsync) はここが終わってから動き出す。
+            if (fade != null)
+            {
+                try
+                {
+                    await FadeFromBlackAsync(fade, token);
+                }
+                finally
+                {
+                    // 途中でキャンセルされても待ち側を止めたままにしない
+                    _fadeCompletion?.TrySetResult();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 遷移の明転が終わるまで待つ。暗転を伴わない遷移や、既に明転済みなら即座に返る。
+        /// 画面側は「自分が見えている」状態になってから演出を始めたいときにこれを await する。
+        /// </summary>
+        public UniTask WaitForTransitionFadeAsync(CancellationToken cancellationToken = default)
+        {
+            var completion = _fadeCompletion;
+            return completion != null
+                ? completion.Task.AttachExternalCancellation(cancellationToken)
+                : UniTask.CompletedTask;
+        }
+
+        // -------- Transition fade --------
+
+        private async UniTask FadeToBlackAsync(Image fade, CancellationToken token)
+        {
+            fade.rectTransform.SetAsLastSibling();
+            var color = fade.color;
+            color.a = 0f;
+            fade.color = color;
+            fade.enabled = true;
+
+            var elapsed = 0f;
+            while (elapsed < fadeToBlackDuration)
+            {
+                token.ThrowIfCancellationRequested();
+                elapsed += Time.unscaledDeltaTime;
+                color.a = Mathf.Clamp01(elapsed / fadeToBlackDuration);
+                fade.color = color;
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+            }
+            color.a = 1f;
+            fade.color = color;
+        }
+
+        private async UniTask FadeFromBlackAsync(Image fade, CancellationToken token)
+        {
+            fade.rectTransform.SetAsLastSibling();
+            var color = fade.color;
+
+            try
+            {
+                var elapsed = 0f;
+                while (elapsed < fadeFromBlackDuration)
+                {
+                    token.ThrowIfCancellationRequested();
+                    elapsed += Time.unscaledDeltaTime;
+                    color.a = 1f - Mathf.Clamp01(elapsed / fadeFromBlackDuration);
+                    fade.color = color;
+                    await UniTask.Yield(PlayerLoopTiming.Update, token);
+                }
+            }
+            finally
+            {
+                if (fade != null) fade.enabled = false;
+            }
+        }
+
+        // 全画面の黒 Image を用意する (未設定なら生成し、最前面に置く)
+        private Image EnsureTransitionFade()
+        {
+            if (transitionFadeImage != null) return transitionFadeImage;
+            var parent = root != null ? root : transform as RectTransform;
+            if (parent == null) return null;
+
+            var go = new GameObject("TransitionFade");
+            var rt = go.AddComponent<RectTransform>();
+            rt.SetParent(parent, false);
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+            rt.SetAsLastSibling();
+
+            transitionFadeImage = go.AddComponent<Image>();
+            transitionFadeImage.color = Color.black;
+            transitionFadeImage.raycastTarget = true; // 暗転中の誤操作を防ぐ
+            transitionFadeImage.enabled = false;
+            return transitionFadeImage;
         }
 
         private ScreenEntry FindEntry(ScreenType type)

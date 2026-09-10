@@ -18,8 +18,6 @@ namespace VocaNerd
         [SerializeField] private Image secondaryToggleMark;
 
         [Header("Colors")]
-        [SerializeField] private Color typeAColor = new Color(0.3f, 0.5f, 0.9f);
-        [SerializeField] private Color typeBColor = new Color(0.9f, 0.4f, 0.3f);
         [SerializeField] private Color toggleOnColor = new Color(0.3f, 1f, 0.3f, 0.7f);
         [SerializeField] private Color toggleOffColor = new Color(1f, 0.3f, 0.3f, 0.4f);
 
@@ -31,11 +29,15 @@ namespace VocaNerd
 
         public RectTransform Rect => _rt != null ? _rt : (_rt = (RectTransform)transform);
 
-        public void Setup(bool isTypeA, bool isToggle)
+        // sprite / color はコース生成側 (HopscotchRaceGame) が決めた「わっか画像」と「色」。
+        public void Setup(bool isTypeA, bool isToggle, Sprite sprite, Color color)
         {
             _isToggle = isToggle;
-            var color = isTypeA ? typeAColor : typeBColor;
-            if (background != null) background.color = color;
+            if (background != null)
+            {
+                if (sprite != null) background.sprite = sprite;
+                background.color = color;
+            }
             if (label != null) label.text = isTypeA ? "A" : "B";
             if (toggleMark != null)
             {
@@ -45,7 +47,10 @@ namespace VocaNerd
             if (secondaryPlatform != null)
                 secondaryPlatform.SetActive(!isTypeA);
             if (secondaryImage != null)
+            {
+                if (sprite != null) secondaryImage.sprite = sprite;
                 secondaryImage.color = color;
+            }
             if (secondaryRect != null && !isTypeA)
             {
                 secondaryRect.anchoredPosition = secondaryOffset;

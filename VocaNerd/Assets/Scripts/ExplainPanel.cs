@@ -45,7 +45,11 @@ namespace VocaNerd
             if (videoPlayer != null)
                 videoPlayer.errorReceived -= OnVideoError;
 
-            _closedTcs.TrySetResult();
+            // 「戻る」で閉じた場合は CloseAsync が既に完了させている。ここに来るのは
+            // 画面遷移などで丸ごと破棄されたケースなので、待ち側には成功ではなく
+            // キャンセルを通知する。成功にすると破棄処理の最中に待ち側の続きが
+            // 同期実行され、破棄中の GameObject を SetActive してエラーになる。
+            _closedTcs.TrySetCanceled();
         }
 
         protected override void Awake()
@@ -299,7 +303,8 @@ namespace VocaNerd
             var data = _current;
             ScreenController.Instance.ShowAsync(
                 ScreenType.MiniGame,
-                go => go.GetComponentInChildren<MiniGamePanel>().Bind(data)
+                go => go.GetComponentInChildren<MiniGamePanel>().Bind(data),
+                fadeToBlack: true
             ).Forget();
         }
 
@@ -317,6 +322,7 @@ namespace VocaNerd
                 await PanelOutAsync(token);
             }
             catch (System.OperationCanceledException) { }
+            _closedTcs.TrySetResult();
             if (this != null) Destroy(gameObject);
         }
     }

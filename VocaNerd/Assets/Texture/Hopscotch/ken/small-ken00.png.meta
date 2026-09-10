@@ -1,19 +1,10 @@
 fileFormatVersion: 2
-guid: 457bb30e7c46846f6ac58aef20da78b7
+guid: 0b26f1f88bc454a92b9e20ca8c3091d1
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 3442211565984681827
-    second: 6bkx3_0
-  - first:
-      213: -11017247244235389
-    second: 6bkx3_1
-  - first:
-      213: 3945027504651235774
-    second: 6bkx3_2
-  - first:
-      213: -4126832282057559537
-    second: 6bkx3_3
+      213: -7781824548946396337
+    second: small-ken00_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -55,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -105,17 +96,30 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 6bkx3_0
+      name: small-ken00_0
       rect:
         serializedVersion: 2
-        x: 33
-        y: 26
-        width: 50
-        height: 58
+        x: 4
+        y: 54
+        width: 282
+        height: 357
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -124,74 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 36f02408e2135cf20800000000000000
-      internalID: 3442211565984681827
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: 6bkx3_1
-      rect:
-        serializedVersion: 2
-        x: 85
-        y: 26
-        width: 60
-        height: 58
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 38dca9b3fdbd8dff0800000000000000
-      internalID: -11017247244235389
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: 6bkx3_2
-      rect:
-        serializedVersion: 2
-        x: 147
-        y: 26
-        width: 25
-        height: 58
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: eb1f1e32d9d8fb630800000000000000
-      internalID: 3945027504651235774
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: 6bkx3_3
-      rect:
-        serializedVersion: 2
-        x: 173
-        y: 26
-        width: 52
-        height: 58
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: f02385487eb8ab6c0800000000000000
-      internalID: -4126832282057559537
+      spriteID: f4bb2a77dc7610490800000000000000
+      internalID: -7781824548946396337
       vertices: []
       indices: 
       edges: []
@@ -200,7 +138,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -210,10 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      6bkx3_0: 3442211565984681827
-      6bkx3_1: -11017247244235389
-      6bkx3_2: 3945027504651235774
-      6bkx3_3: -4126832282057559537
+      small-ken00_0: -7781824548946396337
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

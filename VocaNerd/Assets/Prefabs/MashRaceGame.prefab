@@ -1363,6 +1363,8 @@ MonoBehaviour:
   canvasGroup: {fileID: 4983382399980752529}
   defaultSelected: {fileID: 0}
   fadeDuration: 0.25
+  autoButtonSe: 1
+  buttonSeKey: se_decide
   introText: {fileID: 294728166786143892}
   countdownText: {fileID: 8664148436041471676}
   timerText: {fileID: 3144406242142497054}
@@ -1383,7 +1385,6 @@ MonoBehaviour:
   countdownStep: 1
   playDuration: 10
   missLockDuration: 0.2
-  charRestY: -500
   winnerRiseY: -150
   winnerRiseDuration: 0.6
   loserFallY: -1400
@@ -2227,7 +2228,7 @@ RectTransform:
   m_GameObject: {fileID: 9030932246530403472}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.65, y: 0.65, z: 0.65}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 8460082649547339750}

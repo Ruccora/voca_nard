@@ -13,6 +13,9 @@ Shader "UI/Sparkle"
         _ColorMask ("Color Mask", Float) = 15
         [Toggle(UNITY_UI_ALPHACLIP)] _UseUIAlphaClip ("Use Alpha Clip", Float) = 0
 
+        [Header(Brightness)]
+        _Brightness ("Brightness (1=通常, 小さいほど暗い)", Range(0, 2)) = 1.0
+
         [Header(Bloom Glow)]
         _MaskTex ("Bloom Mask (R channel)", 2D) = "white" {}
         _GlowColor ("Glow Color (fallback)", Color) = (1, 1, 1, 1)
@@ -21,6 +24,7 @@ Shader "UI/Sparkle"
         _GlowIntensity ("Glow Intensity", Range(0, 5)) = 1.5
         _PulseAmount ("Pulse Amount", Range(0, 1)) = 0.3
         _PulseSpeed ("Pulse Speed", Range(0, 10)) = 2.0
+        _StepFps ("Step FPS (0=なめらか, 小さいほどカクつく)", Range(0, 60)) = 8
         _PhaseGridSize ("Phase Grid Size (1=sync, high=各領域独立)", Range(1, 60)) = 8
         _BlurSpread ("Bloom Spread", Range(0, 0.03)) = 0.006
         _MaskCutoff ("Mask Cutoff", Range(0, 1)) = 0.01
@@ -93,12 +97,14 @@ Shader "UI/Sparkle"
             float4 _MainTex_ST;
             float4 _MaskTex_ST;
 
+            float _Brightness;
             fixed4 _GlowColor;
             float _ColorFromImage;
             float _ColorBoost;
             float _GlowIntensity;
             float _PulseAmount;
             float _PulseSpeed;
+            float _StepFps;
             float _PhaseGridSize;
             float _BlurSpread;
             float _MaskCutoff;
@@ -154,7 +160,9 @@ Shader "UI/Sparkle"
                 {
                     // 位置ごとにランダムな位相 → 全体が同期せず不規則に明滅
                     float phase = samplePhase(IN.texcoord);
-                    float pulseSine = 0.5 + 0.5 * sin(_Time.y * _PulseSpeed + phase);
+                    // 時間を _StepFps コマ/秒に量子化 → 実 FPS に関係なくカクついた明滅
+                    float t = _StepFps > 0.0 ? floor(_Time.y * _StepFps) / _StepFps : _Time.y;
+                    float pulseSine = 0.5 + 0.5 * sin(t * _PulseSpeed + phase);
                     float pulse = lerp(1.0 - _PulseAmount, 1.0, pulseSine);
 
                     // 発光色: 画像色 or フォールバックカラーをブレンド
@@ -164,6 +172,9 @@ Shader "UI/Sparkle"
                     // 加算合成で発光
                     color.rgb += mask * pulse * _GlowIntensity * glowColor * color.a;
                 }
+
+                // 明るさ調整 (開始演出の暗転→明転など)。ベース画像も発光もまとめて増減。
+                color.rgb *= _Brightness;
 
                 #ifdef UNITY_UI_CLIP_RECT
                 color.a *= UnityGet2DClipping(IN.worldPosition.xy, _ClipRect);

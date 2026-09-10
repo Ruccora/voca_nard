@@ -50,6 +50,68 @@ namespace VocaNerd.EditorTools
         [MenuItem("VocaNerd/Generate/MikiriOpening")]
         public static void GenerateMikiriOpening() => RunGenerate("MikiriOpening", CreateMikiriOpening);
 
+        [MenuItem("VocaNerd/Generate/BattleIntroOpening")]
+        public static void GenerateBattleIntroOpening() => RunGenerate("BattleIntroOpening", CreateBattleIntroOpening);
+
+        // QuickDrawGame の開始演出を BattleIntroOpening (上下カットイン) に差し替える
+        [MenuItem("VocaNerd/Patch/QuickDraw Opening (BattleIntro)")]
+        public static void PatchQuickDrawOpening()
+        {
+            var introPath = $"{PrefabDir}/BattleIntroOpening.prefab";
+            var intro = AssetDatabase.LoadAssetAtPath<GameObject>(introPath);
+            if (intro == null)
+            {
+                CreateBattleIntroOpening();
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+                intro = AssetDatabase.LoadAssetAtPath<GameObject>(introPath);
+            }
+            if (intro == null)
+            {
+                Debug.LogError($"[Patch] {introPath} を用意できませんでした");
+                return;
+            }
+
+            var path = $"{PrefabDir}/QuickDrawGame.prefab";
+            var root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                var game = root.GetComponentInChildren<QuickDrawGame>(true);
+                if (game == null)
+                {
+                    Debug.LogError("[Patch] QuickDrawGame が見つかりません");
+                    return;
+                }
+
+                var existing = FindDescendant(root.transform, "BattleIntroOpening");
+                var instance = existing != null
+                    ? existing.gameObject
+                    : (GameObject)PrefabUtility.InstantiatePrefab(intro, root.transform);
+                instance.name = "BattleIntroOpening";
+                var rt = (RectTransform)instance.transform;
+                StretchFull(rt);
+                rt.SetAsLastSibling(); // 演出は最前面
+                instance.SetActive(false); // 再生時に PlayAsync が有効化
+
+                var director = instance.GetComponent<BattleIntroDirector>();
+                // 画面全体をシェイクさせたいので、ゲームのルートを対象にする
+                AssignField(director, "shakeTarget", (RectTransform)game.transform);
+                AssignField(game, "openingEffect", director);
+                AssignFloat(game, "openingHoldDuration", 0f); // 保持は BattleIntro 側のタイムラインが持つ
+
+                // 旧演出 (斜め線) は参照が外れるので無効化して残しておく
+                var mikiri = root.GetComponentInChildren<MikiriOpeningEffect>(true);
+                if (mikiri != null) mikiri.gameObject.SetActive(false);
+
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+                Debug.Log("[Patch] QuickDraw opening -> BattleIntroOpening");
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
         // 既存 QuickDrawGame プレハブ(手編集)をその場パッチ: P1C=Miku / P2C=Teto の勝利アニメを組み込む
         [MenuItem("VocaNerd/Patch/QuickDraw Win Anim (Miku_Teto)")]
         public static void PatchQuickDrawWinAnim()
@@ -494,6 +556,29 @@ namespace VocaNerd.EditorTools
             SavePrefab(root);
         }
 
+        // 格闘ゲーム風の上下カットイン開始演出 (別 prefab)。階層は Director 側が組む。
+        private static void CreateBattleIntroOpening()
+        {
+            var root = new GameObject("BattleIntroOpening", typeof(RectTransform), typeof(BattleIntroDirector));
+            StretchFull((RectTransform)root.transform);
+
+            var fx = root.GetComponent<BattleIntroDirector>();
+            fx.topCutIn = new BattleIntroDirector.CutInConfig
+            {
+                portrait = LoadSprite("Assets/Texture/QuickDrawGame/Miku/miku_MIKIRI.png"),
+                fromLeft = true,
+            };
+            fx.bottomCutIn = new BattleIntroDirector.CutInConfig
+            {
+                portrait = LoadSprite("Assets/Texture/QuickDrawGame/Teto/teto_MIKIRI.png"),
+                fromLeft = false,
+            };
+            fx.BuildHierarchy(); // DimPanel / Bars / Lines / Portraits / Flash を生成
+
+            root.SetActive(false); // 通常は非表示。再生時に PlayAsync が有効化。
+            SavePrefab(root);
+        }
+
         // 線をワイプ描画するためのマスク窓 (Mask, 回転対応)。中の線バーをクリップする。
         private static Transform CreateMikiriClip(Transform parent, string name, Vector2 anchoredPos, Vector2 size)
         {
@@ -928,6 +1013,7 @@ namespace VocaNerd.EditorTools
             AssignField(game, "player2CharacterBlinker", p2Character.GetComponent<CanvasGroupBlinker>());
             AssignField(game, "cellPrefab", cellPrefab);
             AssignField(game, "startCellPrefab", startCellPrefab);
+            AssignArray(game, "cellSprites", LoadSpritesInFolder("Assets/Texture/Hopscotch", "wakka"));
 
             SavePrefab(root);
         }

@@ -309,6 +309,7 @@ Idle → Intro(1.2s) → Countdown(3-2-1-GO) → Playing (30マスをA/Bキー�
 ### 8.6 コース共有＋別インスタンス
 - **要件**: 1P/2P とも同じレース、マス自体は別
 - **実装**: `_course` は共有、`_p1Cells` / `_p2Cells` は別 GameObject リスト
+- コースは `GenerateCourse` で 1 本だけランダム生成し、両トラックに同じ内容を当てる
 
 ### 8.7 HopscotchCell 抜き出し
 - **要件**: SerializeField Prefab パターン
@@ -317,6 +318,20 @@ Idle → Intro(1.2s) → Countdown(3-2-1-GO) → Playing (30マスをA/Bキー�
 ### 8.8 勝敗
 - **要件**: 先にゴールした方が勝ち
 - **実装**: `MoveAsync` 完了時に `position >= cellCount - 1` チェック、`_goalSignal.TrySetResult()`
+
+### 8.9 マスの見た目 (わっか画像＋色)
+- **要件**:
+  - わっか画像は 5 種 (`Assets/Texture/Hopscotch/wakka01-05`) からマスごとにランダム
+  - 色は 3 種 (きいろ `#f6eb69` / あか `#d6484e` / あお `#4b4bed`)、同色が連続しない
+  - 開始色を決めたら、その色から `きいろ→あか→あお` の順でループ
+    (1P きいろ始まり → きいろ/あか/あお…、2P あか始まり → あか/あお/きいろ…)
+- **実装**:
+  - `cellSprites` / `cellColors` SerializeField
+  - `CellData.spriteIndex` はコース生成時に決定 → 1P/2P 共有
+  - 開始色のみプレイヤーごとにランダム (`_p1ColorStart` / `_p2ColorStart`)、
+    色 = `cellColors[(colorStart + courseIndex) % 3]` でループするため隣接マスは必ず別色
+  - `HopscotchCell.Setup(isTypeA, isToggle, sprite, color)` が `background` /
+    `secondaryImage` に反映 (けん = わっか 1 つ、ぱ = わっか 2 つ)
 
 ---
 
@@ -329,7 +344,7 @@ Idle → Intro(1.2s) → Countdown(3-2-1-GO) → Playing (30マスをA/Bキー�
 Idle → Intro(1.2s) → Countdown(3-2-1-GO) → Playing (30ブロックを叩き落とす)
      → Winner → WaitForExit → Exiting → Select
 ```
-- 移動: A/D (P1) または ←/→ (P2)、0.1秒で左右を切替
+- 移動: A/D (P1) または ←/→ (P2)、1フレームで左右を切替
 - 叩く: W/S (P1) または ↑/↓ (P2)
 - ペナルティ: 同サイドの棒付きブロック叩き → 0.5秒待機
 
@@ -349,9 +364,9 @@ Idle → Intro(1.2s) → Countdown(3-2-1-GO) → Playing (30ブロックを叩�
 - **要件**: 棒があるものと同じサイドで叩くと 0.5 秒待機
 - **実装**: `penalty` 判定 → `UniTask.Delay(penaltyDuration)`
 
-### 9.5 移動時間
-- **要件**: 左右移動 0.1 秒
-- **実装**: `moveDuration = 0.1f`
+### 9.5 移動時間 / 落下時間
+- **要件**: 左右移動 1F、次段の落下 1F (どちらも補間なしで即着地)
+- **実装**: `MoveAsync` / `BlockDropBlock.DropAsync` が座標を即時セットして 1 フレーム待つだけ
 
 ### 9.6 ノック方向
 - **要件**: 左から叩くと右へ、逆もしかり

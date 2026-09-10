@@ -1372,6 +1372,16 @@ MonoBehaviour:
   visibleBehind: 2
   jumpHeight: 80
   feetOffset: {x: 0, y: -60}
+  cellSprites:
+  - {fileID: 21300000, guid: c8d37ac764c1341a399f8b18d58ef54d, type: 3}
+  - {fileID: 21300000, guid: 4b6eaa01a139149a2a6e3e7f307776cf, type: 3}
+  - {fileID: 21300000, guid: 56fcd0574761a446c84bc556d0040456, type: 3}
+  - {fileID: 21300000, guid: 3829718b7834a4e2d953bfc5e191ab97, type: 3}
+  - {fileID: 21300000, guid: 2f0d92a09f1f54c219db7c5bebc71b03, type: 3}
+  cellColors:
+  - {r: 0.9647059, g: 0.92156863, b: 0.4117647, a: 1}
+  - {r: 0.8392157, g: 0.28235295, b: 0.30588236, a: 1}
+  - {r: 0.29411766, g: 0.29411766, b: 0.9294118, a: 1}
 --- !u!1 &7673051115484503557
 GameObject:
   m_ObjectHideFlags: 0

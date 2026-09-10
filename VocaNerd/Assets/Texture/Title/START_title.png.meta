@@ -1,19 +1,10 @@
 fileFormatVersion: 2
-guid: d1a188c37aa2446cdb3d24e7792338f1
+guid: 0e010475d0c904218b91a442975f8afa
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -579530762268172725
-    second: j00lk_0
-  - first:
-      213: 3167170490961646515
-    second: j00lk_1
-  - first:
-      213: 2169189414231199930
-    second: j00lk_2
-  - first:
-      213: 1700895700595354731
-    second: j00lk_3
+      213: -397703212348401649
+    second: START_title_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -105,17 +96,30 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: j00lk_0
+      name: START_title_0
       rect:
         serializedVersion: 2
-        x: 33
-        y: 28
-        width: 60
-        height: 62
+        x: 29
+        y: 24
+        width: 1407
+        height: 542
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -124,74 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b4e189a97d715f7f0800000000000000
-      internalID: -579530762268172725
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: j00lk_1
-      rect:
-        serializedVersion: 2
-        x: 91
-        y: 30
-        width: 62
-        height: 59
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 3b35ed8f7cc04fb20800000000000000
-      internalID: 3167170490961646515
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: j00lk_2
-      rect:
-        serializedVersion: 2
-        x: 153
-        y: 30
-        width: 72
-        height: 58
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: ab0d9c587428a1e10800000000000000
-      internalID: 2169189414231199930
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: j00lk_3
-      rect:
-        serializedVersion: 2
-        x: 230
-        y: 30
-        width: 50
-        height: 58
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: b6ca9f1c0abca9710800000000000000
-      internalID: 1700895700595354731
+      spriteID: f0811f519031b7af0800000000000000
+      internalID: -397703212348401649
       vertices: []
       indices: 
       edges: []
@@ -210,10 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      j00lk_0: -579530762268172725
-      j00lk_1: 3167170490961646515
-      j00lk_2: 2169189414231199930
-      j00lk_3: 1700895700595354731
+      START_title_0: -397703212348401649
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93bce61d35ef748808a7147725b987d6, type: 3}
+  m_Name: AudioLibrary
+  m_EditorClassIdentifier:
+  bgmEntries:
+  - key: bgm_title
+    clip: {fileID: 0}
+    volumeScale: 1
+  - key: bgm_select
+    clip: {fileID: 0}
+    volumeScale: 1
+  - key: bgm_quickdraw
+    clip: {fileID: 0}
+    volumeScale: 1
+  - key: bgm_mashrace
+    clip: {fileID: 0}
+    volumeScale: 1
+  - key: bgm_hopscotch
+    clip: {fileID: 0}
+    volumeScale: 1
+  - key: bgm_blockdrop
+    clip: {fileID: 0}
+    volumeScale: 1
+  seEntries:
+  - key: se_decide
+    clip: {fileID: 0}
+    volumeScale: 1
+  - key: se_cancel
+    clip: {fileID: 0}
+    volumeScale: 1
+  - key: se_cursor
+    clip: {fileID: 0}
+    volumeScale: 1
+  - key: se_quickdraw_opening
+    clip: {fileID: 8300000, guid: bd9157d408ad84d489b95b3efcc511d7, type: 3}
+    volumeScale: 1
+  - key: se_quickdraw_start
+    clip: {fileID: 8300000, guid: e9c82b51cca184cb39f76e7e00f4931b, type: 3}
+    volumeScale: 1
+  - key: se_quickdraw_reveal
+    clip: {fileID: 8300000, guid: 35ce584b1c26344879a216cc95902b3d, type: 3}
+    volumeScale: 1
+  - key: se_quickdraw_winner
+    clip: {fileID: 8300000, guid: f44b33d923c914e9d8c95d617e2206c5, type: 3}
+    volumeScale: 1
+  - key: se_countdown
+    clip: {fileID: 0}
+    volumeScale: 1
+  - key: se_start
+    clip: {fileID: 0}
+    volumeScale: 1
+  - key: se_win
+    clip: {fileID: 0}
+    volumeScale: 1
+  - key: se_lose
+    clip: {fileID: 0}
+    volumeScale: 1
+  - key: se_miss
+    clip: {fileID: 0}
+    volumeScale: 1
+  - key: se_hit
+    clip: {fileID: 0}
+    volumeScale: 1

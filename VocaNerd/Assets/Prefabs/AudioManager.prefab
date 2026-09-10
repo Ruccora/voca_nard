@@ -305,6 +305,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ffe0a77b32554595a55c08914b9a112, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  library: {fileID: 11400000, guid: 4a759f384f6641159501e0f2fff97f04, type: 2}
   bgmSourceA: {fileID: 6863002072841783636}
   bgmSourceB: {fileID: 1422492736948925170}
   seSource: {fileID: 2221165548295284633}

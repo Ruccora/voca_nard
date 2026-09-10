@@ -55,11 +55,9 @@ namespace VocaNerd
 
         [Header("Config")]
         [SerializeField] private int blockCount = 30;
-        [SerializeField] private float moveDuration = 0.1f;
         [SerializeField] private float penaltyDuration = 0.5f;
         [SerializeField] private float knockFlyDuration = 0.4f;
         [SerializeField] private float knockFlyDistance = 900f;
-        [SerializeField] private float blockDropDuration = 0.15f;
         [SerializeField] private Vector2 blockSize = new Vector2(150f, 30f);
         [SerializeField] private float stackBottomY = -450f;
         [SerializeField] private float characterLeftX = -160f;
@@ -319,35 +317,23 @@ namespace VocaNerd
             MoveAsync(player, state, target).Forget();
         }
 
+        // 移動演出は1フレームで移動先に到達させる
         private async UniTaskVoid MoveAsync(int player, PlayerState state, PlayerSide target)
         {
             state.isMoving = true;
+            state.side = target;
+
             var character = player == 1 ? player1Character : player2Character;
             if (character != null)
             {
-                var startX = character.anchoredPosition.x;
-                var endX = target == PlayerSide.Left ? characterLeftX : characterRightX;
-                var elapsed = 0f;
-                var token = _roundCts?.Token ?? default;
-                try
-                {
-                    while (elapsed < moveDuration)
-                    {
-                        token.ThrowIfCancellationRequested();
-                        elapsed += Time.deltaTime;
-                        var t = Mathf.Clamp01(elapsed / moveDuration);
-                        var pos = character.anchoredPosition;
-                        pos.x = Mathf.Lerp(startX, endX, t);
-                        character.anchoredPosition = pos;
-                        await UniTask.Yield(PlayerLoopTiming.Update, token);
-                    }
-                    var final = character.anchoredPosition;
-                    final.x = endX;
-                    character.anchoredPosition = final;
-                }
-                catch (OperationCanceledException) { }
+                var pos = character.anchoredPosition;
+                pos.x = target == PlayerSide.Left ? characterLeftX : characterRightX;
+                character.anchoredPosition = pos;
             }
-            state.side = target;
+
+            try { await UniTask.Yield(PlayerLoopTiming.Update, _roundCts?.Token ?? default); }
+            catch (OperationCanceledException) { }
+
             state.isMoving = false;
         }
 
@@ -387,7 +373,7 @@ namespace VocaNerd
                 {
                     var dropTasks = new List<UniTask>(state.blocks.Count);
                     foreach (var b in state.blocks)
-                        dropTasks.Add(b.DropAsync(blockSize.y, blockDropDuration, token));
+                        dropTasks.Add(b.DropAsync(blockSize.y, token));
                     await UniTask.WhenAll(dropTasks);
                 }
             }

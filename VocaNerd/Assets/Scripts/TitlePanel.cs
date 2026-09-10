@@ -18,6 +18,18 @@ namespace VocaNerd
         [SerializeField] private RectTransform exitButtonRect;
         [SerializeField] private CanvasGroupBlinker startBlinker;
 
+        [Header("In Animation")]
+        [Tooltip("パネル表示後、タイトルをポップさせるまでの待機秒数")]
+        [SerializeField] private float inStartDelay = 1f;
+        [Tooltip("起動時にポップ表示するタイトルの scale 0→over→1")]
+        [SerializeField] private float titleOvershootScale = 1.2f;
+        [SerializeField] private float titlePopUpDuration = 0.25f;
+        [SerializeField] private float titleSettleDuration = 0.12f;
+        [Tooltip("タイトルが scale 1 になってから START/EXIT/Credit をフェードインする時間")]
+        [SerializeField] private float menuFadeDuration = 0.2f;
+        [Tooltip("タイトルのポップ後に同時にフェードインするグループ（START/EXIT/Credit など）")]
+        [SerializeField] private CanvasGroup[] menuGroups;
+
         public SelectionIndicator SelectionIndicator => selectionIndicator;
 
         [Header("Out Animation")]
@@ -37,6 +49,29 @@ namespace VocaNerd
             isStart = true;
             startButton.onClick.AddListener(OnStart);
             exitButton.onClick.AddListener(OnExit);
+            SetupNavigation();
+        }
+
+        // Start(上) と Exit(下) の上下ナビを明示配線する。Automatic 任せだと
+        // スティックのドリフトや候補判定のブレで選択が不安定になるため。
+        private void SetupNavigation()
+        {
+            if (startButton != null)
+            {
+                startButton.navigation = new Navigation
+                {
+                    mode = Navigation.Mode.Explicit,
+                    selectOnDown = exitButton,
+                };
+            }
+            if (exitButton != null)
+            {
+                exitButton.navigation = new Navigation
+                {
+                    mode = Navigation.Mode.Explicit,
+                    selectOnUp = startButton,
+                };
+            }
         }
 
         private void Update()
@@ -79,8 +114,78 @@ namespace VocaNerd
 
         protected override async UniTask OnPanelInAsync(CancellationToken token)
         {
-            await base.OnPanelInAsync(token);
+            
+            // 初期状態: タイトルは scale0、START/EXIT は非表示。パネル自体はタイトルの
+            // scale で見せるので alpha は即座に 1 にしてフェードは使わない。
+            SetTitleScale(0f);
+            SetMenuAlpha(0f);
+            canvasGroup.alpha = 1f;
+
+            // ポップ開始前に少し待つ
+            if (inStartDelay > 0f)
+                await UniTask.Delay(System.TimeSpan.FromSeconds(inStartDelay), DelayType.UnscaledDeltaTime, cancellationToken: token);
+
+            // タイトルを 0 → 1.2 → 1 でポップさせる
+            await ScaleTitleAsync(0f, titleOvershootScale, titlePopUpDuration, token);
+            await ScaleTitleAsync(titleOvershootScale, 1f, titleSettleDuration, token);
+
+            // scale が 1 になったタイミングで START / EXIT を表示してフォーカス
+            FocusDefaultSelected();
+            await FadeMenuInAsync(token);
             if (selectionIndicator != null) selectionIndicator.Show();
+        }
+
+        private void SetTitleScale(float scale)
+        {
+            if (titleLabelRects == null) return;
+            var s = new Vector3(scale, scale, 1f);
+            foreach (var rect in titleLabelRects)
+                if (rect != null) rect.localScale = s;
+        }
+
+        private async UniTask ScaleTitleAsync(float from, float to, float duration, CancellationToken token)
+        {
+            if (duration <= 0f)
+            {
+                SetTitleScale(to);
+                return;
+            }
+
+            var elapsed = 0f;
+            while (elapsed < duration)
+            {
+                token.ThrowIfCancellationRequested();
+                elapsed += Time.unscaledDeltaTime;
+                SetTitleScale(Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / duration)));
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+            }
+            SetTitleScale(to);
+        }
+
+        private void SetMenuAlpha(float alpha)
+        {
+            if (menuGroups == null) return;
+            foreach (var group in menuGroups)
+                if (group != null) group.alpha = alpha;
+        }
+
+        private async UniTask FadeMenuInAsync(CancellationToken token)
+        {
+            if (menuFadeDuration <= 0f)
+            {
+                SetMenuAlpha(1f);
+                return;
+            }
+
+            var elapsed = 0f;
+            while (elapsed < menuFadeDuration)
+            {
+                token.ThrowIfCancellationRequested();
+                elapsed += Time.unscaledDeltaTime;
+                SetMenuAlpha(Mathf.Clamp01(elapsed / menuFadeDuration));
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+            }
+            SetMenuAlpha(1f);
         }
 
         protected override async UniTask OnPanelPreOutAsync(CancellationToken token)

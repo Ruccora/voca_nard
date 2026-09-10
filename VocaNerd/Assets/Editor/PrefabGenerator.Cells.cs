@@ -48,6 +48,9 @@ namespace VocaNerd.EditorTools
             rt.sizeDelta = new Vector2(100f, 40f);
             var bg = tmp.GetComponent<Image>();
             bg.color = Color.white;
+            // 既定のわっか画像。実際の種類は HopscotchRaceGame.Setup が差し替える。
+            var defaultWakka = LoadSprite("Assets/Texture/Hopscotch/wakka01.png");
+            bg.sprite = defaultWakka;
 
             // Toggle mark (child, behind background)
             var toggleGO = new GameObject("Toggle", typeof(RectTransform), typeof(Image));
@@ -88,6 +91,7 @@ namespace VocaNerd.EditorTools
             srt.anchoredPosition = new Vector2(110f, 0f);
             var secondaryImg = secondaryGO.GetComponent<Image>();
             secondaryImg.color = Color.white;
+            secondaryImg.sprite = defaultWakka;
             secondaryImg.raycastTarget = false;
             secondaryGO.SetActive(false);
 

@@ -96,8 +96,6 @@ MonoBehaviour:
   secondaryImage: {fileID: 0}
   secondaryRect: {fileID: 0}
   secondaryToggleMark: {fileID: 0}
-  typeAColor: {r: 0.3, g: 0.5, b: 0.9, a: 1}
-  typeBColor: {r: 0.9, g: 0.4, b: 0.3, a: 1}
   toggleOnColor: {r: 0.3, g: 1, b: 0.3, a: 0.7}
   toggleOffColor: {r: 1, g: 0.3, b: 0.3, a: 0.4}
   secondaryOffset: {x: 110, y: 0}

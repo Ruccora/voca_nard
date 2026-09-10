@@ -42,6 +42,8 @@ namespace VocaNerd
                     miniGameThumbnails[i].sprite = miniGames[i].Thumbnail;
             }
 
+            SetupNavigation();
+
             if (headerRect != null) _headerRestingPos = headerRect.anchoredPosition;
             _buttonRestingPos = new Vector2[miniGameButtonRects.Length];
             _buttonRestingSize = new Vector2[miniGameButtonRects.Length];
@@ -54,6 +56,37 @@ namespace VocaNerd
                 }
             }
         }
+
+        /// <summary>
+        /// 4 つのミニゲームボタンは 2x2 グリッド (0=左上 1=右上 2=左下 3=右下)。
+        /// 既定の Automatic ナビだと左右候補が安定して拾えず「上下は動くが左右が動かない」
+        /// 症状になるので、明示的に隣接関係を配線する。
+        /// </summary>
+        private void SetupNavigation()
+        {
+            if (miniGameButtons == null || miniGameButtons.Length < 4) return;
+            LinkNav(0, right: 1, down: 2);
+            LinkNav(1, left: 0, down: 3);
+            LinkNav(2, right: 3, up: 0);
+            LinkNav(3, left: 2, up: 1);
+        }
+
+        private void LinkNav(int index, int left = -1, int right = -1, int up = -1, int down = -1)
+        {
+            var btn = ButtonAt(index);
+            if (btn == null) return;
+            btn.navigation = new Navigation
+            {
+                mode = Navigation.Mode.Explicit,
+                selectOnLeft = ButtonAt(left),
+                selectOnRight = ButtonAt(right),
+                selectOnUp = ButtonAt(up),
+                selectOnDown = ButtonAt(down),
+            };
+        }
+
+        private Button ButtonAt(int index)
+            => index >= 0 && index < miniGameButtons.Length ? miniGameButtons[index] : null;
 
         private void OnSelect(int index)
         {
@@ -202,7 +235,6 @@ namespace VocaNerd
 
         protected override async UniTask OnPanelInAsync(CancellationToken token)
         {
-            FocusDefaultSelected();
             canvasGroup.alpha = 1f;
 
             var panelRt = (RectTransform)transform;
@@ -256,6 +288,9 @@ namespace VocaNerd
             }
 
             ApplyResting();
+            // interactable が有効になる直前に選択を確定させる。フェード中の非インタラクティブな
+            // タイミングで選択すると外れて「選択が効かない」ことがあるため末尾で行う。
+            FocusDefaultSelected();
             if (selectionIndicator != null) selectionIndicator.Show();
         }
 

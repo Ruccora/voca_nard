@@ -51,20 +51,13 @@ namespace VocaNerd
             Rect.anchoredPosition = end;
         }
 
-        public async UniTask DropAsync(float dropAmount, float duration, CancellationToken token)
+        // 次の段が落ちてくる演出は1フレームで即着地させる
+        public async UniTask DropAsync(float dropAmount, CancellationToken token)
         {
-            var start = Rect.anchoredPosition;
-            var end = new Vector2(start.x, start.y - dropAmount);
-            var elapsed = 0f;
-            while (elapsed < duration)
-            {
-                token.ThrowIfCancellationRequested();
-                elapsed += Time.deltaTime;
-                var t = Mathf.Clamp01(elapsed / duration);
-                Rect.anchoredPosition = Vector2.Lerp(start, end, t);
-                await UniTask.Yield(PlayerLoopTiming.Update, token);
-            }
-            Rect.anchoredPosition = end;
+            token.ThrowIfCancellationRequested();
+            var pos = Rect.anchoredPosition;
+            Rect.anchoredPosition = new Vector2(pos.x, pos.y - dropAmount);
+            await UniTask.Yield(PlayerLoopTiming.Update, token);
         }
     }
 }

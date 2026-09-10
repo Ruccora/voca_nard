@@ -42,11 +42,15 @@ namespace VocaNerd
         [Tooltip("AudioLibrary に無いキーで再生を試みたら警告を出す（同じキーにつき 1 回だけ）")]
         [SerializeField] private bool warnOnMissingKey = true;
 
+        [Tooltip("同時に鳴らせる SE の数。足りなくなったら一番古い声を止めて使い回す")]
+        [SerializeField, Range(1, 32)] private int maxSeVoices = 8;
+
         private AudioSource _activeBgm;
         private string _activeBgmKey;
         private float _activeBgmScale = 1f;
         private CancellationTokenSource _bgmCts;
         private readonly HashSet<string> _warnedKeys = new HashSet<string>();
+        private readonly List<AudioSource> _sePool = new List<AudioSource>();
 
         public float MasterVolume
         {
@@ -160,7 +164,59 @@ namespace VocaNerd
         public void PlaySE(AudioClip clip, float volumeScale = 1f)
         {
             if (clip == null || seSource == null) return;
-            seSource.PlayOneShot(clip, Mathf.Clamp01(masterVolume * seVolume * Mathf.Max(0f, volumeScale)));
+
+            var src = GetFreeSeSource();
+            if (src == null) return;
+
+            src.clip = clip;
+            src.volume = Mathf.Clamp01(masterVolume * seVolume * Mathf.Max(0f, volumeScale));
+            src.Play();
+        }
+
+        /// <summary>
+        /// 再生中の SE を全て止める（<see cref="PlaySEAt"/> の 3D SE は対象外）。
+        /// </summary>
+        public void StopSE()
+        {
+            if (seSource != null) seSource.Stop();
+            foreach (var src in _sePool)
+            {
+                if (src != null) src.Stop();
+            }
+        }
+
+        /// <summary>
+        /// 空いている SE 用 AudioSource を返す。PlayOneShot は <see cref="AudioSource.Stop"/> で
+        /// 止められないので、SE ごとに AudioSource を割り当てて clip + Play() で鳴らしている。
+        /// 全部埋まっていたら一番古い声を奪う。
+        /// </summary>
+        private AudioSource GetFreeSeSource()
+        {
+            if (!seSource.isPlaying) return seSource;
+
+            foreach (var src in _sePool)
+            {
+                if (src != null && !src.isPlaying) return src;
+            }
+
+            if (_sePool.Count >= Mathf.Max(1, maxSeVoices) - 1)
+            {
+                // 上限。最初に確保した声を止めて使い回す
+                var oldest = _sePool.Count > 0 ? _sePool[0] : seSource;
+                if (oldest != null) oldest.Stop();
+                return oldest;
+            }
+
+            var extra = seSource.gameObject.AddComponent<AudioSource>();
+            extra.playOnAwake = false;
+            extra.loop = false;
+            extra.outputAudioMixerGroup = seSource.outputAudioMixerGroup;
+            extra.spatialBlend = seSource.spatialBlend;
+            extra.bypassEffects = seSource.bypassEffects;
+            extra.bypassListenerEffects = seSource.bypassListenerEffects;
+            extra.bypassReverbZones = seSource.bypassReverbZones;
+            _sePool.Add(extra);
+            return extra;
         }
 
         /// <summary>キー指定で 3D 位置つき SE を再生する。</summary>

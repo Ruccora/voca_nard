@@ -41,6 +41,19 @@ namespace VocaNerd
         public const string Cursor = "se_cursor";
 
         // 以下はミニゲーム側から任意で呼ぶ用（自動再生はされない）
+
+        /// <summary>刹那の見切り: 開始演出の頭。</summary>
+        public const string QuickDrawOpening = "se_quickdraw_opening";
+
+        /// <summary>刹那の見切り: 開始演出が終わってラウンド本編に入るところ。</summary>
+        public const string QuickDrawStart = "se_quickdraw_start";
+
+        /// <summary>刹那の見切り: 合図のマークが出た瞬間。</summary>
+        public const string QuickDrawReveal = "se_quickdraw_reveal";
+
+        /// <summary>刹那の見切り: 勝者決定。</summary>
+        public const string QuickDrawWinner = "se_quickdraw_winner";
+
         public const string Countdown = "se_countdown";
         public const string Start = "se_start";
         public const string Win = "se_win";
@@ -54,6 +67,10 @@ namespace VocaNerd
             Decide,
             Cancel,
             Cursor,
+            QuickDrawOpening,
+            QuickDrawStart,
+            QuickDrawReveal,
+            QuickDrawWinner,
             Countdown,
             Start,
             Win,

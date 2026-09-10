@@ -28,6 +28,10 @@ namespace VocaNerd
         public static void PlaySE(AudioClip clip, float volumeScale = 1f)
             => AudioManager.Instance?.PlaySE(clip, volumeScale);
 
+        /// <summary>鳴っている SE を止める（ワンショットは個別に止められないので一括）。</summary>
+        public static void StopSE()
+            => AudioManager.Instance?.StopSE();
+
         public static void PlaySEAt(string key, Vector3 position, float volumeScale = 1f)
             => AudioManager.Instance?.PlaySEAt(key, position, volumeScale);
 

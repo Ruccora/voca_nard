@@ -30,6 +30,7 @@ namespace VocaNerd
         {
             public CellType type;
             public bool isToggle;
+            public int spriteIndex;   // わっか画像 (cellSprites) の種類。1P/2P で共有。
         }
 
         private class PlayerState
@@ -82,6 +83,15 @@ namespace VocaNerd
         [Header("Character Jump")]
         [SerializeField] private float jumpHeight = 80f;
 
+        [Header("Cell Appearance")]
+        [SerializeField] private Sprite[] cellSprites;               // わっか画像 5種 (マスごとにランダム)
+        [SerializeField] private Color[] cellColors = new[]          // 開始色からこの順でループ
+        {
+            new Color(0.96470588f, 0.92156863f, 0.41176471f), // #f6eb69 きいろ
+            new Color(0.83921569f, 0.28235294f, 0.30588235f), // #d6484e あか
+            new Color(0.29411765f, 0.29411765f, 0.92941176f), // #4b4bed あお
+        };
+
         private Phase _phase;
 
         public override bool CanAcceptBack => _phase == Phase.Winner || _phase == Phase.WaitForExit;
@@ -92,6 +102,8 @@ namespace VocaNerd
         private readonly PlayerState _p2 = new PlayerState();
         private Vector2 _p1CharacterRest;
         private Vector2 _p2CharacterRest;
+        private int _p1ColorStart;
+        private int _p2ColorStart;
         private float _playElapsed;
         private CancellationTokenSource _roundCts;
         private InputAction _p1A, _p1D, _p2Left, _p2Right;
@@ -216,10 +228,13 @@ namespace VocaNerd
         }
 
         // -------- Course generation --------
+        // コースは 1 本だけランダム生成し、1P/2P の両トラックに同じものを当てる。
+        // (マスの A/B・トグル・わっか画像は共有。色だけ開始位置がプレイヤーごとに変わる)
         private void GenerateCourse()
         {
             _course.Clear();
             var rng = new System.Random();
+            var spriteVariants = cellSprites != null && cellSprites.Length > 0 ? cellSprites.Length : 1;
             var cellsSinceToggle = int.MaxValue;
             for (var i = 0; i < cellCount; i++)
             {
@@ -229,9 +244,16 @@ namespace VocaNerd
                 {
                     type = rng.NextDouble() < 0.5 ? CellType.A : CellType.B,
                     isToggle = isToggle,
+                    spriteIndex = rng.Next(spriteVariants),
                 });
                 cellsSinceToggle = isToggle ? 0 : cellsSinceToggle + 1;
             }
+
+            // 色は 3 種。開始色だけをプレイヤーごとにランダムに決め、以降はその順でループさせる。
+            // (例: 1P きいろ始まり → きいろ→あか→あお→きいろ…) 常に隣のマスと別の色になる。
+            var colorVariants = cellColors != null && cellColors.Length > 0 ? cellColors.Length : 1;
+            _p1ColorStart = rng.Next(colorVariants);
+            _p2ColorStart = rng.Next(colorVariants);
         }
 
         private void SpawnCells()
@@ -246,8 +268,8 @@ namespace VocaNerd
 
             for (var i = 0; i < _course.Count; i++)
             {
-                if (player1Track != null) _p1Cells.Add(CreateCell(player1Track, i, _course[i]));
-                if (player2Track != null) _p2Cells.Add(CreateCell(player2Track, i, _course[i]));
+                if (player1Track != null) _p1Cells.Add(CreateCell(player1Track, i, _course[i], _p1ColorStart));
+                if (player2Track != null) _p2Cells.Add(CreateCell(player2Track, i, _course[i], _p2ColorStart));
             }
         }
 
@@ -265,12 +287,26 @@ namespace VocaNerd
             list.Clear();
         }
 
-        private HopscotchCell CreateCell(RectTransform parent, int index, CellData data)
+        private HopscotchCell CreateCell(RectTransform parent, int index, CellData data, int colorStart)
         {
             var cell = Instantiate(cellPrefab, parent);
             cell.name = $"Cell_{index}";
-            cell.Setup(data.type == CellType.A, data.isToggle);
+            cell.Setup(data.type == CellType.A, data.isToggle,
+                GetCellSprite(data.spriteIndex), GetCellColor(colorStart, index));
             return cell;
+        }
+
+        private Sprite GetCellSprite(int spriteIndex)
+        {
+            if (cellSprites == null || cellSprites.Length == 0) return null;
+            return cellSprites[Mathf.Abs(spriteIndex) % cellSprites.Length];
+        }
+
+        // colorStart から cellColors 順にループ。連続する 2 マスが同色になることはない。
+        private Color GetCellColor(int colorStart, int courseIndex)
+        {
+            if (cellColors == null || cellColors.Length == 0) return Color.white;
+            return cellColors[Mathf.Abs(colorStart + courseIndex) % cellColors.Length];
         }
 
         // -------- Perspective rendering --------
