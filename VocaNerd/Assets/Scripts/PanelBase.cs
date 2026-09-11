@@ -9,8 +9,11 @@ namespace VocaNerd
     [RequireComponent(typeof(CanvasGroup))]
     public abstract class PanelBase : MonoBehaviour
     {
+        [Tooltip("この Panel 全体の CanvasGroup。未設定なら Awake で自分から取得する")]
         [SerializeField] protected CanvasGroup canvasGroup;
+        [Tooltip("PanelIn 時に選択状態にする UI (未設定ならフォーカスを動かさない)")]
         [SerializeField] protected Selectable defaultSelected;
+        [Tooltip("PanelIn / PanelOut のフェード尺 (秒)")]
         [SerializeField] protected float fadeDuration = 0.25f;
 
         [Header("Audio")]
@@ -123,6 +126,16 @@ namespace VocaNerd
             if (target == null) return;
             if (EventSystem.current == null) return;
             EventSystem.current.SetSelectedGameObject(target.gameObject);
+        }
+
+        /// <summary>
+        /// UI の選択状態を外す。選択が残っていると EventSystem の Submit (どのパッドの A でも飛ぶ)
+        /// でそのボタンが押せてしまうので、1P 限定の入力に任せたい画面ではこれで選択を外す。
+        /// </summary>
+        protected void ClearFocus()
+        {
+            if (EventSystem.current == null) return;
+            EventSystem.current.SetSelectedGameObject(null);
         }
 
         protected virtual UniTask OnPanelPreOutAsync(CancellationToken token) => UniTask.CompletedTask;

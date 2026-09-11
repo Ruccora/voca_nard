@@ -96,6 +96,7 @@ namespace VocaNerd
         public override bool CanAcceptBack => _phase == Phase.Winner || _phase == Phase.WaitForExit;
         private InputAction _p1Action;
         private InputAction _p2Action;
+        private ResultInput _resultInput; // リザルトの A=再戦 / B=退出 (1P のみ)
         private CancellationTokenSource _roundCts;
         private UniTaskCompletionSource _pressSignal;
         private PressResult _pressResult;
@@ -126,6 +127,8 @@ namespace VocaNerd
             _p2Action.AddBinding("<Keyboard>/l");
             _p2Action.AddBinding("<Gamepad>/buttonSouth");
             _p2Action.performed += OnP2;
+
+            _resultInput = new ResultInput(OnResultRetry, OnResultExit);
 
             if (playAgainButton != null)
                 playAgainButton.onClick.AddListener(OnPlayAgain);
@@ -162,6 +165,7 @@ namespace VocaNerd
             CancelRound();
             _p1Action?.Disable();
             _p2Action?.Disable();
+            _resultInput?.Disable();
             await base.OnPanelOutAsync(token);
         }
 
@@ -170,6 +174,7 @@ namespace VocaNerd
             CancelRound();
             _p1Action?.Dispose();
             _p2Action?.Dispose();
+            _resultInput?.Dispose();
             if (playAgainButton != null) playAgainButton.onClick.RemoveListener(OnPlayAgain);
             if (_openingDimMat != null) Destroy(_openingDimMat);
         }
@@ -177,8 +182,32 @@ namespace VocaNerd
         private void OnPlayAgain()
         {
             if (IsAnimating) return;
+            _resultInput?.Disable();
             Audio.StopSE(); // 勝利 SE が長いので、鳴りっぱなしのまま次ラウンドに入らせない
             StartRound(replay: true);
+        }
+
+        // リザルト: 1P の A で再戦
+        private void OnResultRetry()
+        {
+            if (IsAnimating) return;
+            if (_phase != Phase.WaitForExit) return;
+            _resultInput.Disable();
+            Audio.StopSE(); // 勝利 SE が長いので、鳴りっぱなしのまま次ラウンドに入らせない
+            Audio.PlaySE(SeKey.Decide);
+            StartRound(replay: true);
+        }
+
+        // リザルト: 1P の B で抜ける (通常の退出シーケンスへ流す)
+        private void OnResultExit()
+        {
+            if (IsAnimating) return;
+            if (_phase != Phase.WaitForExit) return;
+            if (_pressSignal == null || _pressSignal.Task.Status.IsCompleted()) return;
+            _resultInput.Disable();
+            Audio.PlaySE(SeKey.Cancel);
+            _phase = Phase.Exiting;
+            _pressSignal.TrySetResult();
         }
 
         private void StartRound(bool replay = false)
@@ -454,17 +483,26 @@ namespace VocaNerd
                 resultGroup.interactable = true;
                 resultGroup.blocksRaycasts = true;
             }
-            SetFocus(playAgainButton);
+            // 選択を残すと EventSystem の Submit (2P のパッドの A でも飛ぶ) で押せてしまうので外す
+            ClearFocus();
             // TODO: 勝利演出（スポットライト・BGM切替・エフェクトなど）
             await UniTask.Yield(PlayerLoopTiming.Update, token);
         }
 
-        // -------- Stage 6: 任意ボタン入力待ち --------
+        // -------- Stage 6: 1P の A (再戦) / B (退出) 待ち --------
         private async UniTask WaitForExitPressAsync(CancellationToken token)
         {
             _phase = Phase.WaitForExit;
             _pressSignal = new UniTaskCompletionSource();
-            await _pressSignal.Task.AttachExternalCancellation(token);
+            _resultInput?.Enable();
+            try
+            {
+                await _pressSignal.Task.AttachExternalCancellation(token);
+            }
+            finally
+            {
+                _resultInput?.Disable();
+            }
         }
 
         // -------- Stage 7: 抜ける演出 --------
@@ -480,36 +518,14 @@ namespace VocaNerd
         // -------- 入力処理 --------
         private void OnP1(InputAction.CallbackContext ctx)
         {
-            if (!IsDeviceForPlayer(ctx.control.device, 1)) return;
+            if (!PlayerDevices.IsForPlayer(ctx, 1)) return;
             HandlePress(1);
         }
 
         private void OnP2(InputAction.CallbackContext ctx)
         {
-            if (!IsDeviceForPlayer(ctx.control.device, 2)) return;
+            if (!PlayerDevices.IsForPlayer(ctx, 2)) return;
             HandlePress(2);
-        }
-
-        // Keyboard は常に有効。Gamepad は接続順で player を割り当て
-        private static bool IsDeviceForPlayer(InputDevice device, int player)
-        {
-            if (device is Keyboard) return true;
-            if (device is Gamepad gp)
-            {
-                var idx = GamepadIndexOf(gp);
-                return idx == player - 1;
-            }
-            return false;
-        }
-
-        private static int GamepadIndexOf(Gamepad gp)
-        {
-            var all = Gamepad.all;
-            for (var i = 0; i < all.Count; i++)
-            {
-                if (all[i] == gp) return i;
-            }
-            return -1;
         }
 
         private void HandlePress(int player)
@@ -537,10 +553,7 @@ namespace VocaNerd
                     _phase = Phase.Reaction;
                     _pressSignal.TrySetResult();
                     break;
-                case Phase.WaitForExit:
-                    _phase = Phase.Exiting;
-                    _pressSignal.TrySetResult();
-                    break;
+                // リザルトの退出は ResultInput (1P の B) が担当するのでここでは扱わない
             }
         }
 

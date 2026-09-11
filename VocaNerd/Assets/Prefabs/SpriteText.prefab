@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2298404290605809387
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1758198211634929013}
+  - component: {fileID: 5205068997189625947}
+  - component: {fileID: 3332381882497619123}
+  m_Layer: 0
+  m_Name: SpriteText
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1758198211634929013
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2298404290605809387}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 900, y: 120}
+  m_Pivot: {x: 0.5, y: 1}
+--- !u!222 &5205068997189625947
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2298404290605809387}
+  m_CullTransparentMesh: 1
+--- !u!114 &3332381882497619123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2298404290605809387}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5691fabd7a9aa4cf599c836ce486f35d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  glyphPrefab: {fileID: 6974084262330292284, guid: d263c0487ad9c483f9b23d4cd53ae8e9, type: 3}
+  digitSprites:
+  - {fileID: 21300000, guid: 636fffcdeeb2947f4a40deaef1db23e4, type: 3}
+  - {fileID: 21300000, guid: bbdea5b6fb09a415eb1e9571d8d54024, type: 3}
+  - {fileID: 21300000, guid: 3d069b8cf36c8483f9357c211cd15697, type: 3}
+  - {fileID: 21300000, guid: 209f573b954514427841e7b411cacc2b, type: 3}
+  - {fileID: 21300000, guid: 9ff20555097914a5eb1d31e3169b821a, type: 3}
+  - {fileID: 21300000, guid: 25c2fcbdf988542cca9c2876f6951dc5, type: 3}
+  - {fileID: 21300000, guid: a746179275fc04cef91a08524a855281, type: 3}
+  - {fileID: 21300000, guid: da8370b049df64d76afab226976f5a1b, type: 3}
+  - {fileID: 21300000, guid: 0763ac8d7925640d8b67e30eebb5d5b3, type: 3}
+  - {fileID: 21300000, guid: 47f67d55e077c487ea242a8202b73bc7, type: 3}
+  colonSprite: {fileID: 21300000, guid: 4d04d75951c7a4061bd7c2b4a74d1db2, type: 3}
+  glyphHeight: 96
+  spacing: -40

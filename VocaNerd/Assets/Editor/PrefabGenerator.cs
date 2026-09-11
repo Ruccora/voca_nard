@@ -665,17 +665,30 @@ namespace VocaNerd.EditorTools
             var (p1Char, p1Anim) = CreateSpriteAnimCharacter(root.transform, "P1Character", rukaFrames, new Vector2(-420, -500));
             var (p2Char, p2Anim) = CreateSpriteAnimCharacter(root.transform, "P2Character", rukaFrames, new Vector2(420, -500));
 
-            // ラベル
-            CreateTMPText(root.transform, "P1Label", "P1 (A / D)", new Vector2(-420, 520), 32);
-            CreateTMPText(root.transform, "P2Label", "P2 (← / →)", new Vector2(420, 520), 32);
+            // ラベル (開始演出で明滅させるので CanvasGroup を持たせる)
+            var p1LabelGroup = CreatePlayerLabel(root.transform, "P1Label", "P1 (A / D)", new Vector2(-420, 520));
+            var p2LabelGroup = CreatePlayerLabel(root.transform, "P2Label", "P2 (← / →)", new Vector2(420, 520));
 
             // Miss バッジ
             var (_, p1MissGroup) = CreateMissBadge(root.transform, "P1Miss", new Vector2(-420, 360));
             var (_, p2MissGroup) = CreateMissBadge(root.transform, "P2Miss", new Vector2(420, 360));
 
+            // ---- 開始演出のキー表示 (キャラの 0 フレーム = A / 4 フレーム = B) ----
+            const string keyASprite = "Assets/Texture/Common/num-A.png";
+            const string keyBSprite = "Assets/Texture/Common/num-B.png";
+            var keySize = new Vector2(160, 160);
+            var p1KeyA = CreateOpeningImage(root.transform, "P1KeyA", keyASprite, new Vector2(-420, -180), keySize);
+            var p1KeyB = CreateOpeningImage(root.transform, "P1KeyB", keyBSprite, new Vector2(-420, -180), keySize);
+            var p2KeyA = CreateOpeningImage(root.transform, "P2KeyA", keyASprite, new Vector2(420, -180), keySize);
+            var p2KeyB = CreateOpeningImage(root.transform, "P2KeyB", keyBSprite, new Vector2(420, -180), keySize);
+
+            // ---- 開始演出の Ready / Go ----
+            var (readyRect, readyGroup) = CreateOpeningLabelImage(root.transform, "Ready",
+                "Assets/Texture/Common/num-READY.png", new Vector2(726, 174));
+            var (goRect, goGroup) = CreateOpeningLabelImage(root.transform, "Go",
+                "Assets/Texture/Common/num-GO.png", new Vector2(330, 174));
+
             // ---- 中央オーバーレイ ----
-            var introText = CreateTMPText(root.transform, "IntroText", "", Vector2.zero, 72);
-            var countdownText = CreateTMPText(root.transform, "CountdownText", "", Vector2.zero, 128);
             var timerText = CreateTMPText(root.transform, "TimerText", "10.0", new Vector2(0, -560), 48);
 
             // ---- Result ----
@@ -693,8 +706,6 @@ namespace VocaNerd.EditorTools
 
             // ---- Assign ----
             AssignField(game, "canvasGroup", root.GetComponent<CanvasGroup>());
-            AssignField(game, "introText", introText);
-            AssignField(game, "countdownText", countdownText);
             AssignField(game, "timerText", timerText);
             AssignField(game, "resultGroup", resultGroup);
             AssignField(game, "winnerText", winnerText);
@@ -709,8 +720,66 @@ namespace VocaNerd.EditorTools
             AssignField(game, "player2Anim", p2Anim);
             AssignField(game, "player1MissGroup", p1MissGroup);
             AssignField(game, "player2MissGroup", p2MissGroup);
+            AssignField(game, "player1LabelGroup", p1LabelGroup);
+            AssignField(game, "player2LabelGroup", p2LabelGroup);
+            AssignField(game, "player1KeyAGroup", p1KeyA);
+            AssignField(game, "player1KeyBGroup", p1KeyB);
+            AssignField(game, "player2KeyAGroup", p2KeyA);
+            AssignField(game, "player2KeyBGroup", p2KeyB);
+            AssignField(game, "readyRect", readyRect);
+            AssignField(game, "readyGroup", readyGroup);
+            AssignField(game, "goRect", goRect);
+            AssignField(game, "goGroup", goGroup);
 
             SavePrefab(root);
+        }
+
+        // 開始演出で明滅させるプレイヤーラベル (CanvasGroup 付き)
+        private static CanvasGroup CreatePlayerLabel(Transform parent, string name, string label, Vector2 anchoredPos)
+        {
+            var text = CreateTMPText(parent, name, label, anchoredPos, 32);
+            var group = text.gameObject.AddComponent<CanvasGroup>();
+            group.alpha = 0f;
+            group.blocksRaycasts = false;
+            group.interactable = false;
+            return group;
+        }
+
+        // 開始演出用の画像 (初期は透明。表示は MashRaceGame が CanvasGroup で切り替える)
+        private static CanvasGroup CreateOpeningImage(Transform parent, string name, string spritePath,
+            Vector2 anchoredPos, Vector2 size)
+        {
+            var (_, group) = CreateOpeningImageInternal(parent, name, spritePath, anchoredPos, size);
+            return group;
+        }
+
+        // Ready / Go は scale をアニメーションさせるので RectTransform も返す
+        private static (RectTransform rt, CanvasGroup group) CreateOpeningLabelImage(Transform parent, string name,
+            string spritePath, Vector2 size)
+            => CreateOpeningImageInternal(parent, name, spritePath, Vector2.zero, size);
+
+        private static (RectTransform rt, CanvasGroup group) CreateOpeningImageInternal(Transform parent, string name,
+            string spritePath, Vector2 anchoredPos, Vector2 size)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = size;
+            rt.anchoredPosition = anchoredPos;
+
+            var img = go.GetComponent<Image>();
+            img.sprite = LoadSprite(spritePath);
+            img.preserveAspect = true;
+            img.raycastTarget = false;
+
+            var group = go.GetComponent<CanvasGroup>();
+            group.alpha = 0f;
+            group.blocksRaycasts = false;
+            group.interactable = false;
+            return (rt, group);
         }
 
         private static void StretchFull(RectTransform rt)

@@ -30,11 +30,12 @@ namespace VocaNerd
             base.Awake();
             backButton.onClick.AddListener(OnBack);
 
+            // ゲームパッドの B / select はここでは拾わない。ミニゲームのリザルトで
+            // 「1P の B で抜ける」を各ゲーム側 (ResultInput) が持っていて、二重に効いてしまうため。
+            // ここに残すのは開発用のキーボード Back だけ。
             _backAction = new InputAction("Back", InputActionType.Button);
             _backAction.AddBinding("<Keyboard>/escape");
             _backAction.AddBinding("<Keyboard>/backspace");
-            _backAction.AddBinding("<Gamepad>/buttonEast");
-            _backAction.AddBinding("<Gamepad>/select");
             _backAction.performed += _ => OnBack();
         }
 

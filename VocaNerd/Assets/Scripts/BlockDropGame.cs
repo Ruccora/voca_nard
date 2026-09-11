@@ -77,6 +77,7 @@ namespace VocaNerd
         private readonly PlayerState _p2 = new PlayerState();
         private InputAction _p1Left, _p1Right, _p1Knock, _p1KnockAlt;
         private InputAction _p2Left, _p2Right, _p2Knock, _p2KnockAlt;
+        private ResultInput _resultInput; // リザルトの A=再戦 / B=退出 (1P のみ)
         private CancellationTokenSource _roundCts;
         private UniTaskCompletionSource _winnerSignal;
         private UniTaskCompletionSource _exitSignal;
@@ -89,24 +90,28 @@ namespace VocaNerd
             if (_isSetup) return UniTask.CompletedTask;
             _isSetup = true;
 
-            _p1Left = MakeAction("P1Left", "<Keyboard>/a");
-            _p1Right = MakeAction("P1Right", "<Keyboard>/d");
-            _p1Knock = MakeAction("P1Knock", "<Keyboard>/w");
-            _p1KnockAlt = MakeAction("P1KnockAlt", "<Keyboard>/s");
+            // 左右移動は十字キー / 左スティック、叩くのは A (buttonSouth) / B (buttonEast)。
+            // 1P/2P で同じボタンを張っておき、どちらのパッドかは PlayerDevices で振り分ける。
+            _p1Left = MakeAction("P1Left", "<Keyboard>/a", "<Gamepad>/dpad/left", "<Gamepad>/leftStick/left");
+            _p1Right = MakeAction("P1Right", "<Keyboard>/d", "<Gamepad>/dpad/right", "<Gamepad>/leftStick/right");
+            _p1Knock = MakeAction("P1Knock", "<Keyboard>/w", "<Gamepad>/buttonSouth");
+            _p1KnockAlt = MakeAction("P1KnockAlt", "<Keyboard>/s", "<Gamepad>/buttonEast");
 
-            _p2Left = MakeAction("P2Left", "<Keyboard>/leftArrow");
-            _p2Right = MakeAction("P2Right", "<Keyboard>/rightArrow");
-            _p2Knock = MakeAction("P2Knock", "<Keyboard>/upArrow");
-            _p2KnockAlt = MakeAction("P2KnockAlt", "<Keyboard>/downArrow");
+            _p2Left = MakeAction("P2Left", "<Keyboard>/leftArrow", "<Gamepad>/dpad/left", "<Gamepad>/leftStick/left");
+            _p2Right = MakeAction("P2Right", "<Keyboard>/rightArrow", "<Gamepad>/dpad/right", "<Gamepad>/leftStick/right");
+            _p2Knock = MakeAction("P2Knock", "<Keyboard>/upArrow", "<Gamepad>/buttonSouth");
+            _p2KnockAlt = MakeAction("P2KnockAlt", "<Keyboard>/downArrow", "<Gamepad>/buttonEast");
 
-            _p1Left.performed += _ => OnMove(1, PlayerSide.Left);
-            _p1Right.performed += _ => OnMove(1, PlayerSide.Right);
-            _p1Knock.performed += _ => OnKnock(1);
-            _p1KnockAlt.performed += _ => OnKnock(1);
-            _p2Left.performed += _ => OnMove(2, PlayerSide.Left);
-            _p2Right.performed += _ => OnMove(2, PlayerSide.Right);
-            _p2Knock.performed += _ => OnKnock(2);
-            _p2KnockAlt.performed += _ => OnKnock(2);
+            _p1Left.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 1)) OnMove(1, PlayerSide.Left); };
+            _p1Right.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 1)) OnMove(1, PlayerSide.Right); };
+            _p1Knock.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 1)) OnKnock(1); };
+            _p1KnockAlt.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 1)) OnKnock(1); };
+            _p2Left.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 2)) OnMove(2, PlayerSide.Left); };
+            _p2Right.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 2)) OnMove(2, PlayerSide.Right); };
+            _p2Knock.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 2)) OnKnock(2); };
+            _p2KnockAlt.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 2)) OnKnock(2); };
+
+            _resultInput = new ResultInput(OnResultRetry, OnResultExit);
 
             if (playAgainButton != null)
                 playAgainButton.onClick.AddListener(OnPlayAgain);
@@ -134,13 +139,14 @@ namespace VocaNerd
             CancelRound();
             _p1Left?.Dispose(); _p1Right?.Dispose(); _p1Knock?.Dispose(); _p1KnockAlt?.Dispose();
             _p2Left?.Dispose(); _p2Right?.Dispose(); _p2Knock?.Dispose(); _p2KnockAlt?.Dispose();
+            _resultInput?.Dispose();
             if (playAgainButton != null) playAgainButton.onClick.RemoveListener(OnPlayAgain);
         }
 
-        private static InputAction MakeAction(string name, string binding)
+        private static InputAction MakeAction(string name, params string[] bindings)
         {
             var a = new InputAction(name, InputActionType.Button);
-            a.AddBinding(binding);
+            foreach (var binding in bindings) a.AddBinding(binding);
             return a;
         }
 
@@ -154,12 +160,36 @@ namespace VocaNerd
         {
             _p1Left?.Disable(); _p1Right?.Disable(); _p1Knock?.Disable(); _p1KnockAlt?.Disable();
             _p2Left?.Disable(); _p2Right?.Disable(); _p2Knock?.Disable(); _p2KnockAlt?.Disable();
+            _resultInput?.Disable();
         }
 
         private void OnPlayAgain()
         {
             if (IsAnimating) return;
+            _resultInput?.Disable();
             StartRound();
+        }
+
+        // リザルト: 1P の A で再戦
+        private void OnResultRetry()
+        {
+            if (IsAnimating) return;
+            if (_phase != Phase.WaitForExit) return;
+            _resultInput.Disable();
+            Audio.PlaySE(SeKey.Decide);
+            StartRound();
+        }
+
+        // リザルト: 1P の B で抜ける (通常の退出シーケンスへ流す)
+        private void OnResultExit()
+        {
+            if (IsAnimating) return;
+            if (_phase != Phase.WaitForExit) return;
+            if (_exitSignal == null || _exitSignal.Task.Status.IsCompleted()) return;
+            _resultInput.Disable();
+            Audio.PlaySE(SeKey.Cancel);
+            _phase = Phase.Exiting;
+            _exitSignal.TrySetResult();
         }
 
         private void StartRound()
@@ -247,16 +277,25 @@ namespace VocaNerd
                 resultGroup.interactable = true;
                 resultGroup.blocksRaycasts = true;
             }
-            SetFocus(playAgainButton);
+            // 選択を残すと EventSystem の Submit (2P のパッドの A でも飛ぶ) で押せてしまうので外す
+            ClearFocus();
             await UniTask.Yield(PlayerLoopTiming.Update, token);
         }
 
-        // -------- 任意ボタン待ち --------
+        // -------- 1P の A (再戦) / B (退出) 待ち --------
         private async UniTask WaitForExitPressAsync(CancellationToken token)
         {
             _phase = Phase.WaitForExit;
             _exitSignal = new UniTaskCompletionSource();
-            await _exitSignal.Task.AttachExternalCancellation(token);
+            _resultInput?.Enable();
+            try
+            {
+                await _exitSignal.Task.AttachExternalCancellation(token);
+            }
+            finally
+            {
+                _resultInput?.Disable();
+            }
         }
 
         // -------- 抜ける演出 --------
@@ -309,7 +348,7 @@ namespace VocaNerd
         // -------- 入力ハンドラ --------
         private void OnMove(int player, PlayerSide target)
         {
-            if (_phase == Phase.WaitForExit) { TryExit(); return; }
+            // リザルトの再戦 / 退出は ResultInput (1P の A / B) が担当するのでここでは扱わない
             if (_phase != Phase.Playing) return;
             var state = player == 1 ? _p1 : _p2;
             if (state.isMoving || state.isLocked) return;
@@ -339,7 +378,7 @@ namespace VocaNerd
 
         private void OnKnock(int player)
         {
-            if (_phase == Phase.WaitForExit) { TryExit(); return; }
+            // リザルトの再戦 / 退出は ResultInput (1P の A / B) が担当するのでここでは扱わない
             if (_phase != Phase.Playing) return;
             var state = player == 1 ? _p1 : _p2;
             if (state.isMoving || state.isLocked) return;
@@ -402,13 +441,6 @@ namespace VocaNerd
             var blinker = player == 1 ? player1CharacterBlinker : player2CharacterBlinker;
             if (blinker == null) return UniTask.CompletedTask;
             return blinker.BlinkAsync(duration, token);
-        }
-
-        private void TryExit()
-        {
-            if (_exitSignal == null || _exitSignal.Task.Status.IsCompleted()) return;
-            _phase = Phase.Exiting;
-            _exitSignal.TrySetResult();
         }
 
         // -------- View reset --------

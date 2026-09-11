@@ -50,6 +50,17 @@ namespace VocaNerd
             catch (OperationCanceledException) { }
         }
 
+        // 明滅を打ち切って表示状態に戻す。キャンセルされた BlinkAsync は alpha を戻さないので、
+        // ラウンドのやり直しなど「初期状態に戻したい」ときはこれを呼ぶ。
+        public void Restore()
+        {
+            _cts?.Cancel();
+            _cts?.Dispose();
+            _cts = null;
+            if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
+            if (canvasGroup != null) canvasGroup.alpha = 1f;
+        }
+
         private void OnDestroy()
         {
             _cts?.Cancel();

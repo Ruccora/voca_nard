@@ -211,10 +211,38 @@ Idle → Intro → Waiting(3~5秒) → Ready(画像表示) → Reaction → Winn
 
 ### 概要
 ```
-Idle → Intro(1.2s) → Countdown(3-2-1-GO) → Playing(10秒)
+Idle → Opening(黒フェード明け → キャラ 0/4 往復 ×4 → ラベル非表示 → Ready → Go) → Playing(10秒 / Go の FadeOut 完了で開始)
      → Result (キャラ上昇 → 背景スクロール → object 生成 → 背景停止 → object 継続 → キャラ落下)
      → Winner → WaitForExit → Exiting → Select
 ```
+
+### 7.0 開始演出
+- **要件**:
+  - 遷移の黒フェードで入ってきた後に開始
+  - キャラを 0 / 4 フレームで交互アニメーション。0 のとき A 画像、4 のとき B 画像を表示 (明滅なし)
+  - 4 往復したら完全停止
+  - `Ready` の開始時に P1 / P2 ラベルと A / B 表示を消す (ここから先はゲーム前だと分かるように)
+  - `Ready` が ScaleDown + FadeIn で登場 (FadeIn は ScaleDown と同時開始・尺は別指定)
+  - `Go` が ScaleUp + FadeOut。FadeOut は ScaleUp が半分まで進んでから残り時間で消える
+  - **ゲーム開始は `Go` の FadeOut 完了時**。同時にタイマーを表示し、A / B は「次に押す必要があるキー」を常時表示する
+- **実装**: `MashRaceGame.PlayOpeningAsync`
+  - `ScreenController.WaitForTransitionFadeAsync` で明転を待つ
+  - `PlayOpeningCharacterAsync` — `openingCycles` 回 `ShowOpeningFrameAsync(0/4)`、A/B は CanvasGroup の alpha 切り替え
+  - `HideOpeningLabels` (= `HidePlayerLabels` + `HideKeyLabels`) を Ready の直前に呼ぶ
+  - `PlayReadyAsync` — ScaleDown と FadeIn を `UniTask.WhenAll` で同時進行 (`readyScaleDuration` / `readyFadeInDuration`)
+  - `PlayGoAsync` — `goFadeOutStartRatio` (既定 0.5) 到達後の残り時間で FadeOut。`RunRoundAsync` が await するので完了 = ゲーム開始
+  - `PlayGameAsync` の頭で `SetTimer(playDuration)` + `UpdateKeyHint(1/2)`、終了時に `HideKeyLabels`
+- **スケール指定の方針**: 倍率 (比率) は使わない。**開始スケール = prefab で設定した scale**、
+  **到達スケール = Inspector の `〜EndScale` (絶対値)**。対象は `readyEndScale` / `goEndScale` /
+  `groundEndScale` / `starsEndScale` / `charEndScale` / `earthEndScale`。`SetScale` は XY のみ変更し Z は prefab の値を残す
+  - `SetTimer` — 残り時間を「秒:1/100秒」(`09:58` = 9.58 秒) で `SpriteNumber` に表示。端数は切り上げで 0 になって初めて `00:00`
+  - タイマーは結果演出の飛び始め (`PlayResultEffectAsync` の `StartFlyAnimation` 直後) に `Clear()` で消す
+
+### 7.0.1 押すキーの常時表示
+- **要件**: プレイ中は A / B のどちらを押す必要があるかを常に表示する
+- **実装**: `UpdateKeyHint(player)`
+  - 次に必要な向き = `lastDirection == 0 ? 左(A) : -lastDirection`。該当する CanvasGroup だけ alpha 1
+  - 押下成功 (`HandlePress`) ごとに更新。ミス明滅 (`PlayMissAsync`) の後もここへ戻す
 
 ### 7.1 ゲームルール
 - **要件**: 左右交互連打でゲージ増加、同方向連打はミス + 0.2 秒ロック、10 秒プレイ
@@ -240,6 +268,51 @@ Idle → Intro(1.2s) → Countdown(3-2-1-GO) → Playing(10秒)
   - Phase 2 途中 (`bgMaxScroll/2` 到達) から Object 生成開始
   - `bgMaxScroll` 到達で背景停止、Object のみ継続
   - 最後 `decelZone` (200px) で減速
+
+### 7.4.1 勝敗によるキャラの挙動 (現行)
+- **要件**:
+  - **引き分けなし**。連打数が同数ならランダムで 1P / 2P のどちらかを勝者にする
+  - 敗者も溜まったエネルギー (連打数) ぶんは勝者と一緒に飛ぶ。尽きたら先に落ちる
+  - **勝利演出を始める時、敗者はパワーが残っていても敗北演出 (落下) に入る**
+  - **勝利演出は敗北演出 (落下) の開始から最低 1 秒空ける** (`winnerEffectMinDelayAfterLoserFall`)
+  - 勝利演出は Z 回転ではなく **指定スケールへの変更 + 真横の往復移動**。スケールの尺と往復の尺は別物。
+    往復はラウンド中ずっと続き、スプライトアニメーションも再生し続ける
+  - 勝利演出を予約するタイミングは、パワーが余って白に到達した場合は **白 FadeIn の 1 秒後**
+    (`winnerEffectDelayAfterWhite`)。予算切れで白に届かなかった場合はシーケンス終了時
+  - **Result (勝敗表示 + 入力受付) は勝利演出の開始から 1.5 秒後** (`resultDelayAfterWinnerEffect`)
+- **実装**: `MashRaceGame.PlayResultEffectAsync`
+  - 勝者判定は `_p1Won`（同数時は `UnityEngine.Random.value < 0.5f`）。表示メッセージもこれを使う
+  - 換算は勝者の演出予算と共通 (`secondsPerAlternation = ToWhiteSeconds() / whiteReachAlternations`)
+  - `FlyThenFallLoserAsync(loser, minPower * secondsPerAlternation)` — 上昇 → パワー切れまで滞空 → 落下
+    - 滞空は `UniTask.WhenAny(パワー分の Delay, _loserFlyCut.Task)`。`StartWinnerEffect` が
+      `_loserFlyCut.TrySetResult()` するので、勝利演出の予約で滞空を打ち切って落下に入る
+    - 落下開始時に `_shrinkChar*` から自分を外し (縮小と落下の競合防止)、`_loserFallTime` を記録
+  - `StartWinnerEffect` → `RunWinnerEffectAsync`（`_winnerCts` = round トークン由来、二重起動なし）
+    1. 敗者の落下開始 (`_loserFell`) を待ち、`_loserFallTime` から最低秒数まで待機
+    2. `_winnerEffectStarted.TrySetResult()`（Result の基準）+ スプライトアニメ再生
+    3. `ScaleWinnerCharAsync`（`winnerEffectEndScale` / `winnerEffectScaleDuration`、一度だけ）を `Forget()` し、
+       `MoveWinnerCharAsync`（`winnerEffectMoveDistance` / `winnerEffectMoveDuration` の sin 往復）を回し続ける
+  - `PlayWinnerEffectAsync` は `_winnerEffectStarted` を待ってから `resultDelayAfterWinnerEffect` 秒後に Result を出す
+
+### 7.4.2 背景シーケンスの順序 (現行)
+1. 地面: 少し上昇 (`groundRiseDuration`)
+2. 地面: `groundEndScale` まで縮小 (`groundShrinkDuration`)
+3. 地面: 連打数ぶん下降して消える (`groundDescendDuration`)
+4. 星 + 飛んでいるキャラ: `starsEndScale` / `charEndScale` まで縮小 (`starsShrinkDuration`)
+   - 完了後、星だけ続けて **最終 ScaleDown (`starsFadeOutEndScale` = 0.2) + FadeOut**
+     (`starsFadeOutDuration`。地球の演出とは独立した尺)
+   - 4 の一連は `ShrinkStarsThenFadeOutAsync` を `Forget()` して並行実行し、シーケンス本体は 5 の開始時刻まで待つ
+5. 地球: 下から競り上がる (`earthRiseDuration`)。開始は **星の縮小が終わる `earthRiseLeadBeforeStarsEnd` 秒前**
+   (既定 1 秒。星の縮小尺でクランプ) なので、星の最終 FadeOut と地球の競り上がりが重なる
+6. 地球: `earthEndScale` まで縮小 (`earthShrinkDuration`)
+7. 待機 (`earthHoldBeforeWhite`)
+8. 白 FadeIn (`whiteFadeDuration`)
+9. `winnerEffectDelayAfterWhite` (既定 1 秒) 待って勝利演出を予約 — この時点で敗者はパワーが残っていても落下する。
+   勝利演出 (スケール変更 + 真横の往復) は落下開始から `winnerEffectMinDelayAfterLoserFall` (既定 1 秒) 後に始まり、
+   その 1.5 秒後 (`resultDelayAfterWinnerEffect`) に Result が出る
+
+- 星の FadeOut は `starsGroup` があればそれ、無ければ `starsRect` の Graphic の alpha を直接操作する
+- 星の Z 回転 (`Update`) は演出停止でも止めない。停止時は「その時の見た目で固定」
 
 ### 7.5 Object の挙動
 - **要件**: スクロール停止時に object も停止、その後 上下に少し揺れる
@@ -274,7 +347,7 @@ Idle → Intro(1.2s) → Countdown(3-2-1-GO) → Playing(10秒)
 
 ### 概要
 ```
-Idle → Intro(1.2s) → Countdown(3-2-1-GO) → Playing (30マスをA/Bキーで進む)
+Idle → Opening (けんけんぱデモ3マス → Ready → Go) → Playing (残りマスをA/Bキーで進む)
      → Goal → Winner → WaitForExit → Exiting → Select
 ```
 - 進む: 正しいキー → 0.4秒でマーカー移動
@@ -282,7 +355,7 @@ Idle → Intro(1.2s) → Countdown(3-2-1-GO) → Playing (30マスをA/Bキー�
 - トグル: 1秒周期で jumpable/unjumpable、間隔最小3マス
 
 ### 8.1 ゲームルール
-- **要件**: けんけんぱ、A/B パターンのマスを正しいキーで進む、失敗すると 0.3 秒停止、移動 0.4 秒/マス
+- **要件**: けんけんぱ、A/B パターンのマスを正しいキーで進む、失敗すると 1 秒停止 (8.12)、移動 0.4 秒/マス
 - **実装**: `HopscotchRaceGame.cs`
 
 ### 8.2 レイアウト
@@ -332,6 +405,62 @@ Idle → Intro(1.2s) → Countdown(3-2-1-GO) → Playing (30マスをA/Bキー�
     色 = `cellColors[(colorStart + courseIndex) % 3]` でループするため隣接マスは必ず別色
   - `HopscotchCell.Setup(isTypeA, isToggle, sprite, color)` が `background` /
     `secondaryImage` に反映 (けん = わっか 1 つ、ぱ = わっか 2 つ)
+
+### 8.10 開始演出 (けんけんぱデモ → Ready/Go)
+- **要件**:
+  - レースの頭に けんけんぱ が 1 セットあり、そこを自動で 3 マス飛ぶ演出から始まる
+  - 飛ぶ前の位置 (start cell) は **ぱ**。自キャラも ぱ の画像 (アニメーションの最終フレーム) で待機
+    → 見た目の並びは `ぱ → けん → けん → ぱ`
+  - デモは 1P/2P 同時。飛んだ 3 マスは本番コースの頭 3 マスそのもの (position 2 から本番開始)
+  - デモの後に MashRace と同じ Ready → Go 演出を出す
+- **実装**:
+  - `IntroPattern = { A, A, B }` (けん・けん・ぱ) を `GenerateCourse` が頭 3 マスに固定生成。
+    このマスにはトグルを置かない
+  - `CreateStartCell` が `Setup(isTypeA: false, ...)` で start cell を ぱ にする。
+    色は `GetCellColor(colorStart, -1)` (負数でも巡回する剰余)
+  - キャラは けん / ぱ で **SpriteAnimation を 2 つ**持つ (`player1KenAnim` / `player1PaAnim`、2P も同様)。
+    `ShowCellAnim(player, courseIndex, play)` が飛び先のマス種別で使う方だけ `SetActive(true)` にして
+    `Play()`、もう片方は隠す。`play: false` は最終フレームで静止 (着地して待機している状態)。
+    start cell (-1) は ぱ 扱いなので、開始時は ぱ アニメの最終フレームで待機する
+  - `PlayKenKenPaDemoAsync` が `UniTask.WhenAll` で 1P/2P 同時に `JumpAsync` を 3 回
+  - `JumpAsync(player, state, targetIndex, duration, token)` を本番の `MoveAsync` と共有 (尺だけ差し替え)。
+    ゴール判定は `MoveAsync` 側にのみ持たせ、デモでは発火しない
+  - Ready/Go は MashRace と同じ実装 (`PlayReadyAsync` = ScaleDown + FadeIn、
+    `PlayGoAsync` = ScaleUp + 途中から FadeOut、Go はプレイと並行)
+  - 旧 `introText` ("READY?") / `countdownText` (3-2-1-GO) は廃止
+
+### 8.11 Play Again (再戦)
+- **要件**:
+  - Play Again でも初回開始時とまったく同じ状態から始まる
+  - リザルトから間を置かず始まらないよう、QuickDraw と同じく 1 秒待ってから開始演出に入る
+- **実装**:
+  - `StartRound(replay: true)` → `RunRoundAsync(token, replay)` → `PlayOpeningAsync(token, replay)`。
+    明転待ちの直後に `replayDelay` (既定 1 秒) を挟む
+  - `ResetRoundView` が Ready/Go の alpha・scale、キャラの足元位置、
+    `CanvasGroupBlinker.Restore()` (ミス明滅で透明のまま残るのを防ぐ) を初期状態に戻す
+  - `ResetPlayerStates` が position (-1)・`_winner`・`_playElapsed` とキャラの ぱ 姿勢を戻す
+  - コース・マスは `GenerateCourse` / `SpawnCells` で毎ラウンド作り直し (再戦ごとに別コース)
+
+### 8.12 失敗演出 (飛び上がり + 左右に傾く)
+- **要件**: 間違えたら 1 秒くらいかけて、左右左右と傾きながら飛び上がる
+- **実装**: `StopAsync` → `PlayMissJumpAsync(player, missLockDuration, token)`
+  - `missLockDuration` (既定 1 秒) = 演出尺 = そのプレイヤーの入力ロック時間
+  - 飛び上がり: 尺いっぱいで `missJumpHeight * Sin(t * π)` の山なり 1 回
+  - 傾き: 尺を `missTiltCount` (既定 4 = 左右左右) 等分して `±missTiltAngle` を交互に当てる
+  - マスは進まないので `RefreshCells` は触らず、キャラの `anchoredPosition` / `localRotation` だけ動かす。
+    `finally` で必ず足元・home 回転に戻す
+  - 明滅は `missBlinkDuration` (既定 0.3 秒) に分離。0 にすれば明滅なし
+
+### 8.13 待機のたてゆれ (Y スケール)
+- **要件**: 飛んでいない状態が 0.5 秒続いたら待機とみなし、Y スケールを 0.9 ↔ 1 で繰り返す。
+  飛んでいる間は 1
+- **実装**: `Update` → `UpdateIdleScale(state, character, homeScale)` (1P/2P それぞれ)
+  - `PlayerState.idleElapsed` が「飛んでいない秒数」。`isMoving` (マス移動) または
+    `isStopped` (失敗の飛び上がり) の間は 0 にリセットし、scale を home に戻す
+  - `idleScaleDelay` (既定 0.5 秒) を超えたらそこから開始。
+    `y = Lerp(idleScaleMinY, 1, (1 + cos(2πt)) / 2)` なので開始時点がちょうど 1 倍、
+    そこから縮んで戻るのを `idleScalePeriod` (既定 0.6 秒) 周期で繰り返す
+  - X / Z は home のまま。scale をかける対象は `player1Character` (子の Ken/Pa アニメも一緒に伸縮する)
 
 ---
 
