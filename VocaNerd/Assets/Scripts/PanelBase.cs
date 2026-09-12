@@ -152,7 +152,7 @@ namespace VocaNerd
             canvasGroup.blocksRaycasts = value;
         }
 
-        private static async UniTask FadeAsync(CanvasGroup group, float from, float to, float duration, CancellationToken token)
+        protected static async UniTask FadeAsync(CanvasGroup group, float from, float to, float duration, CancellationToken token)
         {
             if (duration <= 0f)
             {

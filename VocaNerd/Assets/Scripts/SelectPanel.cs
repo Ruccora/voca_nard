@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -8,23 +9,30 @@ namespace VocaNerd
 {
     public class SelectPanel : PanelBase
     {
-        [SerializeField] private MiniGameData[] miniGames = new MiniGameData[4];
+        [Tooltip("ミニゲームごとの説明画面 prefab。ボタンと同じ並び順 (0=左上 1=右上 2=左下 3=右下)")]
+        [SerializeField] private ExplainPanelBase[] explainPanelPrefabs = new ExplainPanelBase[4];
         [SerializeField] private Button[] miniGameButtons = new Button[4];
-        [SerializeField] private Image[] miniGameThumbnails = new Image[4];
-        [SerializeField] private ExplainPanel explainPanelPrefab;
         [SerializeField] private RectTransform explainRoot;
         [SerializeField] private SelectionIndicator selectionIndicator;
         [SerializeField] private float expandDuration = 0.35f;
 
         [Header("Animated Rects")]
-        [SerializeField] private RectTransform headerRect;
         [SerializeField] private RectTransform[] miniGameButtonRects = new RectTransform[4];
 
-        public RectTransform HeaderRect => headerRect;
+        [Header("Intro (FadeIn → 一拍おいて ScaleUp)")]
+        [Tooltip("FadeIn の後に拡大する object")]
+        [SerializeField] private RectTransform introScaleUpRect;
+        [Tooltip("FadeIn が終わってから拡大を始めるまでの待機秒数")]
+        [SerializeField] private float introScaleUpDelay = 1f;
+        [Tooltip("拡大後のスケール倍率 (prefab のスケールに対する倍率)。拡大したらそのまま維持する")]
+        [SerializeField] private float introScaleUpFactor = 1.3f;
+        [Tooltip("拡大にかける秒数")]
+        [SerializeField] private float introScaleUpDuration = 0.8f;
+
         public RectTransform[] MiniGameButtonRects => miniGameButtonRects;
 
-        private ExplainPanel _activeExplain;
-        private Vector2 _headerRestingPos;
+        private ExplainPanelBase _activeExplain;
+        private Vector3 _introScaleUpHome = Vector3.one;
         private Vector2[] _buttonRestingPos;
         private Vector2[] _buttonRestingSize;
         private int _selectedIndex = -1;
@@ -37,14 +45,11 @@ namespace VocaNerd
                 var index = i;
                 if (miniGameButtons[i] != null)
                     miniGameButtons[i].onClick.AddListener(() => OnSelect(index));
-
-                if (miniGameThumbnails[i] != null && miniGames[i] != null)
-                    miniGameThumbnails[i].sprite = miniGames[i].Thumbnail;
             }
 
             SetupNavigation();
 
-            if (headerRect != null) _headerRestingPos = headerRect.anchoredPosition;
+            if (introScaleUpRect != null) _introScaleUpHome = introScaleUpRect.localScale;
             _buttonRestingPos = new Vector2[miniGameButtonRects.Length];
             _buttonRestingSize = new Vector2[miniGameButtonRects.Length];
             for (var i = 0; i < miniGameButtonRects.Length; i++)
@@ -92,27 +97,26 @@ namespace VocaNerd
         {
             if (IsAnimating) return;
             if (_activeExplain != null) return;
-            if (index < 0 || index >= miniGames.Length) return;
-            var data = miniGames[index];
-            if (data == null || explainPanelPrefab == null) return;
+            if (index < 0 || index >= explainPanelPrefabs.Length) return;
+            var prefab = explainPanelPrefabs[index];
+            if (prefab == null) return;
 
             _selectedIndex = index;
-            OpenExplainAsync(data).Forget();
+            OpenExplainAsync(prefab).Forget();
         }
 
-        private async UniTaskVoid OpenExplainAsync(MiniGameData data)
+        private async UniTaskVoid OpenExplainAsync(ExplainPanelBase prefab)
         {
             var token = this.GetCancellationTokenOnDestroy();
-            ExplainPanel explain = null;
+            ExplainPanelBase explain = null;
             try
             {
                 await PanelPreOutAsync(token);
                 SetInteractable(true);
 
                 var parent = explainRoot != null ? explainRoot : (RectTransform)transform;
-                explain = Instantiate(explainPanelPrefab, parent);
+                explain = Instantiate(prefab, parent);
                 _activeExplain = explain;
-                explain.Bind(data);
                 await explain.SetupAsync(token);
                 await explain.PanelInAsync(token);
                 await explain.Closed;
@@ -235,68 +239,52 @@ namespace VocaNerd
 
         protected override async UniTask OnPanelInAsync(CancellationToken token)
         {
-            canvasGroup.alpha = 1f;
-
-            var panelRt = (RectTransform)transform;
-            var panelW = panelRt.rect.width;
-            var panelH = panelRt.rect.height;
-
-            var headerStart = _headerRestingPos;
-            if (headerRect != null)
-            {
-                var slideY = (panelH > 0f ? panelH * 0.5f : 540f)
-                             + headerRect.rect.height * 0.5f + 40f;
-                headerStart = _headerRestingPos + new Vector2(0f, slideY);
-                headerRect.anchoredPosition = headerStart;
-            }
-
-            var buttonStarts = new Vector2[miniGameButtonRects.Length];
-            for (var i = 0; i < miniGameButtonRects.Length; i++)
-            {
-                var rt = miniGameButtonRects[i];
-                if (rt == null) continue;
-                var fromLeft = i % 2 == 0;
-                var slideX = (panelW > 0f ? panelW * 0.5f : 960f)
-                             + rt.rect.width * 0.5f + 40f;
-                buttonStarts[i] = _buttonRestingPos[i] + new Vector2(fromLeft ? -slideX : slideX, 0f);
-                rt.anchoredPosition = buttonStarts[i];
-            }
-
-            var duration = fadeDuration;
-            if (duration > 0f)
-            {
-                var elapsed = 0f;
-                while (elapsed < duration)
-                {
-                    token.ThrowIfCancellationRequested();
-                    elapsed += Time.unscaledDeltaTime;
-                    var t = Mathf.Clamp01(elapsed / duration);
-                    var eased = 1f - Mathf.Pow(1f - t, 3f);
-
-                    if (headerRect != null)
-                        headerRect.anchoredPosition = Vector2.LerpUnclamped(headerStart, _headerRestingPos, eased);
-
-                    for (var i = 0; i < miniGameButtonRects.Length; i++)
-                    {
-                        var rt = miniGameButtonRects[i];
-                        if (rt == null) continue;
-                        rt.anchoredPosition = Vector2.LerpUnclamped(buttonStarts[i], _buttonRestingPos[i], eased);
-                    }
-
-                    await UniTask.Yield(PlayerLoopTiming.Update, token);
-                }
-            }
-
+            // 1) FadeIn
+            canvasGroup.alpha = 0f;
             ApplyResting();
+            if (introScaleUpRect != null) introScaleUpRect.localScale = _introScaleUpHome;
+            await FadeAsync(canvasGroup, 0f, 1f, fadeDuration, token);
+
+            // 2) 一拍おく
+            if (introScaleUpDelay > 0f)
+                await UniTask.Delay(TimeSpan.FromSeconds(introScaleUpDelay), DelayType.UnscaledDeltaTime, cancellationToken: token);
+
+            // 3) ScaleUp。拡大したら戻さず、そのサイズのまま維持する。
+            await ScaleUpIntroAsync(token);
+
             // interactable が有効になる直前に選択を確定させる。フェード中の非インタラクティブな
             // タイミングで選択すると外れて「選択が効かない」ことがあるため末尾で行う。
             FocusDefaultSelected();
             if (selectionIndicator != null) selectionIndicator.Show();
         }
 
+        private async UniTask ScaleUpIntroAsync(CancellationToken token)
+        {
+            if (introScaleUpRect == null) return;
+
+            var from = _introScaleUpHome;
+            var to = _introScaleUpHome * introScaleUpFactor;
+            if (introScaleUpDuration <= 0f)
+            {
+                introScaleUpRect.localScale = to;
+                return;
+            }
+
+            var elapsed = 0f;
+            while (elapsed < introScaleUpDuration)
+            {
+                token.ThrowIfCancellationRequested();
+                elapsed += Time.unscaledDeltaTime;
+                var t = Mathf.Clamp01(elapsed / introScaleUpDuration);
+                var eased = 1f - Mathf.Pow(1f - t, 3f);
+                introScaleUpRect.localScale = Vector3.LerpUnclamped(from, to, eased);
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+            }
+            introScaleUpRect.localScale = to;
+        }
+
         private void ApplyResting()
         {
-            if (headerRect != null) headerRect.anchoredPosition = _headerRestingPos;
             for (var i = 0; i < miniGameButtonRects.Length; i++)
             {
                 if (miniGameButtonRects[i] != null)

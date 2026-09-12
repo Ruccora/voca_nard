@@ -7,7 +7,7 @@
 ## 0. プロジェクト全体
 
 ### 0.1 ゲームフロー
-- **要件**: タイトル → 4 つのミニゲーム選択画面 → 画像タップで説明＋動画再生 → Play ボタンでミニゲーム開始
+- **要件**: タイトル → 4 つのミニゲーム選択画面 → 画像タップで動画再生 → Play ボタンでミニゲーム開始
 - **実装**:
   - `TitlePanel.cs` → `SelectPanel.cs` → `ExplainPanel.cs`（モーダル）→ `MiniGamePanel.cs`
   - `ScreenType`: Title / Select / MiniGame（Explain はモーダル化で ScreenType から除外）
@@ -18,7 +18,7 @@
 
 ### 0.3 説明画面のメディア
 - **要件**: .mp4 動画を再生
-- **実装**: `ExplainPanel.SetupAsync` で `VideoPlayer.Prepare` → `Play`
+- **実装**: `ExplainPanel.SetupAsync` で `VideoPlayer.Prepare`、In が終わってから `Play`（5.2）
 
 ### 0.4 単一シーン + Panel 切替
 - **要件**: 単一シーンで Panel を Instantiate/Destroy 方式で切替
@@ -69,7 +69,7 @@
 
 ### 2.4 ExplainPanel モーダル化
 - **要件**: ExplainPanel を SelectPanel の子として生成（Screen ではなくオーバーレイ）
-- **実装**: `SelectPanel.OpenExplainAsync` で `Instantiate(explainPanelPrefab, explainRoot)`、Back で `PanelOutAsync + Destroy(self)`
+- **実装**: `SelectPanel.OpenExplainAsync` で `Instantiate(explainPanelPrefabs[index], explainRoot)`（`explainRoot` 未設定なら SelectPanel 自身が親）、Back で `PanelOutAsync + Destroy(self)`
 
 ### 2.5 モーダル背景
 - **要件**: SelectPanel を暗く見せる（推定）
@@ -144,7 +144,7 @@ Audio.StopBgm(0.5f);
 ### 4.6 画面ごとの BGM 自動切替
 - **実装**:
   - `ScreenController.ScreenEntry.bgmKey` — Title / Select はここで指定。`ShowAsync` が Instantiate 直後に投げっぱなしで再生し、遷移演出と並行してクロスフェードする
-  - `MiniGameData.bgmKey` — ミニゲームは ScriptableObject 側で持ち、`MiniGamePanel.SetupAsync` が再生（ScreenController の MiniGame 枠は**空にしておく**）
+  - `ExplainPanelBase.bgmKey` — ミニゲームは説明画面 prefab 側で持ち、`MiniGamePanel.Bind(prefab, bgmKey)` 経由で `SetupAsync` が再生（ScreenController の MiniGame 枠は**空にしておく**）
 
 ### 4.7 ミニゲーム内 SE
 - 自動化対象外。`SeKey.Countdown` / `Start` / `Win` / `Lose` / `Miss` / `Hit` を用意してあるので、
@@ -152,11 +152,56 @@ Audio.StopBgm(0.5f);
 
 ---
 
-## 5. MiniGameData (`MiniGameData.cs`)
+### 2.6 SelectPanel の開始演出
+- **要件**: FadeIn → 1 秒おいて、指定した object を 1.3 倍に拡大。拡大したらそのまま維持する
+- **実装**: `SelectPanel.OnPanelInAsync`
+  1. `canvasGroup.alpha` 0 → 1（`fadeDuration`）
+  2. `introScaleUpDelay`（既定 1 秒）待機
+  3. `introScaleUpRect` を `introScaleUpFactor`（既定 1.3）倍へ `introScaleUpDuration`（既定 0.8 秒）で拡大 → 戻さない
+  4. 最後に `FocusDefaultSelected()` と `selectionIndicator.Show()`
+- 待機・拡大とも `unscaledDeltaTime` 基準
+- 拡大の基準は Awake で記録した prefab の `localScale`
+- 旧演出（ヘッダーが上から / ボタンが左右から入ってくるスライド）は廃止。
+  `headerRect` も使わなくなったので削除
 
-- **要件**: ScriptableObject でミニゲーム情報を保持、prefab 参照を含む
-- **実装**: `[CreateAssetMenu(menuName = "VocaNerd/MiniGameData")]`
-  - Title / Description / Thumbnail / VideoFileName / VideoClip / MiniGamePrefab
+---
+
+## 5. 説明画面 (`ExplainPanelBase.cs` / `ExplainPanel.cs`)
+
+- **要件**: 説明画面 (ゲーム開始前に動画を流す画面) はミニゲームごとに prefab を分けて持つ。
+  ScriptableObject (旧 `MiniGameData`) の仕組みは廃止。基底クラスは 1 つだけ用意し、
+  そこで共有するのは **In / Out のアニメーション** と **Play / Back の配線** のみ
+- **実装**:
+  - `ExplainPanelBase : PanelBase` (abstract)
+    - SerializeField: `miniGamePrefab` / `bgmKey` / `playButton` / `backButton` /
+      `selectionIndicator` / `slideFromLeftRect` / `slideFromRightRect` / `slideFromBottomRect` / `slideMargin`
+    - `Closed` — Back で閉じるまで待つ signal (画面ごと破棄されたらキャンセル)
+    - `OnAfterPanelInAsync` — In が終わった後の hook (動画の再生開始などはここ)
+    - Play → `ScreenController.ShowAsync(MiniGame, go => …Bind(miniGamePrefab, bgmKey), fadeToBlack: true)`
+  - `ExplainPanel : ExplainPanelBase` — 動画を流す既定の実装。
+    VideoPlayer / RawImage / VideoClip / videoFileName だけを持つ
+  - 旧 `MiniGameData` の Title / Thumbnail / Description は廃止。サムネや文言は
+    prefab 上に直接置く (コードからは触らない)
+
+### 5.1 In / Out アニメーション
+- **要件**:
+  - In = 「左から右へ」「右から左へ」「下から上へ」入ってくる 3 つの object が **同じ秒数**で動く
+  - Out = その逆 (定位置から画面外へ)
+- **実装**: `ExplainPanelBase.PlaySlideAsync(inward, token)`
+  - 対象は `slideFromLeftRect` / `slideFromRightRect` / `slideFromBottomRect` の 3 つ。
+    未設定のものは飛ばす
+  - 定位置は Awake で `anchoredPosition` を記録。画面外の位置は
+    `パネル半分 + object 半分 + slideMargin` で毎回計算する
+  - 尺は `PanelBase.fadeDuration` を共有。In は EaseOutCubic、Out は EaseInCubic
+
+### 5.2 動画再生
+- **要件**: VideoPlayer を SerializeField で持ち、どれを再生するかも prefab 側で指定。
+  **再生開始は In が終わってから**
+- **実装**: `ExplainPanel`
+  - `videoPlayer` / `videoDisplay` / `videoClip` / `videoFileName` を SerializeField で保持
+  - `SetupAsync` で source 設定と `Prepare()` までを済ませる (ここでは再生しない)
+  - `OnAfterPanelInAsync` で `isPrepared` を最大 3 秒待ってから `Play()`
+  - WebGL は `videoFileName` (StreamingAssets)、それ以外は `videoClip` を優先
 
 ---
 
@@ -533,6 +578,33 @@ Idle → Intro → Countdown (該当時) → Playing → Winner → WaitForExit 
 ### 10.4 Play Again ボタン
 - 各ミニゲーム内に Play Again UI ボタン、`StartRound` を再呼び出し
 
+### 10.5 リザルトの A/B (`ResultInput.cs`)
+- **要件**: ミニゲーム完了後、コントローラーの **A で再戦 / B で抜ける**。操作できるのは **1P のみ**
+- **実装**: `ResultInput` (A = `<Gamepad>/buttonSouth`、B = `<Gamepad>/buttonEast`) を各ゲームが 1 つ持ち、
+  `WaitForExitPressAsync` の間だけ Enable する
+  - A → `StartRound(replay: true)` (SE: Decide)
+  - B → `_exitSignal` を立てて `PlayExitEffectAsync` → `ScreenController.ShowAsync(Select)` (SE: Cancel)
+  - 1P 判定は `PlayerDevices.IsPlayerOne`。2P のパッドは無視する
+- **注意**: リザルトでは `ClearFocus()` で UI 選択を外す。選択が残っていると EventSystem の Submit
+  (どのパッドの A でも飛ぶ) で Play Again が押せてしまい 1P 限定が崩れる
+- キーボードの Esc / Backspace は `MiniGamePanel` の Back が拾う (`ResultInput` には入れない。二重遷移を防ぐ)
+
+### 10.6 1P/2P のデバイス振り分け (`PlayerDevices.cs`)
+- **要件**: 同じボタン (A/B) を 1P/2P 両方にバインドしつつ、押したパッドで持ち主を決める
+- **実装**: キーボードは 1P/2P 両方に有効 (キーで分離)。Gamepad は接続順 `Gamepad.all[0]` = 1P、`[1]` = 2P
+- 各ゲームは `performed` で `PlayerDevices.IsForPlayer(ctx, player)` を通してから処理する
+- **注意**: 接続順ベースなので、1P のパッドを抜き差しすると 2P のパッドが 1P に繰り上がる
+
+### 10.7 パッド操作の割り当て
+| ゲーム | 操作 | キーボード (1P / 2P) | Gamepad |
+| --- | --- | --- | --- |
+| QuickDraw | 抜刀 | `A` / `L` | A |
+| MashRace | 交互連打 | `A`,`D` / `←`,`→` | A, B |
+| HopscotchRace | けん / ぱ | `A`,`D` / `←`,`→` | A, B |
+| BlockDrop | 左右移動 | `A`,`D` / `←`,`→` | 十字キー, 左スティック |
+| BlockDrop | 叩く | `W`,`S` / `↑`,`↓` | A, B |
+- プレイ中は `resultGroup.interactable = false` なので、選択が残っていても Submit で Play Again は押せない
+
 ---
 
 ## 11. Editor Tooling (`PrefabGenerator.cs`)
@@ -559,8 +631,8 @@ Idle → Intro → Countdown (該当時) → Playing → Winner → WaitForExit 
 
 1. `VocaNerd > Generate Sample Prefabs` を実行
 2. Scene に `MainCanvas.prefab` / `BlackFadeOverlay.prefab` / `AudioManager.prefab` をドラッグ
-3. `MiniGameData` ScriptableObject を 4 つ作成、各ミニゲーム Prefab をアサイン
-4. `SelectPanel.prefab` の `Mini Games` 配列に 4 つの ScriptableObject をアサイン
+3. ミニゲームごとに説明画面 prefab を作成し、`miniGamePrefab` / `bgmKey` / 動画をアサイン
+4. `SelectPanel.prefab` の `Explain Panel Prefabs` 配列に 4 つの Explain prefab をアサイン（0=左上 1=右上 2=左下 3=右下）
 5. `ScreenController` (`AspectFrame` にアタッチ済み) の Screens に Title / Select / MiniGame プレハブを設定
 
 ---
@@ -571,7 +643,7 @@ Idle → Intro → Countdown (該当時) → Playing → Winner → WaitForExit 
 |---|---|
 | 初期 | Panel は常駐 + CanvasGroup フェード方式 |
 | Destroy 方式化 | Prefab を Instantiate/Destroy に変更 |
-| ScriptableObject 導入 | MiniGameData 作成 |
+| 説明画面のデータ | ミニゲームごとの Explain prefab（旧 MiniGameData は廃止）|
 | PrefabGenerator 導入 | Editor 拡張で Prefab を自動生成 |
 | PanelBase 抽出 | 共通ライフサイクル基底クラス |
 | BlackFadeOverlay | 遷移用黒フェード singleton |

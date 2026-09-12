@@ -1,0 +1,1118 @@
+fileFormatVersion: 2
+guid: 3ad5b4b27b3c747c7a22430178a25667
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7361578285343079660
+    second: setsumei_rariato_0
+  - first:
+      213: -6802597635911318259
+    second: setsumei_rariato_1
+  - first:
+      213: -8993711039039953607
+    second: setsumei_rariato_2
+  - first:
+      213: -2952449484269590933
+    second: setsumei_rariato_3
+  - first:
+      213: -7925799949393810069
+    second: setsumei_rariato_4
+  - first:
+      213: 3667203069679240631
+    second: setsumei_rariato_5
+  - first:
+      213: 7638411778606818903
+    second: setsumei_rariato_6
+  - first:
+      213: -4306808473236011886
+    second: setsumei_rariato_7
+  - first:
+      213: -1730465805880721500
+    second: setsumei_rariato_8
+  - first:
+      213: 2461655959565450974
+    second: setsumei_rariato_9
+  - first:
+      213: -6979655963635160555
+    second: setsumei_rariato_10
+  - first:
+      213: 1734873924037715320
+    second: setsumei_rariato_11
+  - first:
+      213: 8386080717585437099
+    second: setsumei_rariato_12
+  - first:
+      213: 5743306899075154517
+    second: setsumei_rariato_13
+  - first:
+      213: -2730565690775378642
+    second: setsumei_rariato_14
+  - first:
+      213: -408557082231196710
+    second: setsumei_rariato_15
+  - first:
+      213: 1657254169148829500
+    second: setsumei_rariato_16
+  - first:
+      213: -6033135755915451624
+    second: setsumei_rariato_17
+  - first:
+      213: -5571262872078905385
+    second: setsumei_rariato_18
+  - first:
+      213: 7530157896249623986
+    second: setsumei_rariato_19
+  - first:
+      213: -2442066568742004760
+    second: setsumei_rariato_20
+  - first:
+      213: 1064934219233630986
+    second: setsumei_rariato_21
+  - first:
+      213: -212525921978129116
+    second: setsumei_rariato_22
+  - first:
+      213: 8043958726492643178
+    second: setsumei_rariato_23
+  - first:
+      213: -3273532386311174650
+    second: setsumei_rariato_24
+  - first:
+      213: -3946140242907939033
+    second: setsumei_rariato_25
+  - first:
+      213: -2472288316561800445
+    second: setsumei_rariato_26
+  - first:
+      213: 8425701049321500091
+    second: setsumei_rariato_27
+  - first:
+      213: 1236499819221049884
+    second: setsumei_rariato_28
+  - first:
+      213: 7985516168566170294
+    second: setsumei_rariato_29
+  - first:
+      213: 9117888880733349082
+    second: setsumei_rariato_30
+  - first:
+      213: 4420601282640436568
+    second: setsumei_rariato_31
+  - first:
+      213: -6154680754149186402
+    second: setsumei_rariato_32
+  - first:
+      213: -8551394887339377854
+    second: setsumei_rariato_33
+  - first:
+      213: -8401103126792199729
+    second: setsumei_rariato_34
+  - first:
+      213: 473631970039751891
+    second: setsumei_rariato_35
+  - first:
+      213: -6404938954026200274
+    second: setsumei_rariato_36
+  - first:
+      213: -435987262837726261
+    second: setsumei_rariato_37
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: setsumei_rariato_0
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 229
+        width: 72
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 41385e38d8b66d990800000000000000
+      internalID: -7361578285343079660
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_1
+      rect:
+        serializedVersion: 2
+        x: 254
+        y: 229
+        width: 62
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d050899ed715891a0800000000000000
+      internalID: -6802597635911318259
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_2
+      rect:
+        serializedVersion: 2
+        x: 329
+        y: 229
+        width: 77
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 935a381f57bef2380800000000000000
+      internalID: -8993711039039953607
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_3
+      rect:
+        serializedVersion: 2
+        x: 409
+        y: 229
+        width: 77
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6663d836dac607d0800000000000000
+      internalID: -2952449484269590933
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_4
+      rect:
+        serializedVersion: 2
+        x: 499
+        y: 229
+        width: 17
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6da29f40f6e10290800000000000000
+      internalID: -7925799949393810069
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_5
+      rect:
+        serializedVersion: 2
+        x: 519
+        y: 274
+        width: 32
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b5047f13c584e230800000000000000
+      internalID: 3667203069679240631
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_6
+      rect:
+        serializedVersion: 2
+        x: 574
+        y: 229
+        width: 72
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 756e408ea07110a60800000000000000
+      internalID: 7638411778606818903
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_7
+      rect:
+        serializedVersion: 2
+        x: 654
+        y: 224
+        width: 72
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 294002513842b34c0800000000000000
+      internalID: -4306808473236011886
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_8
+      rect:
+        serializedVersion: 2
+        x: 734
+        y: 229
+        width: 62
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4aff48894862cf7e0800000000000000
+      internalID: -1730465805880721500
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_9
+      rect:
+        serializedVersion: 2
+        x: 804
+        y: 224
+        width: 32
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ede3f158d0f892220800000000000000
+      internalID: 2461655959565450974
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_10
+      rect:
+        serializedVersion: 2
+        x: 844
+        y: 229
+        width: 37
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 51ae61181e7432f90800000000000000
+      internalID: -6979655963635160555
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_11
+      rect:
+        serializedVersion: 2
+        x: 884
+        y: 224
+        width: 67
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8752b5464a2831810800000000000000
+      internalID: 1734873924037715320
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_12
+      rect:
+        serializedVersion: 2
+        x: 1039
+        y: 229
+        width: 62
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ba1de653bf7516470800000000000000
+      internalID: 8386080717585437099
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_13
+      rect:
+        serializedVersion: 2
+        x: 1114
+        y: 229
+        width: 72
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 552cc63023354bf40800000000000000
+      internalID: 5743306899075154517
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_14
+      rect:
+        serializedVersion: 2
+        x: 1189
+        y: 224
+        width: 67
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e25e67da8f41b1ad0800000000000000
+      internalID: -2730565690775378642
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_15
+      rect:
+        serializedVersion: 2
+        x: 1269
+        y: 229
+        width: 62
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ad3b3239f73845af0800000000000000
+      internalID: -408557082231196710
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_16
+      rect:
+        serializedVersion: 2
+        x: 1359
+        y: 284
+        width: 37
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3fa6a6e2efbff610800000000000000
+      internalID: 1657254169148829500
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_17
+      rect:
+        serializedVersion: 2
+        x: 1444
+        y: 249
+        width: 17
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 813a3f2befef54ca0800000000000000
+      internalID: -6033135755915451624
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_18
+      rect:
+        serializedVersion: 2
+        x: 794
+        y: 254
+        width: 12
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7df0a678fe5eea2b0800000000000000
+      internalID: -5571262872078905385
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_19
+      rect:
+        serializedVersion: 2
+        x: 964
+        y: 259
+        width: 62
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b5cf8cc5be708860800000000000000
+      internalID: 7530157896249623986
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_20
+      rect:
+        serializedVersion: 2
+        x: 1349
+        y: 229
+        width: 57
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e79644f4690c1ed0800000000000000
+      internalID: -2442066568742004760
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_21
+      rect:
+        serializedVersion: 2
+        x: 219
+        y: 224
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a0b1496b70867ce00800000000000000
+      internalID: 1064934219233630986
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_22
+      rect:
+        serializedVersion: 2
+        x: 514
+        y: 229
+        width: 42
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4256eeaccc4fc0df0800000000000000
+      internalID: -212525921978129116
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_23
+      rect:
+        serializedVersion: 2
+        x: 1444
+        y: 229
+        width: 17
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6f5f70d7d1e1af60800000000000000
+      internalID: 8043958726492643178
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_24
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 184
+        width: 72
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6068f2973a31292d0800000000000000
+      internalID: -3273532386311174650
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_25
+      rect:
+        serializedVersion: 2
+        x: 229
+        y: 124
+        width: 57
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72f399b4b5e7c39c0800000000000000
+      internalID: -3946140242907939033
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_26
+      rect:
+        serializedVersion: 2
+        x: 304
+        y: 124
+        width: 72
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3034cf4ffdaa0bdd0800000000000000
+      internalID: -2472288316561800445
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_27
+      rect:
+        serializedVersion: 2
+        x: 389
+        y: 124
+        width: 62
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bbda17c867a1ee470800000000000000
+      internalID: 8425701049321500091
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_28
+      rect:
+        serializedVersion: 2
+        x: 449
+        y: 169
+        width: 12
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c126189c80ee82110800000000000000
+      internalID: 1236499819221049884
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_29
+      rect:
+        serializedVersion: 2
+        x: 489
+        y: 124
+        width: 12
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b2668f65a042de60800000000000000
+      internalID: 7985516168566170294
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_30
+      rect:
+        serializedVersion: 2
+        x: 524
+        y: 124
+        width: 12
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ad4689dd0af398e70800000000000000
+      internalID: 9117888880733349082
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_31
+      rect:
+        serializedVersion: 2
+        x: 154
+        y: 164
+        width: 42
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 85d5b69f171295d30800000000000000
+      internalID: 4420601282640436568
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_32
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 119
+        width: 77
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e942107867e269aa0800000000000000
+      internalID: -6154680754149186402
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_33
+      rect:
+        serializedVersion: 2
+        x: 354
+        y: 119
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 24b7b0e38a7535980800000000000000
+      internalID: -8551394887339377854
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_34
+      rect:
+        serializedVersion: 2
+        x: 1084
+        y: 94
+        width: 47
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc1a0269739496b80800000000000000
+      internalID: -8401103126792199729
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_35
+      rect:
+        serializedVersion: 2
+        x: 1144
+        y: 94
+        width: 152
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d4ec7074cda29600800000000000000
+      internalID: 473631970039751891
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_36
+      rect:
+        serializedVersion: 2
+        x: 1324
+        y: 94
+        width: 42
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e23d435c4f51d17a0800000000000000
+      internalID: -6404938954026200274
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_rariato_37
+      rect:
+        serializedVersion: 2
+        x: 1369
+        y: 94
+        width: 132
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bc366f7f4ef03f9f0800000000000000
+      internalID: -435987262837726261
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      setsumei_rariato_0: -7361578285343079660
+      setsumei_rariato_1: -6802597635911318259
+      setsumei_rariato_10: -6979655963635160555
+      setsumei_rariato_11: 1734873924037715320
+      setsumei_rariato_12: 8386080717585437099
+      setsumei_rariato_13: 5743306899075154517
+      setsumei_rariato_14: -2730565690775378642
+      setsumei_rariato_15: -408557082231196710
+      setsumei_rariato_16: 1657254169148829500
+      setsumei_rariato_17: -6033135755915451624
+      setsumei_rariato_18: -5571262872078905385
+      setsumei_rariato_19: 7530157896249623986
+      setsumei_rariato_2: -8993711039039953607
+      setsumei_rariato_20: -2442066568742004760
+      setsumei_rariato_21: 1064934219233630986
+      setsumei_rariato_22: -212525921978129116
+      setsumei_rariato_23: 8043958726492643178
+      setsumei_rariato_24: -3273532386311174650
+      setsumei_rariato_25: -3946140242907939033
+      setsumei_rariato_26: -2472288316561800445
+      setsumei_rariato_27: 8425701049321500091
+      setsumei_rariato_28: 1236499819221049884
+      setsumei_rariato_29: 7985516168566170294
+      setsumei_rariato_3: -2952449484269590933
+      setsumei_rariato_30: 9117888880733349082
+      setsumei_rariato_31: 4420601282640436568
+      setsumei_rariato_32: -6154680754149186402
+      setsumei_rariato_33: -8551394887339377854
+      setsumei_rariato_34: -8401103126792199729
+      setsumei_rariato_35: 473631970039751891
+      setsumei_rariato_36: -6404938954026200274
+      setsumei_rariato_37: -435987262837726261
+      setsumei_rariato_4: -7925799949393810069
+      setsumei_rariato_5: 3667203069679240631
+      setsumei_rariato_6: 7638411778606818903
+      setsumei_rariato_7: -4306808473236011886
+      setsumei_rariato_8: -1730465805880721500
+      setsumei_rariato_9: 2461655959565450974
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

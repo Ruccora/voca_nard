@@ -87,7 +87,7 @@ namespace VocaNerd.EditorTools
         {
             if (videoFileNames.Count == 0)
             {
-                Debug.LogWarning("[WebGLBuildScript] No MiniGameData video files were found.");
+                Debug.LogWarning("[WebGLBuildScript] No ExplainPanel video files were found.");
                 return;
             }
 
@@ -115,14 +115,20 @@ namespace VocaNerd.EditorTools
             var sourceDir = Path.Combine(projectRoot.FullName, VideoSourceDir);
             var fileNames = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var guid in AssetDatabase.FindAssets("t:MiniGameData"))
+            // 説明画面は ミニゲームごとの prefab (ExplainPanel) が持つ。そこに書かれた
+            // videoFileName を集めて StreamingAssets にコピーする。
+            foreach (var guid in AssetDatabase.FindAssets("t:Prefab"))
             {
                 var assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                var data = AssetDatabase.LoadAssetAtPath<MiniGameData>(assetPath);
-                if (data == null)
+                var go = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+                if (go == null)
                     continue;
 
-                var fileName = NormalizeVideoFileName(data.VideoFileName, assetPath);
+                var explain = go.GetComponentInChildren<ExplainPanel>(true);
+                if (explain == null)
+                    continue;
+
+                var fileName = NormalizeVideoFileName(explain.VideoFileName, assetPath);
                 var source = Path.Combine(sourceDir, fileName);
                 if (!File.Exists(source))
                     throw new InvalidOperationException($"[WebGLBuildScript] Video file was not found for {assetPath}: {source}");

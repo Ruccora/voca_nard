@@ -1,0 +1,1144 @@
+fileFormatVersion: 2
+guid: 1d3f8ef70c3ed4754a3bb3f5b8f112a4
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -825209133272486193
+    second: setsumei_megumegu_0
+  - first:
+      213: 1775026568575449386
+    second: setsumei_megumegu_1
+  - first:
+      213: -5525912598405941557
+    second: setsumei_megumegu_2
+  - first:
+      213: 8264114799310758743
+    second: setsumei_megumegu_3
+  - first:
+      213: 1311288762374753739
+    second: setsumei_megumegu_4
+  - first:
+      213: 7561620840097702795
+    second: setsumei_megumegu_5
+  - first:
+      213: 4671463035781804362
+    second: setsumei_megumegu_6
+  - first:
+      213: -7382950239138792332
+    second: setsumei_megumegu_7
+  - first:
+      213: 1668802913102579222
+    second: setsumei_megumegu_8
+  - first:
+      213: 7291671690735184852
+    second: setsumei_megumegu_9
+  - first:
+      213: -1117430308637705729
+    second: setsumei_megumegu_10
+  - first:
+      213: 2903668601795911990
+    second: setsumei_megumegu_11
+  - first:
+      213: -2496789653774339992
+    second: setsumei_megumegu_12
+  - first:
+      213: -2885405671112758328
+    second: setsumei_megumegu_13
+  - first:
+      213: 3181000670952065390
+    second: setsumei_megumegu_14
+  - first:
+      213: 1582401668497852191
+    second: setsumei_megumegu_15
+  - first:
+      213: 3142627712326440832
+    second: setsumei_megumegu_16
+  - first:
+      213: -1897231457131332442
+    second: setsumei_megumegu_17
+  - first:
+      213: 2084779398681651120
+    second: setsumei_megumegu_18
+  - first:
+      213: -6487976947067959518
+    second: setsumei_megumegu_19
+  - first:
+      213: -8654981763913043083
+    second: setsumei_megumegu_20
+  - first:
+      213: 6940083642307424958
+    second: setsumei_megumegu_21
+  - first:
+      213: -3913370853059386703
+    second: setsumei_megumegu_22
+  - first:
+      213: 2668398910811786594
+    second: setsumei_megumegu_23
+  - first:
+      213: -4228890464680196900
+    second: setsumei_megumegu_24
+  - first:
+      213: 5512472924782520809
+    second: setsumei_megumegu_25
+  - first:
+      213: 7518509355464266349
+    second: setsumei_megumegu_26
+  - first:
+      213: -9066614123460196064
+    second: setsumei_megumegu_27
+  - first:
+      213: 3411766467027947517
+    second: setsumei_megumegu_28
+  - first:
+      213: 3103648916405488431
+    second: setsumei_megumegu_29
+  - first:
+      213: 3577541636285036201
+    second: setsumei_megumegu_30
+  - first:
+      213: 4661193968914892832
+    second: setsumei_megumegu_31
+  - first:
+      213: 7176344695723774198
+    second: setsumei_megumegu_32
+  - first:
+      213: 8065156867317312537
+    second: setsumei_megumegu_33
+  - first:
+      213: -5499327354610047341
+    second: setsumei_megumegu_34
+  - first:
+      213: -7117638093672013633
+    second: setsumei_megumegu_35
+  - first:
+      213: 3607311574915809782
+    second: setsumei_megumegu_36
+  - first:
+      213: -1704830464634381264
+    second: setsumei_megumegu_37
+  - first:
+      213: 8821000725267632705
+    second: setsumei_megumegu_38
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: setsumei_megumegu_0
+      rect:
+        serializedVersion: 2
+        x: 124
+        y: 254
+        width: 27
+        height: 57
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fcea2e95aa44c84f0800000000000000
+      internalID: -825209133272486193
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_1
+      rect:
+        serializedVersion: 2
+        x: 159
+        y: 269
+        width: 72
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a29f1d6724922a810800000000000000
+      internalID: 1775026568575449386
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_2
+      rect:
+        serializedVersion: 2
+        x: 239
+        y: 224
+        width: 82
+        height: 92
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bc67820f4c30053b0800000000000000
+      internalID: -5525912598405941557
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_3
+      rect:
+        serializedVersion: 2
+        x: 329
+        y: 229
+        width: 27
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 75367f3ff9800b270800000000000000
+      internalID: 8264114799310758743
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_4
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 224
+        width: 72
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bcd0f4f8e22a23210800000000000000
+      internalID: 1311288762374753739
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_5
+      rect:
+        serializedVersion: 2
+        x: 544
+        y: 224
+        width: 67
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b83e634471640f860800000000000000
+      internalID: 7561620840097702795
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_6
+      rect:
+        serializedVersion: 2
+        x: 619
+        y: 129
+        width: 147
+        height: 217
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a41742d61ee54d040800000000000000
+      internalID: 4671463035781804362
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_7
+      rect:
+        serializedVersion: 2
+        x: 774
+        y: 224
+        width: 67
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 47c3fb1cfdd7a8990800000000000000
+      internalID: -7382950239138792332
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_8
+      rect:
+        serializedVersion: 2
+        x: 849
+        y: 224
+        width: 67
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 616cd936867c82710800000000000000
+      internalID: 1668802913102579222
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_9
+      rect:
+        serializedVersion: 2
+        x: 929
+        y: 224
+        width: 42
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4dbea0115c8313560800000000000000
+      internalID: 7291671690735184852
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_10
+      rect:
+        serializedVersion: 2
+        x: 1019
+        y: 289
+        width: 37
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff9f4600e071e70f0800000000000000
+      internalID: -1117430308637705729
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_11
+      rect:
+        serializedVersion: 2
+        x: 1119
+        y: 224
+        width: 67
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 63120838537eb4820800000000000000
+      internalID: 2903668601795911990
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_12
+      rect:
+        serializedVersion: 2
+        x: 1194
+        y: 224
+        width: 52
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 860f8e7d90f995dd0800000000000000
+      internalID: -2496789653774339992
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_13
+      rect:
+        serializedVersion: 2
+        x: 1249
+        y: 249
+        width: 12
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8cb2d6464daf4f7d0800000000000000
+      internalID: -2885405671112758328
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_14
+      rect:
+        serializedVersion: 2
+        x: 1274
+        y: 259
+        width: 67
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e69806ea14f252c20800000000000000
+      internalID: 3181000670952065390
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_15
+      rect:
+        serializedVersion: 2
+        x: 1354
+        y: 224
+        width: 72
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f17cccefee1d5f510800000000000000
+      internalID: 1582401668497852191
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_16
+      rect:
+        serializedVersion: 2
+        x: 169
+        y: 224
+        width: 57
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0871486014bdc9b20800000000000000
+      internalID: 3142627712326440832
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_17
+      rect:
+        serializedVersion: 2
+        x: 469
+        y: 259
+        width: 62
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ac7dfcaa0eaba5e0800000000000000
+      internalID: -1897231457131332442
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_18
+      rect:
+        serializedVersion: 2
+        x: 954
+        y: 259
+        width: 37
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b7e87541df9eec10800000000000000
+      internalID: 2084779398681651120
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_19
+      rect:
+        serializedVersion: 2
+        x: 1009
+        y: 224
+        width: 57
+        height: 57
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2274717675316f5a0800000000000000
+      internalID: -6487976947067959518
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_20
+      rect:
+        serializedVersion: 2
+        x: 1274
+        y: 224
+        width: 57
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 573ba7811f353e780800000000000000
+      internalID: -8654981763913043083
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_21
+      rect:
+        serializedVersion: 2
+        x: 949
+        y: 224
+        width: 42
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eb2bb337d41205060800000000000000
+      internalID: 6940083642307424958
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_22
+      rect:
+        serializedVersion: 2
+        x: 154
+        y: 129
+        width: 72
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b2270d61f9e0b9c0800000000000000
+      internalID: -3913370853059386703
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_23
+      rect:
+        serializedVersion: 2
+        x: 239
+        y: 129
+        width: 62
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 26dc9fdebae080520800000000000000
+      internalID: 2668398910811786594
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_24
+      rect:
+        serializedVersion: 2
+        x: 294
+        y: 194
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cd443ba2786ff45c0800000000000000
+      internalID: -4228890464680196900
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_25
+      rect:
+        serializedVersion: 2
+        x: 309
+        y: 129
+        width: 67
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9e9ee933bec308c40800000000000000
+      internalID: 5512472924782520809
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_26
+      rect:
+        serializedVersion: 2
+        x: 389
+        y: 174
+        width: 32
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d6216ec8c6c175860800000000000000
+      internalID: 7518509355464266349
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_27
+      rect:
+        serializedVersion: 2
+        x: 399
+        y: 129
+        width: 47
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0298d9fdd7aec2280800000000000000
+      internalID: -9066614123460196064
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_28
+      rect:
+        serializedVersion: 2
+        x: 459
+        y: 129
+        width: 67
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dff4ac38687095f20800000000000000
+      internalID: 3411766467027947517
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_29
+      rect:
+        serializedVersion: 2
+        x: 534
+        y: 129
+        width: 77
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f2b00e1ee30621b20800000000000000
+      internalID: 3103648916405488431
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_30
+      rect:
+        serializedVersion: 2
+        x: 789
+        y: 149
+        width: 12
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9a670ffd92bf5a130800000000000000
+      internalID: 3577541636285036201
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_31
+      rect:
+        serializedVersion: 2
+        x: 844
+        y: 129
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0288d5af733efa040800000000000000
+      internalID: 4661193968914892832
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_32
+      rect:
+        serializedVersion: 2
+        x: 934
+        y: 129
+        width: 77
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6f0df569a7f779360800000000000000
+      internalID: 7176344695723774198
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_33
+      rect:
+        serializedVersion: 2
+        x: 1034
+        y: 129
+        width: 12
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 91c204690713def60800000000000000
+      internalID: 8065156867317312537
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_34
+      rect:
+        serializedVersion: 2
+        x: 789
+        y: 129
+        width: 12
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 39621ec58e67ea3b0800000000000000
+      internalID: -5499327354610047341
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_35
+      rect:
+        serializedVersion: 2
+        x: 1084
+        y: 94
+        width: 47
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fb024ea5dd1193d90800000000000000
+      internalID: -7117638093672013633
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_36
+      rect:
+        serializedVersion: 2
+        x: 1144
+        y: 94
+        width: 152
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6f10309d3cebf0230800000000000000
+      internalID: 3607311574915809782
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_37
+      rect:
+        serializedVersion: 2
+        x: 1324
+        y: 94
+        width: 42
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 03c143999b93758e0800000000000000
+      internalID: -1704830464634381264
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_megumegu_38
+      rect:
+        serializedVersion: 2
+        x: 1369
+        y: 94
+        width: 132
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1425a098c6d7a6a70800000000000000
+      internalID: 8821000725267632705
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      setsumei_megumegu_0: -825209133272486193
+      setsumei_megumegu_1: 1775026568575449386
+      setsumei_megumegu_10: -1117430308637705729
+      setsumei_megumegu_11: 2903668601795911990
+      setsumei_megumegu_12: -2496789653774339992
+      setsumei_megumegu_13: -2885405671112758328
+      setsumei_megumegu_14: 3181000670952065390
+      setsumei_megumegu_15: 1582401668497852191
+      setsumei_megumegu_16: 3142627712326440832
+      setsumei_megumegu_17: -1897231457131332442
+      setsumei_megumegu_18: 2084779398681651120
+      setsumei_megumegu_19: -6487976947067959518
+      setsumei_megumegu_2: -5525912598405941557
+      setsumei_megumegu_20: -8654981763913043083
+      setsumei_megumegu_21: 6940083642307424958
+      setsumei_megumegu_22: -3913370853059386703
+      setsumei_megumegu_23: 2668398910811786594
+      setsumei_megumegu_24: -4228890464680196900
+      setsumei_megumegu_25: 5512472924782520809
+      setsumei_megumegu_26: 7518509355464266349
+      setsumei_megumegu_27: -9066614123460196064
+      setsumei_megumegu_28: 3411766467027947517
+      setsumei_megumegu_29: 3103648916405488431
+      setsumei_megumegu_3: 8264114799310758743
+      setsumei_megumegu_30: 3577541636285036201
+      setsumei_megumegu_31: 4661193968914892832
+      setsumei_megumegu_32: 7176344695723774198
+      setsumei_megumegu_33: 8065156867317312537
+      setsumei_megumegu_34: -5499327354610047341
+      setsumei_megumegu_35: -7117638093672013633
+      setsumei_megumegu_36: 3607311574915809782
+      setsumei_megumegu_37: -1704830464634381264
+      setsumei_megumegu_38: 8821000725267632705
+      setsumei_megumegu_4: 1311288762374753739
+      setsumei_megumegu_5: 7561620840097702795
+      setsumei_megumegu_6: 4671463035781804362
+      setsumei_megumegu_7: -7382950239138792332
+      setsumei_megumegu_8: 1668802913102579222
+      setsumei_megumegu_9: 7291671690735184852
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

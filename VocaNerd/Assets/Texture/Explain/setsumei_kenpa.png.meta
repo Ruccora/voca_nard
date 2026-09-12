@@ -1,0 +1,1222 @@
+fileFormatVersion: 2
+guid: f23a06f1b2fb44d65aa6c12f10f11c90
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -1919572475577527891
+    second: setsumei_kenpa_0
+  - first:
+      213: 4695309020193998604
+    second: setsumei_kenpa_1
+  - first:
+      213: 6524092392715194409
+    second: setsumei_kenpa_2
+  - first:
+      213: 2338265381469445959
+    second: setsumei_kenpa_3
+  - first:
+      213: 5476653527242018351
+    second: setsumei_kenpa_4
+  - first:
+      213: -1998929414452755363
+    second: setsumei_kenpa_5
+  - first:
+      213: 3167165567886943459
+    second: setsumei_kenpa_6
+  - first:
+      213: -954493800815936836
+    second: setsumei_kenpa_7
+  - first:
+      213: 8885399033329324161
+    second: setsumei_kenpa_8
+  - first:
+      213: 8543863167733120747
+    second: setsumei_kenpa_9
+  - first:
+      213: -5901560034074924658
+    second: setsumei_kenpa_10
+  - first:
+      213: -3197903746465968442
+    second: setsumei_kenpa_11
+  - first:
+      213: 5206270394915977257
+    second: setsumei_kenpa_12
+  - first:
+      213: 1315126404592561488
+    second: setsumei_kenpa_13
+  - first:
+      213: 2424228515313317115
+    second: setsumei_kenpa_14
+  - first:
+      213: 3112774635061336912
+    second: setsumei_kenpa_15
+  - first:
+      213: 4768866944516895682
+    second: setsumei_kenpa_16
+  - first:
+      213: -2067188899687940838
+    second: setsumei_kenpa_17
+  - first:
+      213: 4113885527093859139
+    second: setsumei_kenpa_18
+  - first:
+      213: -5025062783269757605
+    second: setsumei_kenpa_19
+  - first:
+      213: -5800141193551083307
+    second: setsumei_kenpa_20
+  - first:
+      213: 2589018456275523779
+    second: setsumei_kenpa_21
+  - first:
+      213: 5875787904841728682
+    second: setsumei_kenpa_22
+  - first:
+      213: 1189930268354110735
+    second: setsumei_kenpa_23
+  - first:
+      213: -8536542864702329173
+    second: setsumei_kenpa_24
+  - first:
+      213: 8940008794262847469
+    second: setsumei_kenpa_25
+  - first:
+      213: 15347854442683175
+    second: setsumei_kenpa_26
+  - first:
+      213: -4730347546062648330
+    second: setsumei_kenpa_27
+  - first:
+      213: 5608887972779079277
+    second: setsumei_kenpa_28
+  - first:
+      213: -2638342307368728003
+    second: setsumei_kenpa_29
+  - first:
+      213: -2985288360413287323
+    second: setsumei_kenpa_30
+  - first:
+      213: -2472220598777393410
+    second: setsumei_kenpa_31
+  - first:
+      213: 5372949047944511323
+    second: setsumei_kenpa_32
+  - first:
+      213: 8976764831875946067
+    second: setsumei_kenpa_33
+  - first:
+      213: -4061045547169338968
+    second: setsumei_kenpa_34
+  - first:
+      213: -8534728942872309577
+    second: setsumei_kenpa_35
+  - first:
+      213: 1798940536668294680
+    second: setsumei_kenpa_36
+  - first:
+      213: 8828028965148491100
+    second: setsumei_kenpa_37
+  - first:
+      213: -2787870132150380856
+    second: setsumei_kenpa_38
+  - first:
+      213: -3365750330510822008
+    second: setsumei_kenpa_39
+  - first:
+      213: 330408183216523416
+    second: setsumei_kenpa_40
+  - first:
+      213: 3857586365225336033
+    second: setsumei_kenpa_41
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: setsumei_kenpa_0
+      rect:
+        serializedVersion: 2
+        x: 189
+        y: 224
+        width: 57
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: da19598f00f4c55e0800000000000000
+      internalID: -1919572475577527891
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_1
+      rect:
+        serializedVersion: 2
+        x: 264
+        y: 224
+        width: 52
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c07c9535da6192140800000000000000
+      internalID: 4695309020193998604
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_2
+      rect:
+        serializedVersion: 2
+        x: 324
+        y: 224
+        width: 67
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9201e9d077b3a8a50800000000000000
+      internalID: 6524092392715194409
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_3
+      rect:
+        serializedVersion: 2
+        x: 404
+        y: 224
+        width: 52
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74f541dc9ff237020800000000000000
+      internalID: 2338265381469445959
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_4
+      rect:
+        serializedVersion: 2
+        x: 469
+        y: 224
+        width: 62
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f2e8621dd5bf00c40800000000000000
+      internalID: 5476653527242018351
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_5
+      rect:
+        serializedVersion: 2
+        x: 539
+        y: 224
+        width: 77
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d54c670d9406244e0800000000000000
+      internalID: -1998929414452755363
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_6
+      rect:
+        serializedVersion: 2
+        x: 619
+        y: 224
+        width: 72
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e4efbabd4804fb20800000000000000
+      internalID: 3167165567886943459
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_7
+      rect:
+        serializedVersion: 2
+        x: 709
+        y: 224
+        width: 62
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cbabd0ef1f4f0c2f0800000000000000
+      internalID: -954493800815936836
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_8
+      rect:
+        serializedVersion: 2
+        x: 779
+        y: 224
+        width: 62
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 180913d08574f4b70800000000000000
+      internalID: 8885399033329324161
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_9
+      rect:
+        serializedVersion: 2
+        x: 849
+        y: 234
+        width: 17
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: beeb642a846e19670800000000000000
+      internalID: 8543863167733120747
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_10
+      rect:
+        serializedVersion: 2
+        x: 864
+        y: 224
+        width: 47
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e896254ba62791ea0800000000000000
+      internalID: -5901560034074924658
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_11
+      rect:
+        serializedVersion: 2
+        x: 919
+        y: 224
+        width: 62
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ce410e5c73ce93d0800000000000000
+      internalID: -3197903746465968442
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_12
+      rect:
+        serializedVersion: 2
+        x: 989
+        y: 224
+        width: 12
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 92879951753604840800000000000000
+      internalID: 5206270394915977257
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_13
+      rect:
+        serializedVersion: 2
+        x: 1009
+        y: 224
+        width: 57
+        height: 87
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05de9744f74404210800000000000000
+      internalID: 1315126404592561488
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_14
+      rect:
+        serializedVersion: 2
+        x: 1079
+        y: 224
+        width: 67
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf47f959df694a120800000000000000
+      internalID: 2424228515313317115
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_15
+      rect:
+        serializedVersion: 2
+        x: 1149
+        y: 224
+        width: 67
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05b5da4d90cc23b20800000000000000
+      internalID: 3112774635061336912
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_16
+      rect:
+        serializedVersion: 2
+        x: 1229
+        y: 274
+        width: 72
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2c33801383b6e2240800000000000000
+      internalID: 4768866944516895682
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_17
+      rect:
+        serializedVersion: 2
+        x: 1304
+        y: 224
+        width: 72
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a1d387ee5aedf43e0800000000000000
+      internalID: -2067188899687940838
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_18
+      rect:
+        serializedVersion: 2
+        x: 1404
+        y: 249
+        width: 17
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 343dc013715771930800000000000000
+      internalID: 4113885527093859139
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_19
+      rect:
+        serializedVersion: 2
+        x: 1229
+        y: 224
+        width: 72
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b5d9b25c504634ab0800000000000000
+      internalID: -5025062783269757605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_20
+      rect:
+        serializedVersion: 2
+        x: 1404
+        y: 224
+        width: 17
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d8074f9052c18fa0800000000000000
+      internalID: -5800141193551083307
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_21
+      rect:
+        serializedVersion: 2
+        x: 189
+        y: 129
+        width: 72
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c89b3b919a0ee320800000000000000
+      internalID: 2589018456275523779
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_22
+      rect:
+        serializedVersion: 2
+        x: 274
+        y: 129
+        width: 72
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa2c0abd7fdfa8150800000000000000
+      internalID: 5875787904841728682
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_23
+      rect:
+        serializedVersion: 2
+        x: 364
+        y: 134
+        width: 17
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f056bb8464b738010800000000000000
+      internalID: 1189930268354110735
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_24
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 129
+        width: 42
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: baea58b3e7b188980800000000000000
+      internalID: -8536542864702329173
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_25
+      rect:
+        serializedVersion: 2
+        x: 429
+        y: 129
+        width: 62
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: defb7e6d1aa411c70800000000000000
+      internalID: 8940008794262847469
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_26
+      rect:
+        serializedVersion: 2
+        x: 509
+        y: 129
+        width: 57
+        height: 57
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72bde14dac6863000800000000000000
+      internalID: 15347854442683175
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_27
+      rect:
+        serializedVersion: 2
+        x: 594
+        y: 129
+        width: 62
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6fb8bc428fd6a5eb0800000000000000
+      internalID: -4730347546062648330
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_28
+      rect:
+        serializedVersion: 2
+        x: 674
+        y: 129
+        width: 42
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d663572e4e5c6dd40800000000000000
+      internalID: 5608887972779079277
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_29
+      rect:
+        serializedVersion: 2
+        x: 714
+        y: 149
+        width: 32
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d3a076566a9b26bd0800000000000000
+      internalID: -2638342307368728003
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_30
+      rect:
+        serializedVersion: 2
+        x: 764
+        y: 129
+        width: 27
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 56c257d8d002296d0800000000000000
+      internalID: -2985288360413287323
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_31
+      rect:
+        serializedVersion: 2
+        x: 799
+        y: 129
+        width: 37
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: efe487bb678e0bdd0800000000000000
+      internalID: -2472220598777393410
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_32
+      rect:
+        serializedVersion: 2
+        x: 904
+        y: 129
+        width: 62
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b5f710721bc809a40800000000000000
+      internalID: 5372949047944511323
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_33
+      rect:
+        serializedVersion: 2
+        x: 959
+        y: 184
+        width: 12
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3565f2cbd00e39c70800000000000000
+      internalID: 8976764831875946067
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_34
+      rect:
+        serializedVersion: 2
+        x: 1004
+        y: 149
+        width: 12
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8a92a48579444a7c0800000000000000
+      internalID: -4061045547169338968
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_35
+      rect:
+        serializedVersion: 2
+        x: 564
+        y: 149
+        width: 12
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b0d9d1de3d8e8980800000000000000
+      internalID: -8534728942872309577
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_36
+      rect:
+        serializedVersion: 2
+        x: 834
+        y: 154
+        width: 57
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 81e0a2c03ee17f810800000000000000
+      internalID: 1798940536668294680
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_37
+      rect:
+        serializedVersion: 2
+        x: 1004
+        y: 129
+        width: 12
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c5df8862295738a70800000000000000
+      internalID: 8828028965148491100
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_38
+      rect:
+        serializedVersion: 2
+        x: 1084
+        y: 94
+        width: 47
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c65145b2ee7f49d0800000000000000
+      internalID: -2787870132150380856
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_39
+      rect:
+        serializedVersion: 2
+        x: 1144
+        y: 94
+        width: 152
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 885bf3b28e37a41d0800000000000000
+      internalID: -3365750330510822008
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_40
+      rect:
+        serializedVersion: 2
+        x: 1324
+        y: 94
+        width: 42
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 898c087fd78d59400800000000000000
+      internalID: 330408183216523416
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: setsumei_kenpa_41
+      rect:
+        serializedVersion: 2
+        x: 1369
+        y: 94
+        width: 132
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ec75ad5c56e88530800000000000000
+      internalID: 3857586365225336033
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      setsumei_kenpa_0: -1919572475577527891
+      setsumei_kenpa_1: 4695309020193998604
+      setsumei_kenpa_10: -5901560034074924658
+      setsumei_kenpa_11: -3197903746465968442
+      setsumei_kenpa_12: 5206270394915977257
+      setsumei_kenpa_13: 1315126404592561488
+      setsumei_kenpa_14: 2424228515313317115
+      setsumei_kenpa_15: 3112774635061336912
+      setsumei_kenpa_16: 4768866944516895682
+      setsumei_kenpa_17: -2067188899687940838
+      setsumei_kenpa_18: 4113885527093859139
+      setsumei_kenpa_19: -5025062783269757605
+      setsumei_kenpa_2: 6524092392715194409
+      setsumei_kenpa_20: -5800141193551083307
+      setsumei_kenpa_21: 2589018456275523779
+      setsumei_kenpa_22: 5875787904841728682
+      setsumei_kenpa_23: 1189930268354110735
+      setsumei_kenpa_24: -8536542864702329173
+      setsumei_kenpa_25: 8940008794262847469
+      setsumei_kenpa_26: 15347854442683175
+      setsumei_kenpa_27: -4730347546062648330
+      setsumei_kenpa_28: 5608887972779079277
+      setsumei_kenpa_29: -2638342307368728003
+      setsumei_kenpa_3: 2338265381469445959
+      setsumei_kenpa_30: -2985288360413287323
+      setsumei_kenpa_31: -2472220598777393410
+      setsumei_kenpa_32: 5372949047944511323
+      setsumei_kenpa_33: 8976764831875946067
+      setsumei_kenpa_34: -4061045547169338968
+      setsumei_kenpa_35: -8534728942872309577
+      setsumei_kenpa_36: 1798940536668294680
+      setsumei_kenpa_37: 8828028965148491100
+      setsumei_kenpa_38: -2787870132150380856
+      setsumei_kenpa_39: -3365750330510822008
+      setsumei_kenpa_4: 5476653527242018351
+      setsumei_kenpa_40: 330408183216523416
+      setsumei_kenpa_41: 3857586365225336033
+      setsumei_kenpa_5: -1998929414452755363
+      setsumei_kenpa_6: 3167165567886943459
+      setsumei_kenpa_7: -954493800815936836
+      setsumei_kenpa_8: 8885399033329324161
+      setsumei_kenpa_9: 8543863167733120747
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

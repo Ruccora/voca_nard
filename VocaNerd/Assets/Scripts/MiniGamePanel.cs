@@ -9,18 +9,15 @@ namespace VocaNerd
 {
     public class MiniGamePanel : PanelBase
     {
-        [SerializeField] private TMP_Text titleText;
         [SerializeField] private Button backButton;
         [SerializeField] private RectTransform gameContainer;
 
         [Header("Animated Rects")]
-        [SerializeField] private RectTransform titleTextRect;
         [SerializeField] private RectTransform backButtonRect;
 
-        public RectTransform TitleTextRect => titleTextRect;
         public RectTransform BackButtonRect => backButtonRect;
 
-        private MiniGameData _current;
+        private string _bgmKey;
         private GameObject _spawned;
         private PanelBase _innerPanel;
         private InputAction _backAction;
@@ -39,10 +36,12 @@ namespace VocaNerd
             _backAction.performed += _ => OnBack();
         }
 
-        public void Bind(MiniGameData data)
+        /// <summary>
+        /// 起動するミニゲームを差し込む。呼び出し元は説明画面 (<see cref="ExplainPanelBase"/>)。
+        /// </summary>
+        public void Bind(GameObject miniGamePrefab, string bgmKey)
         {
-            _current = data;
-            if (titleText != null) titleText.text = data.Title;
+            _bgmKey = bgmKey;
 
             if (_spawned != null)
             {
@@ -50,9 +49,9 @@ namespace VocaNerd
                 _spawned = null;
                 _innerPanel = null;
             }
-            if (data.MiniGamePrefab != null && gameContainer != null)
+            if (miniGamePrefab != null && gameContainer != null)
             {
-                _spawned = Instantiate(data.MiniGamePrefab, gameContainer);
+                _spawned = Instantiate(miniGamePrefab, gameContainer);
                 _innerPanel = _spawned.GetComponent<PanelBase>();
             }
         }
@@ -61,8 +60,8 @@ namespace VocaNerd
         {
             await base.SetupAsync(token);
 
-            // BGM はミニゲームごとに MiniGameData で決める（ScreenController の MiniGame 枠は空にしておく）
-            if (_current != null) Audio.PlayBgm(_current.BgmKey);
+            // BGM はミニゲームごとに説明画面 prefab で決める（ScreenController の MiniGame 枠は空にしておく）
+            Audio.PlayBgm(_bgmKey);
 
             if (_innerPanel != null) await _innerPanel.SetupAsync(token);
         }
