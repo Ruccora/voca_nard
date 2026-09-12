@@ -670,7 +670,6 @@ MonoBehaviour:
   paddingX: 40
   hideWhenNoMatch: 1
   blinker: {fileID: 4048190181481705752}
-  shinyOutline: {fileID: 0}
   cursorSeKey: se_cursor
 --- !u!1 &8041079811499703855
 GameObject:

@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -14,7 +13,6 @@ namespace VocaNerd
         {
             Idle,
             Opening,
-            Intro,
             Waiting,
             Ready,
             Reaction,
@@ -30,12 +28,10 @@ namespace VocaNerd
         }
 
         [Header("View")]
-        [SerializeField] private CanvasGroup introGroup;
-        [SerializeField] private TMP_Text introText;
         [SerializeField] private Image targetImage;
         [SerializeField] private CanvasGroup resultGroup;
-        [SerializeField] private TMP_Text resultText;
-        [SerializeField] private Button playAgainButton;
+        [Tooltip("勝者表示 (1P / 2P の画像)")]
+        [SerializeField] private WinnerLabel winnerLabel;
 
         [Header("Players")]
         [SerializeField] private RectTransform player1Character;
@@ -58,16 +54,6 @@ namespace VocaNerd
         // 別 prefab で作った開始演出を子として当てこんで参照する (未設定なら演出なし)
         [SerializeField] private OpeningEffect openingEffect;
 
-        [Header("Opening Background Dim")]
-        [Tooltip("開始演出中に暗転させる背景。UISparkle マテリアルを持つ Image (未設定なら暗転なし)")]
-        [SerializeField] private Graphic openingDimTarget;
-        [Tooltip("最も暗いときの明るさ (1=通常, 0=真っ暗)")]
-        [SerializeField] private float openingDimBrightness = 0.35f;
-        [Tooltip("暗くしていく時間 (秒)")]
-        [SerializeField] private float openingDimInDuration = 0.35f;
-        [Tooltip("明るさを元に戻す時間 (秒)")]
-        [SerializeField] private float openingDimOutDuration = 0.5f;
-
         [Header("SE")]
         [Tooltip("開始演出の頭で鳴らす SE キー。空なら無音")]
         [SerializeField] private string openingSeKey = SeKey.QuickDrawOpening;
@@ -84,7 +70,6 @@ namespace VocaNerd
         [Header("Timing")]
         [SerializeField] private float minWait = 3f;
         [SerializeField] private float maxWait = 5f;
-        [SerializeField] private float introDuration = 1.2f;
         [SerializeField] private float winnerDelay = 1.5f;
         [SerializeField] private float winnerUiDelay = 1.5f;
 
@@ -120,18 +105,15 @@ namespace VocaNerd
 
             _p1Action = new InputAction("Player1", InputActionType.Button);
             _p1Action.AddBinding("<Keyboard>/a");
-            _p1Action.AddBinding("<Gamepad>/buttonSouth");
+            _p1Action.AddBinding(GamepadButtons.A);
             _p1Action.performed += OnP1;
 
             _p2Action = new InputAction("Player2", InputActionType.Button);
             _p2Action.AddBinding("<Keyboard>/l");
-            _p2Action.AddBinding("<Gamepad>/buttonSouth");
+            _p2Action.AddBinding(GamepadButtons.A);
             _p2Action.performed += OnP2;
 
             _resultInput = new ResultInput(OnResultRetry, OnResultExit);
-
-            if (playAgainButton != null)
-                playAgainButton.onClick.AddListener(OnPlayAgain);
 
             // キャラの初期位置（左右）を記録。以後ラウンド毎にここへ戻す。
             if (player1Character != null) _p1Home = player1Character.anchoredPosition;
@@ -144,7 +126,6 @@ namespace VocaNerd
             if (_p2Image != null) _p2OrigSprite = _p2Image.sprite;
 
             EnsureWhiteFlash();
-            EnsureOpeningDimMaterial();
             ResetInitialView();
 
             if (openingEffect != null)
@@ -175,19 +156,10 @@ namespace VocaNerd
             _p1Action?.Dispose();
             _p2Action?.Dispose();
             _resultInput?.Dispose();
-            if (playAgainButton != null) playAgainButton.onClick.RemoveListener(OnPlayAgain);
             if (_openingDimMat != null) Destroy(_openingDimMat);
         }
 
-        private void OnPlayAgain()
-        {
-            if (IsAnimating) return;
-            _resultInput?.Disable();
-            Audio.StopSE(); // 勝利 SE が長いので、鳴りっぱなしのまま次ラウンドに入らせない
-            StartRound(replay: true);
-        }
-
-        // リザルト: 1P の A で再戦
+        // リザルト: 1P の A / Enter で再戦
         private void OnResultRetry()
         {
             if (IsAnimating) return;
@@ -198,7 +170,7 @@ namespace VocaNerd
             StartRound(replay: true);
         }
 
-        // リザルト: 1P の B で抜ける (通常の退出シーケンスへ流す)
+        // リザルト: 1P の B / X で戻る (通常の退出シーケンスへ流す)
         private void OnResultExit()
         {
             if (IsAnimating) return;
@@ -239,20 +211,14 @@ namespace VocaNerd
                 if (replay && replayDelay > 0f)
                     await UniTask.Delay(TimeSpan.FromSeconds(replayDelay), cancellationToken: token);
 
-                // 0) 開始演出 (READY? の前)
+                // 0) 開始演出
                 await PlayOpeningEffectAsync(token);
-
-                // 1) 開始演出
-                await PlayIntroEffectAsync(token);
 
                 // 2) 3~5 秒待機（この間に押されたらフォール）
                 var reachedReveal = await PlayWaitAsync(token);
 
                 if (reachedReveal)
                 {
-                    // 2.5) びっくり(!!!) が出る前に画面を 1f だけ真っ白に
-                    await PlayWhiteFlashAsync(token);
-
                     // 3) 何らかのボタン表示演出
                     await PlayRevealEffectAsync(token);
                     // 押されるまで待つ
@@ -300,9 +266,6 @@ namespace VocaNerd
 
             Audio.PlaySE(openingSeKey);
 
-            // 背景を少し暗転 (露出と並行して進める)
-            AnimateOpeningBrightnessAsync(1f, openingDimBrightness, openingDimInDuration, token).Forget();
-
             // 1) 斜め線を露出 (表示したまま)
             await openingEffect.PlayAsync(token);
 
@@ -313,37 +276,11 @@ namespace VocaNerd
             // 3) マスクが左右にはける → READY へ
             await openingEffect.ExitAsync(token);
 
-            // 背景を明転で元の明るさに戻す
-            await AnimateOpeningBrightnessAsync(openingDimBrightness, 1f, openingDimOutDuration, token);
-
             // 4) 開始演出の後の待機 (SE / READY? の前)
             if (openingEndWait > 0f)
                 await UniTask.Delay(TimeSpan.FromSeconds(openingEndWait), cancellationToken: token);
 
             Audio.PlaySE(startSeKey);
-        }
-
-        // -------- Stage 1: 開始演出 --------
-        private async UniTask PlayIntroEffectAsync(CancellationToken token)
-        {
-            _phase = Phase.Intro;
-            // TODO: 差し替え可能な開始演出。現状は READY? を sin フェード
-            if (introGroup == null)
-            {
-                await UniTask.Delay(TimeSpan.FromSeconds(introDuration), cancellationToken: token);
-                return;
-            }
-
-            var elapsed = 0f;
-            while (elapsed < introDuration)
-            {
-                token.ThrowIfCancellationRequested();
-                elapsed += Time.deltaTime;
-                var t = Mathf.Clamp01(elapsed / introDuration);
-                introGroup.alpha = Mathf.Sin(t * Mathf.PI);
-                await UniTask.Yield(PlayerLoopTiming.Update, token);
-            }
-            introGroup.alpha = 0f;
         }
 
         // -------- Stage 2: 3~5秒待機 (returns true if full wait elapsed, false if foul) --------
@@ -468,12 +405,9 @@ namespace VocaNerd
         private async UniTask PlayWinnerEffectAsync(PressResult result, CancellationToken token)
         {
             _phase = Phase.Winner;
-            if (resultText != null)
-                resultText.text = result.Foul
-                    ? $"FOUL! Player {result.Winner} Wins"
-                    : $"Player {result.Winner} Wins!";
+            if (winnerLabel != null) winnerLabel.Show(result.Winner);
 
-            // 勝利者表示のあと、UI(resultGroup/PlayAgain)を出す前に一拍待機
+            // 勝利者表示のあと、UI(resultGroup)を出す前に一拍待機
             if (winnerUiDelay > 0f)
                 await UniTask.Delay(TimeSpan.FromSeconds(winnerUiDelay), cancellationToken: token);
 
@@ -562,8 +496,6 @@ namespace VocaNerd
         {
             _phase = Phase.Idle;
             ResetRoundView();
-            if (introGroup != null) introGroup.alpha = 0f;
-            if (introText != null) introText.text = "READY?";
         }
 
         private void ResetRoundView()
@@ -588,6 +520,7 @@ namespace VocaNerd
 
             if (targetImage != null) targetImage.enabled = false;
             if (whiteFlashImage != null) whiteFlashImage.enabled = false;
+            if (winnerLabel != null) winnerLabel.Clear();
             if (resultGroup != null)
             {
                 resultGroup.alpha = 0f;
@@ -597,16 +530,7 @@ namespace VocaNerd
             // 背景の明るさを通常へ戻す
             SetOpeningBrightness(1f);
         }
-
-        // -------- 開始演出の背景暗転 --------
-        private void EnsureOpeningDimMaterial()
-        {
-            if (openingDimTarget == null || _openingDimMat != null) return;
-            // 共有マテリアルアセットを実行時に汚さないよう複製して差し替える
-            _openingDimMat = new Material(openingDimTarget.material);
-            openingDimTarget.material = _openingDimMat;
-        }
-
+        
         private void SetOpeningBrightness(float value)
         {
             if (_openingDimMat != null) _openingDimMat.SetFloat(BrightnessId, value);

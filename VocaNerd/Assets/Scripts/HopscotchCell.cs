@@ -9,13 +9,9 @@ namespace VocaNerd
     public class HopscotchCell : MonoBehaviour
     {
         [SerializeField] private Image background;
-        [SerializeField] private TMP_Text label;
-        [SerializeField] private Image toggleMark;
-        [SerializeField] private RectTransform toggleMarkRect;
         [SerializeField] private GameObject secondaryPlatform;
         [SerializeField] private Image secondaryImage;
         [SerializeField] private RectTransform secondaryRect;
-        [SerializeField] private Image secondaryToggleMark;
 
         [Header("Colors")]
         [SerializeField] private Color toggleOnColor = new Color(0.3f, 1f, 0.3f, 0.7f);
@@ -38,12 +34,6 @@ namespace VocaNerd
                 if (sprite != null) background.sprite = sprite;
                 background.color = color;
             }
-            if (label != null) label.text = isTypeA ? "A" : "B";
-            if (toggleMark != null)
-            {
-                toggleMark.gameObject.SetActive(isToggle);
-                if (isToggle) toggleMark.color = toggleOnColor;
-            }
             if (secondaryPlatform != null)
                 secondaryPlatform.SetActive(!isTypeA);
             if (secondaryImage != null)
@@ -55,19 +45,6 @@ namespace VocaNerd
             {
                 secondaryRect.anchoredPosition = secondaryOffset;
             }
-            if (secondaryToggleMark != null)
-            {
-                secondaryToggleMark.gameObject.SetActive(isToggle && !isTypeA);
-                if (isToggle) secondaryToggleMark.color = toggleOnColor;
-            }
-        }
-
-        public void SetToggleState(bool on)
-        {
-            if (!_isToggle) return;
-            var color = on ? toggleOnColor : toggleOffColor;
-            if (toggleMark != null) toggleMark.color = color;
-            if (secondaryToggleMark != null) secondaryToggleMark.color = color;
         }
 
         private UIEffect[] _depthEffects;

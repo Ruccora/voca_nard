@@ -5,7 +5,6 @@ using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
 
 namespace VocaNerd
 {
@@ -37,8 +36,8 @@ namespace VocaNerd
         [SerializeField] private TMP_Text introText;
         [SerializeField] private TMP_Text countdownText;
         [SerializeField] private CanvasGroup resultGroup;
-        [SerializeField] private TMP_Text winnerText;
-        [SerializeField] private Button playAgainButton;
+        [Tooltip("勝者表示 (1P / 2P は画像、残りの文言は TMP)")]
+        [SerializeField] private WinnerLabel winnerLabel;
 
         [Header("Player 1 (Left)")]
         [SerializeField] private RectTransform player1Stack;
@@ -90,17 +89,17 @@ namespace VocaNerd
             if (_isSetup) return UniTask.CompletedTask;
             _isSetup = true;
 
-            // 左右移動は十字キー / 左スティック、叩くのは A (buttonSouth) / B (buttonEast)。
+            // 左右移動は十字キー / 左スティック、叩くのは A / B (割り当ては GamepadButtons)。
             // 1P/2P で同じボタンを張っておき、どちらのパッドかは PlayerDevices で振り分ける。
             _p1Left = MakeAction("P1Left", "<Keyboard>/a", "<Gamepad>/dpad/left", "<Gamepad>/leftStick/left");
             _p1Right = MakeAction("P1Right", "<Keyboard>/d", "<Gamepad>/dpad/right", "<Gamepad>/leftStick/right");
-            _p1Knock = MakeAction("P1Knock", "<Keyboard>/w", "<Gamepad>/buttonSouth");
-            _p1KnockAlt = MakeAction("P1KnockAlt", "<Keyboard>/s", "<Gamepad>/buttonEast");
+            _p1Knock = MakeAction("P1Knock", "<Keyboard>/w", GamepadButtons.A);
+            _p1KnockAlt = MakeAction("P1KnockAlt", "<Keyboard>/s", GamepadButtons.B);
 
             _p2Left = MakeAction("P2Left", "<Keyboard>/leftArrow", "<Gamepad>/dpad/left", "<Gamepad>/leftStick/left");
             _p2Right = MakeAction("P2Right", "<Keyboard>/rightArrow", "<Gamepad>/dpad/right", "<Gamepad>/leftStick/right");
-            _p2Knock = MakeAction("P2Knock", "<Keyboard>/upArrow", "<Gamepad>/buttonSouth");
-            _p2KnockAlt = MakeAction("P2KnockAlt", "<Keyboard>/downArrow", "<Gamepad>/buttonEast");
+            _p2Knock = MakeAction("P2Knock", "<Keyboard>/upArrow", GamepadButtons.A);
+            _p2KnockAlt = MakeAction("P2KnockAlt", "<Keyboard>/downArrow", GamepadButtons.B);
 
             _p1Left.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 1)) OnMove(1, PlayerSide.Left); };
             _p1Right.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 1)) OnMove(1, PlayerSide.Right); };
@@ -112,9 +111,6 @@ namespace VocaNerd
             _p2KnockAlt.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 2)) OnKnock(2); };
 
             _resultInput = new ResultInput(OnResultRetry, OnResultExit);
-
-            if (playAgainButton != null)
-                playAgainButton.onClick.AddListener(OnPlayAgain);
 
             ResetInitialView();
             return UniTask.CompletedTask;
@@ -140,7 +136,6 @@ namespace VocaNerd
             _p1Left?.Dispose(); _p1Right?.Dispose(); _p1Knock?.Dispose(); _p1KnockAlt?.Dispose();
             _p2Left?.Dispose(); _p2Right?.Dispose(); _p2Knock?.Dispose(); _p2KnockAlt?.Dispose();
             _resultInput?.Dispose();
-            if (playAgainButton != null) playAgainButton.onClick.RemoveListener(OnPlayAgain);
         }
 
         private static InputAction MakeAction(string name, params string[] bindings)
@@ -163,14 +158,7 @@ namespace VocaNerd
             _resultInput?.Disable();
         }
 
-        private void OnPlayAgain()
-        {
-            if (IsAnimating) return;
-            _resultInput?.Disable();
-            StartRound();
-        }
-
-        // リザルト: 1P の A で再戦
+        // リザルト: 1P の A / Enter で再戦
         private void OnResultRetry()
         {
             if (IsAnimating) return;
@@ -180,7 +168,7 @@ namespace VocaNerd
             StartRound();
         }
 
-        // リザルト: 1P の B で抜ける (通常の退出シーケンスへ流す)
+        // リザルト: 1P の B / X で戻る (通常の退出シーケンスへ流す)
         private void OnResultExit()
         {
             if (IsAnimating) return;
@@ -270,7 +258,7 @@ namespace VocaNerd
         private async UniTask PlayWinnerEffectAsync(CancellationToken token)
         {
             _phase = Phase.Winner;
-            if (winnerText != null) winnerText.text = $"Player {_winner} Wins!";
+            if (winnerLabel != null) winnerLabel.Show(_winner);
             if (resultGroup != null)
             {
                 resultGroup.alpha = 1f;
@@ -454,7 +442,7 @@ namespace VocaNerd
         {
             if (introText != null) introText.text = string.Empty;
             if (countdownText != null) countdownText.text = string.Empty;
-            if (winnerText != null) winnerText.text = string.Empty;
+            if (winnerLabel != null) winnerLabel.Clear();
             if (resultGroup != null)
             {
                 resultGroup.alpha = 0f;

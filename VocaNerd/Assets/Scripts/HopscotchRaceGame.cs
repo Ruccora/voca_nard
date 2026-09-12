@@ -26,9 +26,10 @@ namespace VocaNerd
         // A = けん (わっか 1 つ) / B = ぱ (わっか 2 つ)
         private enum CellType { A, B }
 
-        // 開始演出でデモする けん・けん・ぱ。start cell が ぱ なので、
-        // 見た目は「ぱ → けん → けん → ぱ」の 1 セットになる。
-        private static readonly CellType[] IntroPattern = { CellType.A, CellType.A, CellType.B };
+        // コース頭の固定パターン「ぱ → けん → けん → ぱ」。
+        // 先頭 (index 0) はキャラが最初に立つマスで、そこから けん・けん・ぱ を開始演出でデモする。
+        private static readonly CellType[] IntroPattern =
+            { CellType.B, CellType.A, CellType.A, CellType.B };
 
         private struct CellData
         {
@@ -39,7 +40,7 @@ namespace VocaNerd
 
         private class PlayerState
         {
-            public int position;   // -1 = before start, 0..cellCount-1 = on cell
+            public int position;   // 0..cellCount-1 = on cell (0 = スタートマス)
             public bool isMoving;
             public bool isStopped;
             public float idleElapsed;  // 飛んでいない状態が続いている秒数 (待機アニメの判定用)
@@ -48,8 +49,8 @@ namespace VocaNerd
         [Header("Common View")]
         [SerializeField] private TMP_Text goalText;
         [SerializeField] private CanvasGroup resultGroup;
-        [SerializeField] private TMP_Text winnerText;
-        [SerializeField] private Button playAgainButton;
+        [Tooltip("勝者表示 (1P / 2P は画像、残りの文言は TMP)")]
+        [SerializeField] private WinnerLabel winnerLabel;
 
         [Header("Player 1 (Top)")]
         [SerializeField] private RectTransform player1Track;
@@ -58,7 +59,6 @@ namespace VocaNerd
         [SerializeField] private SpriteAnimation player1KenAnim;
         [Tooltip("ぱ (わっか 2 つ) に飛ぶときのアニメーション")]
         [SerializeField] private SpriteAnimation player1PaAnim;
-        [SerializeField] private CanvasGroupBlinker player1CharacterBlinker;
 
         [Header("Player 2 (Bottom)")]
         [SerializeField] private RectTransform player2Track;
@@ -67,11 +67,9 @@ namespace VocaNerd
         [SerializeField] private SpriteAnimation player2KenAnim;
         [Tooltip("ぱ (わっか 2 つ) に飛ぶときのアニメーション")]
         [SerializeField] private SpriteAnimation player2PaAnim;
-        [SerializeField] private CanvasGroupBlinker player2CharacterBlinker;
 
         [Header("Config")]
         [SerializeField] private HopscotchCell cellPrefab;
-        [SerializeField] private HopscotchCell startCellPrefab;
         [SerializeField] private int cellCount = 30;
         [SerializeField] private float moveDuration = 0.4f;
         [SerializeField] private float toggleInterval = 1f;
@@ -88,8 +86,6 @@ namespace VocaNerd
         [SerializeField] private float missTiltAngle = 12f;
         [Tooltip("左右の切り替え回数 (4 = 左右左右)")]
         [SerializeField, Min(1)] private int missTiltCount = 4;
-        [Tooltip("失敗時にキャラを明滅させる秒数 (0 で明滅なし)")]
-        [SerializeField] private float missBlinkDuration = 0.3f;
 
         [Header("Opening (けんけんぱ デモ)")]
         [Tooltip("明転を待ってからデモを始めるまでの待機秒数")]
@@ -174,7 +170,6 @@ namespace VocaNerd
         private Vector3 _p2CharacterHomeScale = Vector3.one;
         private int _p1ColorStart;
         private int _p2ColorStart;
-        private int _startSpriteIndex;
         private float _readyHomeScale = 1f;
         private float _goHomeScale = 1f;
         private float _playElapsed;
@@ -194,12 +189,12 @@ namespace VocaNerd
             if (player1Character != null) _p1CharacterRest = player1Character.anchoredPosition;
             if (player2Character != null) _p2CharacterRest = player2Character.anchoredPosition;
 
-            // けん (A) = パッドの A (buttonSouth) / ぱ (B) = パッドの B (buttonEast)。
+            // けん = パッドの A / ぱ = パッドの B (割り当ては GamepadButtons)。
             // 1P/2P で同じボタンを張っておき、どちらのパッドかは PlayerDevices で振り分ける。
-            _p1A = MakeAction("P1A", "<Keyboard>/a", "<Gamepad>/buttonSouth");
-            _p1D = MakeAction("P1D", "<Keyboard>/d", "<Gamepad>/buttonEast");
-            _p2Left = MakeAction("P2Left", "<Keyboard>/leftArrow", "<Gamepad>/buttonSouth");
-            _p2Right = MakeAction("P2Right", "<Keyboard>/rightArrow", "<Gamepad>/buttonEast");
+            _p1A = MakeAction("P1A", "<Keyboard>/a", GamepadButtons.A);
+            _p1D = MakeAction("P1D", "<Keyboard>/d", GamepadButtons.B);
+            _p2Left = MakeAction("P2Left", "<Keyboard>/leftArrow", GamepadButtons.A);
+            _p2Right = MakeAction("P2Right", "<Keyboard>/rightArrow", GamepadButtons.B);
 
             _p1A.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 1)) HandlePress(1, CellType.A); };
             _p1D.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 1)) HandlePress(1, CellType.B); };
@@ -207,9 +202,6 @@ namespace VocaNerd
             _p2Right.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 2)) HandlePress(2, CellType.B); };
 
             _resultInput = new ResultInput(OnResultRetry, OnResultExit);
-
-            if (playAgainButton != null)
-                playAgainButton.onClick.AddListener(OnPlayAgain);
 
             CaptureHome();
             ResetInitialView();
@@ -288,7 +280,6 @@ namespace VocaNerd
             _p2Left?.Dispose();
             _p2Right?.Dispose();
             _resultInput?.Dispose();
-            if (playAgainButton != null) playAgainButton.onClick.RemoveListener(OnPlayAgain);
         }
 
         private static InputAction MakeAction(string name, params string[] bindings)
@@ -311,14 +302,7 @@ namespace VocaNerd
             _resultInput?.Disable();
         }
 
-        private void OnPlayAgain()
-        {
-            if (IsAnimating) return;
-            _resultInput?.Disable();
-            StartRound(replay: true);
-        }
-
-        // リザルト: 1P の A で再戦
+        // リザルト: 1P の A / Enter で再戦
         private void OnResultRetry()
         {
             if (IsAnimating) return;
@@ -328,7 +312,7 @@ namespace VocaNerd
             StartRound(replay: true);
         }
 
-        // リザルト: 1P の B で抜ける (通常の退出シーケンスへ流す)
+        // リザルト: 1P の B / X で戻る (通常の退出シーケンスへ流す)
         private void OnResultExit()
         {
             if (IsAnimating) return;
@@ -394,7 +378,7 @@ namespace VocaNerd
             var cellsSinceToggle = int.MaxValue;
             for (var i = 0; i < cellCount; i++)
             {
-                // 頭 3 マスは開始演出でデモする けん・けん・ぱ で固定。トグルも置かない。
+                // 頭 4 マスは ぱ・けん・けん・ぱ で固定 (index 0 = スタート、以降が開始演出のデモ)。トグルも置かない。
                 var isIntro = i < IntroPattern.Length;
                 var canBeToggle = !isIntro && cellsSinceToggle >= toggleMinSpacing;
                 var isToggle = canBeToggle && rng.NextDouble() < toggleCellChance;
@@ -406,7 +390,6 @@ namespace VocaNerd
                 });
                 cellsSinceToggle = isToggle ? 0 : cellsSinceToggle + 1;
             }
-            _startSpriteIndex = rng.Next(spriteVariants);
 
             // 色は 3 種。開始色だけをプレイヤーごとにランダムに決め、以降はその順でループさせる。
             // (例: 1P きいろ始まり → きいろ→あか→あお→きいろ…) 常に隣のマスと別の色になる。
@@ -421,25 +404,11 @@ namespace VocaNerd
             ClearCells(_p2Cells);
             if (cellPrefab == null) return;
 
-            // Start cell at index 0 (virtual course index -1)
-            if (player1Track != null) _p1Cells.Add(CreateStartCell(player1Track, _p1ColorStart));
-            if (player2Track != null) _p2Cells.Add(CreateStartCell(player2Track, _p2ColorStart));
-
             for (var i = 0; i < _course.Count; i++)
             {
                 if (player1Track != null) _p1Cells.Add(CreateCell(player1Track, i, _course[i], _p1ColorStart));
                 if (player2Track != null) _p2Cells.Add(CreateCell(player2Track, i, _course[i], _p2ColorStart));
             }
-        }
-
-        // start cell は「ぱ」。ここに自キャラが ぱ の姿勢で立った状態から けん・けん・ぱ を飛ぶ。
-        private HopscotchCell CreateStartCell(RectTransform parent, int colorStart)
-        {
-            var prefab = startCellPrefab != null ? startCellPrefab : cellPrefab;
-            var cell = Instantiate(prefab, parent);
-            cell.name = "Cell_Start";
-            cell.Setup(false, false, GetCellSprite(_startSpriteIndex), GetCellColor(colorStart, -1));
-            return cell;
         }
 
         private static void ClearCells(List<HopscotchCell> list)
@@ -464,17 +433,15 @@ namespace VocaNerd
         }
 
         // colorStart から cellColors 順にループ。連続する 2 マスが同色になることはない。
-        // courseIndex は start cell (-1) も取りうるので、負数でも正しく巡回する剰余を使う。
         private Color GetCellColor(int colorStart, int courseIndex)
         {
             if (cellColors == null || cellColors.Length == 0) return Color.white;
             var len = cellColors.Length;
-            return cellColors[((colorStart + courseIndex) % len + len) % len];
+            return cellColors[(colorStart + courseIndex) % len];
         }
 
         // -------- Perspective rendering --------
-        // cells[0] は start cell (virtual course index -1)
-        // cells[1..] は _course[0..cellCount-1] に対応
+        // cells[i] は _course[i] に対応 (cells[0] = スタートマス)
         private void RefreshCells(List<HopscotchCell> cells, float currentPosition, Vector2 anchor, RectTransform character)
         {
             var near = anchor + nearSlotOffset;
@@ -485,9 +452,8 @@ namespace VocaNerd
             {
                 var cell = cells[i];
                 if (cell == null) continue;
-                // cells[i] = course index (i - 1)。distance 0 = 足元, 正 = 前方
-                var virtualIndex = i - 1;
-                var distance = virtualIndex - currentPosition;
+                // distance 0 = 足元, 正 = 前方
+                var distance = i - currentPosition;
 
                 if (distance < -(visibleBehind + 0.5f) || distance > visibleAhead + 0.5f)
                 {
@@ -546,10 +512,11 @@ namespace VocaNerd
         }
 
         // コース頭の けん・けん・ぱ を 1P/2P 同時に飛ぶデモ。
+        // index 0 はキャラが立っているスタートマスなので、飛ぶのは 1 マス目から。
         private async UniTask PlayKenKenPaDemoAsync(CancellationToken token)
         {
             var count = Mathf.Min(IntroPattern.Length, _course.Count);
-            for (var i = 0; i < count; i++)
+            for (var i = 1; i < count; i++)
             {
                 token.ThrowIfCancellationRequested();
                 await UniTask.WhenAll(
@@ -630,7 +597,6 @@ namespace VocaNerd
             {
                 token.ThrowIfCancellationRequested();
                 _playElapsed += Time.deltaTime;
-                UpdateToggleVisuals();
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }
 
@@ -651,7 +617,7 @@ namespace VocaNerd
         private async UniTask PlayWinnerEffectAsync(CancellationToken token)
         {
             _phase = Phase.Winner;
-            if (winnerText != null) winnerText.text = $"Player {_winner} Wins!";
+            if (winnerLabel != null) winnerLabel.Show(_winner);
             if (resultGroup != null)
             {
                 resultGroup.alpha = 1f;
@@ -688,26 +654,6 @@ namespace VocaNerd
 
         // -------- Toggle visuals --------
         private bool IsToggleOn() => ((int)(_playElapsed / toggleInterval)) % 2 == 0;
-
-        private void UpdateToggleVisuals()
-        {
-            var on = IsToggleOn();
-            UpdateToggleList(_p1Cells, on);
-            UpdateToggleList(_p2Cells, on);
-        }
-
-        private void UpdateToggleList(List<HopscotchCell> list, bool on)
-        {
-            // list[0] は start cell。list[i+1] が _course[i] に対応するので +1 オフセット。
-            for (var i = 0; i < _course.Count; i++)
-            {
-                if (!_course[i].isToggle) continue;
-                var cellIndex = i + 1;
-                if (cellIndex >= list.Count) continue;
-                var cell = list[cellIndex];
-                if (cell != null) cell.SetToggleState(on);
-            }
-        }
 
         // -------- 入力処理 --------
         private void HandlePress(int player, CellType keyType)
@@ -791,7 +737,7 @@ namespace VocaNerd
 
         // けん / ぱ の SpriteAnimation を切り替える。使う方だけ表示し、もう片方は隠す。
         // play = true で頭から再生 (跳ぶとき)、false なら最終フレームで静止 (着地して待機している状態)。
-        // courseIndex < 0 は start cell。start cell は ぱ 扱い。
+        // 範囲外 (コース未生成など) は ぱ 扱い。
         private void ShowCellAnim(int player, int courseIndex, bool play)
         {
             var isPa = courseIndex < 0 || courseIndex >= _course.Count
@@ -814,10 +760,6 @@ namespace VocaNerd
         {
             state.isStopped = true;
             var token = _roundCts?.Token ?? default;
-
-            var blinker = player == 1 ? player1CharacterBlinker : player2CharacterBlinker;
-            if (blinker != null && missBlinkDuration > 0f)
-                blinker.BlinkAsync(missBlinkDuration, token).Forget();
 
             try
             {
@@ -880,7 +822,7 @@ namespace VocaNerd
         private void ResetRoundView()
         {
             if (goalText != null) goalText.text = string.Empty;
-            if (winnerText != null) winnerText.text = string.Empty;
+            if (winnerLabel != null) winnerLabel.Clear();
             if (resultGroup != null)
             {
                 resultGroup.alpha = 0f;
@@ -893,10 +835,6 @@ namespace VocaNerd
             SetGroupAlpha(goGroup, 0f);
             SetScale(readyRect, _readyHomeScale * readyStartScale);
             SetScale(goRect, _goHomeScale * goStartScale);
-
-            // ミス明滅がキャンセルされたままだとキャラが透明で残るので、表示状態に戻す。
-            if (player1CharacterBlinker != null) player1CharacterBlinker.Restore();
-            if (player2CharacterBlinker != null) player2CharacterBlinker.Restore();
 
             // ジャンプ / 失敗演出の途中で打ち切られていても足元・無回転・等倍に戻す
             if (player1Character != null)
@@ -915,14 +853,14 @@ namespace VocaNerd
 
         private void ResetPlayerStates()
         {
-            _p1.position = -1; _p1.isMoving = false; _p1.isStopped = false; _p1.idleElapsed = 0f;
-            _p2.position = -1; _p2.isMoving = false; _p2.isStopped = false; _p2.idleElapsed = 0f;
+            _p1.position = 0; _p1.isMoving = false; _p1.isStopped = false; _p1.idleElapsed = 0f;
+            _p2.position = 0; _p2.isMoving = false; _p2.isStopped = false; _p2.idleElapsed = 0f;
             _winner = 0;
             _playElapsed = 0f;
 
-            // start cell は ぱ なので、キャラも ぱ のアニメーションの最終フレームで待機する。
-            ShowCellAnim(1, -1, play: false);
-            ShowCellAnim(2, -1, play: false);
+            // スタートマス (index 0) は ぱ なので、キャラも ぱ のアニメーションの最終フレームで待機する。
+            ShowCellAnim(1, 0, play: false);
+            ShowCellAnim(2, 0, play: false);
         }
 
         // -------- Tween helpers --------

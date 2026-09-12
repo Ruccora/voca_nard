@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 854300867182719562}
   - component: {fileID: 5891046326722563062}
   - component: {fileID: 6015191256364979377}
-  - component: {fileID: 1907328734361733884}
   - component: {fileID: 3203921089877741150}
   m_Layer: 0
   m_Name: Selectable
@@ -90,25 +89,6 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
---- !u!114 &1907328734361733884
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8100240333525150788}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7ce90fe7390ed4bc9a5cc4db51ddbca8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  uiEffect: {fileID: 3203921089877741150}
-  edgeWidth: 0.2
-  useCustomColor: 1
-  edgeColor: {r: 1, g: 0.3780804, b: 0.3537736, a: 1}
-  glow: 1
-  shinyWidth: 0.7
-  speed: 1.5
 --- !u!114 &3203921089877741150
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace VocaNerd
@@ -11,13 +13,12 @@ namespace VocaNerd
     {
         [Tooltip("ミニゲームごとの説明画面 prefab。ボタンと同じ並び順 (0=左上 1=右上 2=左下 3=右下)")]
         [SerializeField] private ExplainPanelBase[] explainPanelPrefabs = new ExplainPanelBase[4];
+        [Tooltip("ミニゲームボタン。未設定 (None) のスロットは配線対象から外れる")]
         [SerializeField] private Button[] miniGameButtons = new Button[4];
+        [Tooltip("ボタンの並びの列数。2 なら 2xN グリッドとして上下左右を配線する")]
+        [SerializeField] private int navigationColumns = 2;
         [SerializeField] private RectTransform explainRoot;
         [SerializeField] private SelectionIndicator selectionIndicator;
-        [SerializeField] private float expandDuration = 0.35f;
-
-        [Header("Animated Rects")]
-        [SerializeField] private RectTransform[] miniGameButtonRects = new RectTransform[4];
 
         [Header("Intro (FadeIn → 一拍おいて ScaleUp)")]
         [Tooltip("FadeIn の後に拡大する object")]
@@ -29,13 +30,11 @@ namespace VocaNerd
         [Tooltip("拡大にかける秒数")]
         [SerializeField] private float introScaleUpDuration = 0.8f;
 
-        public RectTransform[] MiniGameButtonRects => miniGameButtonRects;
-
         private ExplainPanelBase _activeExplain;
         private Vector3 _introScaleUpHome = Vector3.one;
-        private Vector2[] _buttonRestingPos;
-        private Vector2[] _buttonRestingSize;
         private int _selectedIndex = -1;
+        private InputAction _backAction;
+        private bool _leaving;
 
         protected override void Awake()
         {
@@ -49,49 +48,89 @@ namespace VocaNerd
 
             SetupNavigation();
 
-            if (introScaleUpRect != null) _introScaleUpHome = introScaleUpRect.localScale;
-            _buttonRestingPos = new Vector2[miniGameButtonRects.Length];
-            _buttonRestingSize = new Vector2[miniGameButtonRects.Length];
-            for (var i = 0; i < miniGameButtonRects.Length; i++)
+            // B (buttonSouth) でタイトルに戻る。操作できるのは 1P だけ。
+            _backAction = new InputAction("SelectBack", InputActionType.Button);
+            _backAction.AddBinding(GamepadButtons.B);
+            _backAction.AddBinding("<Keyboard>/escape");
+            _backAction.AddBinding("<Keyboard>/backspace");
+            _backAction.performed += ctx =>
             {
-                if (miniGameButtonRects[i] != null)
-                {
-                    _buttonRestingPos[i] = miniGameButtonRects[i].anchoredPosition;
-                    _buttonRestingSize[i] = miniGameButtonRects[i].sizeDelta;
-                }
-            }
+                if (PlayerDevices.IsPlayerOne(ctx.control.device)) OnBack();
+            };
+
+            if (introScaleUpRect != null) _introScaleUpHome = introScaleUpRect.localScale;
+        }
+
+        private void OnDestroy()
+        {
+            _backAction?.Dispose();
+            _backAction = null;
+        }
+
+        // 説明画面が開いている間は、その画面の「戻る」に任せる (二重に効かせない)。
+        private void OnBack()
+        {
+            if (IsAnimating || _leaving) return;
+            if (_activeExplain != null) return;
+
+            _leaving = true;
+            _backAction?.Disable();
+            Audio.PlaySE(SeKey.Cancel);
+            ScreenController.Instance.ShowAsync(ScreenType.Title).Forget();
         }
 
         /// <summary>
-        /// 4 つのミニゲームボタンは 2x2 グリッド (0=左上 1=右上 2=左下 3=右下)。
-        /// 既定の Automatic ナビだと左右候補が安定して拾えず「上下は動くが左右が動かない」
-        /// 症状になるので、明示的に隣接関係を配線する。
+        /// ミニゲームボタンを navigationColumns 列のグリッドとみなして上下左右を明示配線する
+        /// (既定 2 列 = 0=左上 1=右上 2=左下 3=右下)。既定の Automatic ナビだと左右候補が
+        /// 安定して拾えず「上下は動くが左右が動かない」症状になるため。
+        ///
+        /// 未設定 (null) のスロットは飛ばして「実際に使うボタンだけ」で配線するので、
+        /// 3 個など半端な数でも隣に存在しないボタンへ飛んでカーソルを見失うことはない。
         /// </summary>
         private void SetupNavigation()
         {
-            if (miniGameButtons == null || miniGameButtons.Length < 4) return;
-            LinkNav(0, right: 1, down: 2);
-            LinkNav(1, left: 0, down: 3);
-            LinkNav(2, right: 3, up: 0);
-            LinkNav(3, left: 2, up: 1);
-        }
-
-        private void LinkNav(int index, int left = -1, int right = -1, int up = -1, int down = -1)
-        {
-            var btn = ButtonAt(index);
-            if (btn == null) return;
-            btn.navigation = new Navigation
+            var buttons = new List<Button>();
+            if (miniGameButtons != null)
             {
-                mode = Navigation.Mode.Explicit,
-                selectOnLeft = ButtonAt(left),
-                selectOnRight = ButtonAt(right),
-                selectOnUp = ButtonAt(up),
-                selectOnDown = ButtonAt(down),
-            };
-        }
+                foreach (var b in miniGameButtons)
+                    if (b != null) buttons.Add(b);
+            }
+            if (buttons.Count == 0) return;
 
-        private Button ButtonAt(int index)
-            => index >= 0 && index < miniGameButtons.Length ? miniGameButtons[index] : null;
+            var cols = Mathf.Max(1, navigationColumns);
+            for (var i = 0; i < buttons.Count; i++)
+            {
+                var row = i / cols;
+                var col = i % cols;
+                var rowLast = Mathf.Min(row * cols + cols, buttons.Count) - 1; // この行の最後の index
+
+                // 真下が無くても、次の行が存在するならその行の最後へ送る (最終行が欠けている場合)
+                Button down = null;
+                if (i + cols < buttons.Count) down = buttons[i + cols];
+                else if ((row + 1) * cols < buttons.Count) down = buttons[buttons.Count - 1];
+
+                buttons[i].navigation = new Navigation
+                {
+                    mode = Navigation.Mode.Explicit,
+                    selectOnLeft = col > 0 ? buttons[i - 1] : null,
+                    selectOnRight = i < rowLast ? buttons[i + 1] : null,
+                    selectOnUp = row > 0 ? buttons[i - cols] : null,
+                    selectOnDown = down,
+                };
+            }
+
+#if UNITY_EDITOR
+            // カーソル (SelectionIndicator) の targets から漏れているとそのボタンで
+            // カーソルが消えるので、組み違いを気づけるようにしておく
+            if (selectionIndicator != null)
+            {
+                foreach (var b in buttons)
+                    if (!selectionIndicator.HasTarget(b))
+                        Debug.LogWarning($"[SelectPanel] {b.name} が SelectionIndicator.targets に入っていません。" +
+                                         "選択が移るとカーソルが消えます", b);
+            }
+#endif
+        }
 
         private void OnSelect(int index)
         {
@@ -122,8 +161,6 @@ namespace VocaNerd
                 await explain.Closed;
                 _activeExplain = null;
 
-                ShowSelected();
-                await CollapseSelectedAsync(token);
                 RestoreSelectedFocus();
             }
             catch (System.OperationCanceledException)
@@ -131,53 +168,6 @@ namespace VocaNerd
                 if (explain != null) Destroy(explain.gameObject);
                 _activeExplain = null;
             }
-        }
-
-        private void HideSelected()
-        {
-            if (_selectedIndex < 0 || _selectedIndex >= miniGameButtons.Length) return;
-            var btn = miniGameButtons[_selectedIndex];
-            if (btn != null) btn.gameObject.SetActive(false);
-        }
-
-        private void ShowSelected()
-        {
-            if (_selectedIndex < 0 || _selectedIndex >= miniGameButtons.Length) return;
-            var btn = miniGameButtons[_selectedIndex];
-            if (btn != null) btn.gameObject.SetActive(true);
-        }
-
-        private async UniTask CollapseSelectedAsync(CancellationToken token)
-        {
-            if (_selectedIndex < 0 || _selectedIndex >= miniGameButtonRects.Length) return;
-            var rt = miniGameButtonRects[_selectedIndex];
-            if (rt == null) return;
-
-            var startPos = rt.anchoredPosition;
-            var startSize = rt.sizeDelta;
-            var targetPos = _buttonRestingPos[_selectedIndex];
-            var targetSize = _buttonRestingSize[_selectedIndex];
-
-            if (expandDuration <= 0f)
-            {
-                rt.anchoredPosition = targetPos;
-                rt.sizeDelta = targetSize;
-                return;
-            }
-
-            var elapsed = 0f;
-            while (elapsed < expandDuration)
-            {
-                token.ThrowIfCancellationRequested();
-                elapsed += Time.unscaledDeltaTime;
-                var t = Mathf.Clamp01(elapsed / expandDuration);
-                var eased = 1f - Mathf.Pow(1f - t, 3f);
-                rt.anchoredPosition = Vector2.LerpUnclamped(startPos, targetPos, eased);
-                rt.sizeDelta = Vector2.LerpUnclamped(startSize, targetSize, eased);
-                await UniTask.Yield(PlayerLoopTiming.Update, token);
-            }
-            rt.anchoredPosition = targetPos;
-            rt.sizeDelta = targetSize;
         }
 
         private void RestoreSelectedFocus()
@@ -191,57 +181,19 @@ namespace VocaNerd
             if (selectionIndicator != null) selectionIndicator.Show();
         }
 
-        protected override async UniTask OnPanelPreOutAsync(CancellationToken token)
+        // ボタン個別の演出は持たない。説明画面を開く前にカーソルだけ隠す。
+        protected override UniTask OnPanelPreOutAsync(CancellationToken token)
         {
-            if (_activeExplain != null) return;
+            if (_activeExplain != null) return UniTask.CompletedTask;
 
             if (selectionIndicator != null) selectionIndicator.Hide();
-            await ExpandSelectedAsync(token);
-            HideSelected();
-        }
-
-        private async UniTask ExpandSelectedAsync(CancellationToken token)
-        {
-            if (_selectedIndex < 0 || _selectedIndex >= miniGameButtonRects.Length) return;
-            var rt = miniGameButtonRects[_selectedIndex];
-            if (rt == null) return;
-
-            rt.SetAsLastSibling();
-
-            var panelRt = (RectTransform)transform;
-            var canvasSize = new Vector2(panelRt.rect.width, panelRt.rect.height);
-            var startPos = rt.anchoredPosition;
-            var startSize = rt.sizeDelta;
-            var targetPos = Vector2.zero;
-            var targetSize = canvasSize;
-
-            if (expandDuration <= 0f)
-            {
-                rt.anchoredPosition = targetPos;
-                rt.sizeDelta = targetSize;
-                return;
-            }
-
-            var elapsed = 0f;
-            while (elapsed < expandDuration)
-            {
-                token.ThrowIfCancellationRequested();
-                elapsed += Time.unscaledDeltaTime;
-                var t = Mathf.Clamp01(elapsed / expandDuration);
-                var eased = 1f - Mathf.Pow(1f - t, 3f);
-                rt.anchoredPosition = Vector2.LerpUnclamped(startPos, targetPos, eased);
-                rt.sizeDelta = Vector2.LerpUnclamped(startSize, targetSize, eased);
-                await UniTask.Yield(PlayerLoopTiming.Update, token);
-            }
-            rt.anchoredPosition = targetPos;
-            rt.sizeDelta = targetSize;
+            return UniTask.CompletedTask;
         }
 
         protected override async UniTask OnPanelInAsync(CancellationToken token)
         {
             // 1) FadeIn
             canvasGroup.alpha = 0f;
-            ApplyResting();
             if (introScaleUpRect != null) introScaleUpRect.localScale = _introScaleUpHome;
             await FadeAsync(canvasGroup, 0f, 1f, fadeDuration, token);
 
@@ -256,6 +208,14 @@ namespace VocaNerd
             // タイミングで選択すると外れて「選択が効かない」ことがあるため末尾で行う。
             FocusDefaultSelected();
             if (selectionIndicator != null) selectionIndicator.Show();
+
+            _backAction?.Enable();
+        }
+
+        protected override async UniTask OnPanelOutAsync(CancellationToken token)
+        {
+            _backAction?.Disable();
+            await base.OnPanelOutAsync(token);
         }
 
         private async UniTask ScaleUpIntroAsync(CancellationToken token)
@@ -281,15 +241,6 @@ namespace VocaNerd
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }
             introScaleUpRect.localScale = to;
-        }
-
-        private void ApplyResting()
-        {
-            for (var i = 0; i < miniGameButtonRects.Length; i++)
-            {
-                if (miniGameButtonRects[i] != null)
-                    miniGameButtonRects[i].anchoredPosition = _buttonRestingPos[i];
-            }
         }
     }
 }

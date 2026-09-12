@@ -4,8 +4,8 @@ using UnityEngine.InputSystem;
 namespace VocaNerd
 {
     /// <summary>
-    /// ミニゲームのリザルト (勝敗が決まってからの入力待ち) 専用の入力。
-    /// コントローラーの A (buttonSouth) で再戦、B (buttonEast) で抜ける。
+    /// ミニゲームのリザルト (勝敗が決まってからの入力待ち) 専用の入力。全ミニゲーム共通で
+    /// パッドは A で再戦 / B で戻る (割り当ては GamepadButtons)、キーボードは Enter で再戦 / X で戻る。
     ///
     /// 操作できるのは 1P だけ (<see cref="PlayerDevices.IsPlayerOne"/> で判定)。
     /// 2P のパッドから A/B を押しても無視する。
@@ -19,15 +19,16 @@ namespace VocaNerd
         public ResultInput(Action onRetry, Action onExit)
         {
             _retryAction = new InputAction("ResultRetry", InputActionType.Button);
-            _retryAction.AddBinding("<Gamepad>/buttonSouth");
+            _retryAction.AddBinding(GamepadButtons.A);
             _retryAction.AddBinding("<Keyboard>/enter");
-            _retryAction.AddBinding("<Keyboard>/space");
+            _retryAction.AddBinding("<Keyboard>/numpadEnter");
             _retryAction.performed += ctx => InvokeForPlayerOne(ctx, onRetry);
 
-            // キーボードの escape / backspace は MiniGamePanel の Back が拾うのでここでは足さない
+            // 戻るは X。escape / backspace は MiniGamePanel の Back が拾うのでここでは足さない
             // (両方で拾うと画面遷移が二重に走る)。
             _exitAction = new InputAction("ResultExit", InputActionType.Button);
-            _exitAction.AddBinding("<Gamepad>/buttonEast");
+            _exitAction.AddBinding(GamepadButtons.B);
+            _exitAction.AddBinding("<Keyboard>/x");
             _exitAction.performed += ctx => InvokeForPlayerOne(ctx, onExit);
         }
 

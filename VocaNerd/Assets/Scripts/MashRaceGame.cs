@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -31,12 +30,10 @@ namespace VocaNerd
         [Header("Common View")]
         [Tooltip("残り時間 (num-00〜num-09 / num-colon の画像で表示)")]
         [SerializeField] private SpriteNumber timerNumber;
-        [Tooltip("リザルト (勝敗表示 + Play Again) のまとまり。プレイ中は alpha 0")]
+        [Tooltip("リザルト (勝敗表示) のまとまり。プレイ中は alpha 0")]
         [SerializeField] private CanvasGroup resultGroup;
-        [Tooltip("勝敗メッセージのテキスト")]
-        [SerializeField] private TMP_Text winnerText;
-        [Tooltip("もう一度遊ぶボタン")]
-        [SerializeField] private Button playAgainButton;
+        [Tooltip("勝者表示 (1P / 2P は画像、残りの文言は TMP)")]
+        [SerializeField] private WinnerLabel winnerLabel;
 
         [Header("Background (shared full-screen)")]
         [Tooltip("星: 常時 Z 回転し、結果演出の後半でゆっくり縮小する")]
@@ -255,12 +252,12 @@ namespace VocaNerd
             if (_isSetup) return UniTask.CompletedTask;
             _isSetup = true;
 
-            // 画面の A / B 表示に合わせて、パッドも A (buttonSouth) / B (buttonEast) で交互連打。
+            // 画面の A / B 表示に合わせて、パッドも A / B で交互連打 (割り当ては GamepadButtons)。
             // 1P/2P で同じボタンを張っておき、どちらのパッドかは PlayerDevices で振り分ける。
-            _p1Left = MakeAction("P1Left", "<Keyboard>/a", "<Gamepad>/buttonSouth");
-            _p1Right = MakeAction("P1Right", "<Keyboard>/d", "<Gamepad>/buttonEast");
-            _p2Left = MakeAction("P2Left", "<Keyboard>/leftArrow", "<Gamepad>/buttonSouth");
-            _p2Right = MakeAction("P2Right", "<Keyboard>/rightArrow", "<Gamepad>/buttonEast");
+            _p1Left = MakeAction("P1Left", "<Keyboard>/a", GamepadButtons.A);
+            _p1Right = MakeAction("P1Right", "<Keyboard>/d", GamepadButtons.B);
+            _p2Left = MakeAction("P2Left", "<Keyboard>/leftArrow", GamepadButtons.A);
+            _p2Right = MakeAction("P2Right", "<Keyboard>/rightArrow", GamepadButtons.B);
 
             _p1Left.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 1)) HandlePress(1, -1); };
             _p1Right.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 1)) HandlePress(1, +1); };
@@ -268,9 +265,6 @@ namespace VocaNerd
             _p2Right.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 2)) HandlePress(2, +1); };
 
             _resultInput = new ResultInput(OnResultRetry, OnResultExit);
-
-            if (playAgainButton != null)
-                playAgainButton.onClick.AddListener(OnPlayAgain);
 
             CaptureHome();
             ResetInitialView();
@@ -306,7 +300,6 @@ namespace VocaNerd
             _p2Left?.Dispose();
             _p2Right?.Dispose();
             _resultInput?.Dispose();
-            if (playAgainButton != null) playAgainButton.onClick.RemoveListener(OnPlayAgain);
         }
 
         private static InputAction MakeAction(string name, params string[] bindings)
@@ -329,14 +322,7 @@ namespace VocaNerd
             _resultInput?.Disable();
         }
 
-        private void OnPlayAgain()
-        {
-            if (IsAnimating) return;
-            _resultInput?.Disable();
-            StartRound(replay: true);
-        }
-
-        // リザルト: 1P の A で再戦
+        // リザルト: 1P の A / Enter で再戦
         private void OnResultRetry()
         {
             if (IsAnimating) return;
@@ -346,7 +332,7 @@ namespace VocaNerd
             StartRound(replay: true);
         }
 
-        // リザルト: 1P の B で抜ける (通常の退出シーケンスへ流す)
+        // リザルト: 1P の B / X で戻る (通常の退出シーケンスへ流す)
         private void OnResultExit()
         {
             if (IsAnimating) return;
@@ -983,8 +969,7 @@ namespace VocaNerd
             if (resultDelayAfterWinnerEffect > 0f)
                 await UniTask.Delay(TimeSpan.FromSeconds(resultDelayAfterWinnerEffect), cancellationToken: token);
 
-            var msg = _p1Won ? "Player 1 Wins!" : "Player 2 Wins!";
-            if (winnerText != null) winnerText.text = msg;
+            if (winnerLabel != null) winnerLabel.Show(_p1Won ? 1 : 2);
             if (resultGroup != null)
             {
                 resultGroup.alpha = 1f;
@@ -1189,7 +1174,7 @@ namespace VocaNerd
             ResetCharacter(player2Character, _p2HomeScale, _p2HomePos, _p2HomeRot);
             ResetAnimToFirstFrame();
 
-            if (winnerText != null) winnerText.text = string.Empty;
+            if (winnerLabel != null) winnerLabel.Clear();
             if (resultGroup != null)
             {
                 resultGroup.alpha = 0f;

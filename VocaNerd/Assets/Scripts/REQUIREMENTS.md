@@ -163,6 +163,64 @@ Audio.StopBgm(0.5f);
 - 拡大の基準は Awake で記録した prefab の `localScale`
 - 旧演出（ヘッダーが上から / ボタンが左右から入ってくるスライド）は廃止。
   `headerRect` も使わなくなったので削除
+- ボタン個別の演出（選択したボタンが全画面に拡大 → 戻る）も廃止。
+  `expandDuration` / `miniGameButtonRects` / `ExpandSelectedAsync` / `CollapseSelectedAsync` /
+  `HideSelected` / `ShowSelected` を削除し、`OnPanelPreOutAsync` はカーソルを隠すだけになった
+
+### 2.6.1 ミニゲームボタンのナビゲーション
+- **要件**: ボタンが 3 個など半端な数でも、カーソル (選択) がどこかへ消えないこと
+- **実装**: `SelectPanel.SetupNavigation`
+  - `miniGameButtons` の **未設定 (null) スロットを除いた実体だけ**で、`navigationColumns`
+    （既定 2）列のグリッドとして Explicit ナビを配線する（旧実装は 4 個未満だと配線自体を
+    スキップしていて、Automatic ナビのまま隣接外へ飛べてしまっていた）
+  - 行末では左右を打ち止め、真下が無い場合のみ次の行の最後へ送る
+  - **カーソルが消える主因は `SelectionIndicator.targets` の入れ忘れ**
+    （targets に無い Selectable が選ばれると `hideWhenNoMatch` で alpha 0 になる）。
+    エディタ実行時に `SelectionIndicator.HasTarget` で照合し、漏れていれば警告を出す
+
+### 2.7 選択中のハイライト
+- **要件**: 選択時の UIEffect は Edge Shiny ではなく色で表現する。**選択中の対象に UIEffect が
+  付いていれば、その明度 (Value) を少し上げる**。`ShinyOutline` は廃止
+- **実装**: `SelectionIndicator`
+  - **prefab で設定された `colorFilter` / `color` は変えない。効き具合の数値 (`colorIntensity`) だけを動かす**
+  - `selectedIntensityShift`（既定 0.25、0 で無効）ぶん `colorIntensity` を上げる（0〜1 でクランプ）
+  - 対象の探索は「対象自身 → 配下」の順に `UIEffect` を検索。**無ければ何もしない**（こちらからは付けない）
+  - 適用時に `colorIntensity` を退避し、選択が外れた / `Hide()` / `OnDisable` で元に戻す
+  - 想定している prefab 側の作り: ボタンの UIEffect に
+    `ColorFilter = MultiplyAdditive` / `Color = 白` / `Color Intensity = 0` を設定しておく。
+    シェーダ上は `color.rgb * (1 + 白) = 2倍` を intensity で lerp するので、intensity が明るさの量になる
+  - `ShinyOutline.cs` と、`Selectable.prefab` / `ExplainPanel.prefab` に付いていた
+    ShinyOutline コンポーネントは削除済み
+
+---
+
+### 2.8 パッドの A / B の割り当て (`GamepadButtons.cs`)
+- **背景**: Unity の control 名は **位置** で決まる (`buttonSouth` = 下 / `buttonEast` = 右)。
+  Xbox パッドは下に A と印刷されているので世間では「A = buttonSouth」で通っているが、
+  このプロジェクトで使うパッドは **A が右 / B が下** の任天堂式ラベルなので、
+  そのまま組むと「B と書いてあるボタンで決定」になってしまう
+- **要件**: 印刷されたラベルの A が決定 (Xbox の A と同じ役割) になるよう全体で揃える
+- **実装**: `GamepadButtons.A` = `<Gamepad>/buttonEast` / `GamepadButtons.B` = `<Gamepad>/buttonSouth`
+  - 全ミニゲーム・`ResultInput`・`ExplainPanelBase` はこの定数経由でバインドする
+    (生の `<Gamepad>/buttonSouth` を直接書かない)
+  - EventSystem の Submit / Cancel は既定で `*/{Submit}` = 下ボタン固定なので、
+    `UiInputPlayerOne` が UI アクションの複製を作って Submit = A / Cancel = B に差し替える
+  - `ZhiXuGamepad` のレイアウトは**位置どおり**のまま。ラベルの読み替えはこの 1 ファイルに閉じる
+  - 別ラベルのパッドに乗り換えるときは `GamepadButtons` の 2 行だけ直せばよい
+
+### 2.7 UI 入力を 1P に限定 (`UiInputPlayerOne.cs`)
+- **要件**: タイトル / ミニゲーム選択をコントローラーで操作できるようにしつつ、
+  操作できるのは 1P だけにする
+- **背景**: シーンの EventSystem は `InputSystemUIInputModule` + Input System 既定の
+  `DefaultInputActions`。Navigate は dpad / スティック、Submit は `*/{Submit}` (= パッドの A)、
+  Cancel は `*/{Cancel}` (= B) に割り当たっているので、そのままだと **2P のパッドでも決定が通る**
+- **実装**: `UiInputPlayerOne`
+  - UI アクションアセットに「キーボード / マウス / `Gamepad.all[0]`」だけのデバイスマスク
+    (`InputActionAsset.devices`) を掛ける。1P の定義は `PlayerDevices` と同じ接続順
+  - `InputSystem.onDeviceChange` でパッドの抜き差しのたびに掛け直す
+  - `[RuntimeInitializeOnLoadMethod]` で常駐オブジェクトを自動生成するのでシーン配置は不要
+  - ミニゲーム本体と説明画面 (`ExplainPanelBase`) は自前の `InputAction` を使っているので影響なし
+    （2P はこれまで通り遊べる）
 
 ---
 
@@ -185,14 +243,18 @@ Audio.StopBgm(0.5f);
 
 ### 5.1 In / Out アニメーション
 - **要件**:
-  - In = 「左から右へ」「右から左へ」「下から上へ」入ってくる 3 つの object が **同じ秒数**で動く
-  - Out = その逆 (定位置から画面外へ)
-- **実装**: `ExplainPanelBase.PlaySlideAsync(inward, token)`
+  - In = **まず画面全体が FadeIn で入り、その後**「左から右へ」「右から左へ」「下から上へ」
+    入ってくる 3 つの object が **同じ秒数**で動く
+  - Out = スライドだけ逆 (定位置から画面外へ)
+- **実装**: `ExplainPanelBase.OnPanelInAsync` → `FadeAsync` → `PlaySlideAsync(inward, offscreen, token)`
   - 対象は `slideFromLeftRect` / `slideFromRightRect` / `slideFromBottomRect` の 3 つ。
     未設定のものは飛ばす
-  - 定位置は Awake で `anchoredPosition` を記録。画面外の位置は
+  - 定位置は Awake で `anchoredPosition` を記録。画面外の位置 (`CalcOffscreen`) は
     `パネル半分 + object 半分 + slideMargin` で毎回計算する
-  - 尺は `PanelBase.fadeDuration` を共有。In は EaseOutCubic、Out は EaseInCubic
+  - **FadeIn の前に 3 object を画面外へ逃がしておく** (定位置のまま一緒にフェードインすると
+    「その後入ってくる」演出にならない)
+  - 尺は 2 つに分離。FadeIn = `PanelBase.fadeDuration` / 移動 = `slideDuration` (既定 0.5 秒、0 で移動なし)
+  - In は EaseOutCubic、Out は EaseInCubic
 
 ### 5.2 動画再生
 - **要件**: VideoPlayer を SerializeField で持ち、どれを再生するかも prefab 側で指定。
@@ -202,6 +264,30 @@ Audio.StopBgm(0.5f);
   - `SetupAsync` で source 設定と `Prepare()` までを済ませる (ここでは再生しない)
   - `OnAfterPanelInAsync` で `isPrepared` を最大 3 秒待ってから `Play()`
   - WebGL は `videoFileName` (StreamingAssets)、それ以外は `videoClip` を優先
+
+---
+
+### 5.3 ルール枠の演出 (`ExplainPresentation`)
+- **要件**: 説明の中身はゲームごとに違う (SpriteAnimation が 1 個 / 2 個、別 Image の
+  パラパラ切替が要る等)。汎用の基底クラスを 1 つ用意し、各画面はそれを継承して対応する
+- **実装**:
+  - `ExplainPresentation : MonoBehaviour` (abstract) — ExplainPanel とは**別 component** として
+    prefab に付け、`ExplainPanelBase.presentation` に割り当てる
+    - `Play(token)` / `Stop()` — In のスライド完了後に再生、Out と OnDisable / 破棄で停止
+    - 派生は `RunAsync(token)` に「ずっと回り続ける」形で書き、停止はキャンセルに任せる
+    - 部品:
+      | メソッド | 動き |
+      |---|---|
+      | `PlayOnceAsync(anim)` | 頭から 1 周再生して最終フレームで止める (prefab の loop 設定に依存しない) |
+      | `LoopWithPauseAsync(anim, pause)` | 1 周 → pause 秒待機 → 再開 を繰り返す |
+      | `FlipImageAsync(image, sprites, interval)` | Image の sprite を interval 秒ごとに順番に差し替え続ける |
+      | `SetSprite(image, sprite)` | 1 枚だけ差し替える |
+  - 派生クラス:
+    | クラス | 演出 |
+    |---|---|
+    | `QuickDrawExplainPresentation` | SpriteAnimation 2 つを**並行**でループ。どちらも最後まで再生 → `loopPause` (既定 2 秒) 待機 → 再開 |
+    | `HopscotchExplainPresentation` | SpriteAnimation 2 つを**交互に 1 つずつ**再生 (同時には動かない)。A/B の番に合わせて別 Image を `spriteForA` / `spriteForB` に差し替える |
+    | `MashRaceExplainPresentation` | SpriteAnimation 1 つをループしつつ、別 Image を `flipSprites` の 2 枚で `flipInterval` (既定 1 秒) ごとに切替 |
 
 ---
 
@@ -575,18 +661,21 @@ Idle → Intro → Countdown (該当時) → Playing → Winner → WaitForExit 
 - OnPanelOutAsync で Disable
 - OnDestroy で Dispose
 
-### 10.4 Play Again ボタン
-- 各ミニゲーム内に Play Again UI ボタン、`StartRound` を再呼び出し
+### 10.4 Play Again ボタン (廃止)
+- リザルトの再戦は入力のみ (10.5) で行う。各ミニゲームの prefab にあった Play Again UI ボタンと
+  `playAgainButton` / `OnPlayAgain` は削除済み
 
-### 10.5 リザルトの A/B (`ResultInput.cs`)
-- **要件**: ミニゲーム完了後、コントローラーの **A で再戦 / B で抜ける**。操作できるのは **1P のみ**
-- **実装**: `ResultInput` (A = `<Gamepad>/buttonSouth`、B = `<Gamepad>/buttonEast`) を各ゲームが 1 つ持ち、
-  `WaitForExitPressAsync` の間だけ Enable する
-  - A → `StartRound(replay: true)` (SE: Decide)
-  - B → `_exitSignal` を立てて `PlayExitEffectAsync` → `ScreenController.ShowAsync(Select)` (SE: Cancel)
+### 10.5 リザルトの再戦 / 戻る (`ResultInput.cs`)
+- **要件**: 全ミニゲーム共通で、完了後に **A で再戦 / B で戻る**
+  (キーボードは **Enter で再戦 / X で戻る**)。操作できるのは **1P のみ**
+- **実装**: `ResultInput` を各ゲームが 1 つ持ち、`WaitForExitPressAsync` の間だけ Enable する
+  - 再戦 = `<Gamepad>/buttonSouth` / `<Keyboard>/enter` / `<Keyboard>/numpadEnter`
+    → `StartRound(replay: true)` (SE: Decide)
+  - 戻る = `<Gamepad>/buttonEast` / `<Keyboard>/x`
+    → `_exitSignal` を立てて `PlayExitEffectAsync` → `ScreenController.ShowAsync(Select)` (SE: Cancel)
   - 1P 判定は `PlayerDevices.IsPlayerOne`。2P のパッドは無視する
 - **注意**: リザルトでは `ClearFocus()` で UI 選択を外す。選択が残っていると EventSystem の Submit
-  (どのパッドの A でも飛ぶ) で Play Again が押せてしまい 1P 限定が崩れる
+  (どのパッドの A でも飛ぶ) が走ってしまい 1P 限定が崩れる
 - キーボードの Esc / Backspace は `MiniGamePanel` の Back が拾う (`ResultInput` には入れない。二重遷移を防ぐ)
 
 ### 10.6 1P/2P のデバイス振り分け (`PlayerDevices.cs`)
@@ -603,7 +692,7 @@ Idle → Intro → Countdown (該当時) → Playing → Winner → WaitForExit 
 | HopscotchRace | けん / ぱ | `A`,`D` / `←`,`→` | A, B |
 | BlockDrop | 左右移動 | `A`,`D` / `←`,`→` | 十字キー, 左スティック |
 | BlockDrop | 叩く | `W`,`S` / `↑`,`↓` | A, B |
-- プレイ中は `resultGroup.interactable = false` なので、選択が残っていても Submit で Play Again は押せない
+| 全ゲーム (リザルト) | 再戦 / 戻る | `Enter` / `X` (1P のみ) | A / B |
 
 ---
 
