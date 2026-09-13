@@ -41,20 +41,20 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BlurSpread: 0.03
+    - _BlurSpread: 0
     - _Brightness: 1
-    - _ColorBoost: 3.254
+    - _ColorBoost: 1.488
     - _ColorFromImage: 1
     - _ColorMask: 15
     - _EnableExternalAlpha: 0
     - _FlashWidth: 0.02
-    - _GlowIntensity: 5
+    - _GlowIntensity: 2.34
     - _MaskContrast: 0.5
     - _MaskCutoff: 0
-    - _PhaseGridSize: 1
+    - _PhaseGridSize: 30
     - _PhaseSmooth: 0
-    - _PulseAmount: 1
-    - _PulseSpeed: 10
+    - _PulseAmount: 0.5
+    - _PulseSpeed: 5
     - _SparkleDensity: 1
     - _SparkleFade: 0.15
     - _SparkleGridX: 24
@@ -69,7 +69,7 @@ Material:
     - _StencilOp: 0
     - _StencilReadMask: 255
     - _StencilWriteMask: 255
-    - _StepFps: 60
+    - _StepFps: 12
     - _UseUIAlphaClip: 0
     - _ZWrite: 0
     m_Colors:

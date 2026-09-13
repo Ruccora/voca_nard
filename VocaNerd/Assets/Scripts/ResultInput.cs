@@ -18,18 +18,15 @@ namespace VocaNerd
 
         public ResultInput(Action onRetry, Action onExit)
         {
-            _retryAction = new InputAction("ResultRetry", InputActionType.Button);
-            _retryAction.AddBinding(GamepadButtons.A);
-            _retryAction.AddBinding("<Keyboard>/enter");
-            _retryAction.AddBinding("<Keyboard>/numpadEnter");
-            _retryAction.performed += ctx => InvokeForPlayerOne(ctx, onRetry);
+            // 2P のパッドも同じパスに解決されるので PassThrough (理由は PlayerInputAction)。
+            _retryAction = PlayerInputAction.Make("ResultRetry",
+                GamepadButtons.A, "<Keyboard>/enter", "<Keyboard>/numpadEnter");
+            PlayerInputAction.OnPress(_retryAction, 1, onRetry);
 
             // 戻るは X。escape / backspace は MiniGamePanel の Back が拾うのでここでは足さない
             // (両方で拾うと画面遷移が二重に走る)。
-            _exitAction = new InputAction("ResultExit", InputActionType.Button);
-            _exitAction.AddBinding(GamepadButtons.B);
-            _exitAction.AddBinding("<Keyboard>/x");
-            _exitAction.performed += ctx => InvokeForPlayerOne(ctx, onExit);
+            _exitAction = PlayerInputAction.Make("ResultExit", GamepadButtons.B, "<Keyboard>/x");
+            PlayerInputAction.OnPress(_exitAction, 1, onExit);
         }
 
         /// <summary>リザルトの入力待ちに入るタイミングで呼ぶ。</summary>
@@ -54,12 +51,6 @@ namespace VocaNerd
         {
             _retryAction.Dispose();
             _exitAction.Dispose();
-        }
-
-        private static void InvokeForPlayerOne(InputAction.CallbackContext ctx, Action action)
-        {
-            if (!PlayerDevices.IsPlayerOne(ctx.control.device)) return;
-            action?.Invoke();
         }
     }
 }

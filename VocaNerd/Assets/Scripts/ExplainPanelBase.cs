@@ -31,6 +31,8 @@ namespace VocaNerd
         [Tooltip("このミニゲーム中に流す BGM キー (BgmKey の定数)。空なら直前の BGM を継続")]
         [SerializeField] private string bgmKey;
 
+        [SerializeField] private GameObject black;
+
         [Header("In / Out Slide")]
         [Tooltip("スライドの移動尺 (秒)。0 で移動なし (いきなり定位置)。FadeIn の尺は fadeDuration 側")]
         [SerializeField] private float slideDuration = 0.5f;
@@ -67,10 +69,10 @@ namespace VocaNerd
             base.Awake();
 
             // 操作できるのは 1P だけ。2P のパッドから A/B を押しても無視する (ResultInput と同じ扱い)。
-            _nextAction = MakeAction("ExplainNext", GamepadButtons.A, "<Keyboard>/enter", "<Keyboard>/space");
-            _nextAction.performed += ctx => InvokeForPlayerOne(ctx, OnNext);
-            _backAction = MakeAction("ExplainBack", GamepadButtons.B, "<Keyboard>/escape", "<Keyboard>/backspace");
-            _backAction.performed += ctx => InvokeForPlayerOne(ctx, OnBack);
+            _nextAction = PlayerInputAction.Make("ExplainNext", GamepadButtons.A, "<Keyboard>/enter", "<Keyboard>/space");
+            PlayerInputAction.OnPress(_nextAction, 1, OnNext);
+            _backAction = PlayerInputAction.Make("ExplainBack", GamepadButtons.B, "<Keyboard>/escape", "<Keyboard>/backspace");
+            PlayerInputAction.OnPress(_backAction, 1, OnBack);
 
             _slideRects = new[] { slideFromLeftRect, slideFromRightRect, slideFromBottomRect };
             _slideDirs = new[] { Vector2.left, Vector2.right, Vector2.down };
@@ -102,6 +104,9 @@ namespace VocaNerd
         {
             canvasGroup.alpha = 0f;
 
+            // In が始まる前に、In 中に見えている状態を作らせる (動画の巻き戻しなど)。
+            OnBeforePanelIn();
+
             // 選択状態を外しておく。残っていると EventSystem の Submit で裏の
             // SelectPanel のボタンが押せてしまうので、入力はここの A/B に任せる。
             ClearFocus();
@@ -111,6 +116,8 @@ namespace VocaNerd
             var offscreen = CalcOffscreen();
             SetPositions(offscreen);
 
+            black.SetActive(this);
+            
             // まず画面全体が FadeIn で入り、その後でスライドが始まる
             await FadeAsync(canvasGroup, 0f, 1f, fadeDuration, token);
             await PlaySlideAsync(inward: true, offscreen, token);
@@ -120,8 +127,12 @@ namespace VocaNerd
 
             await OnAfterPanelInAsync(token);
 
+            await UniTask.DelayFrame(1);
+
+            black.gameObject.SetActive(false);
             // 受付開始は In が終わってから (IsAnimating が下りるタイミングと揃える)
             SetInputEnabled(true);
+            
         }
 
         protected override UniTask OnPanelOutAsync(CancellationToken token)
@@ -130,6 +141,12 @@ namespace VocaNerd
             if (presentation != null) presentation.Stop();
             return PlaySlideAsync(inward: false, CalcOffscreen(), token);
         }
+
+        /// <summary>
+        /// In のアニメーションが始まる直前に呼ばれる。動画を頭出しして止めておくなど、
+        /// In の最中に見えていてほしい状態を作るのはここで。
+        /// </summary>
+        protected virtual void OnBeforePanelIn() { }
 
         /// <summary>In のスライドが終わった後に呼ばれる。動画の再生開始などはここで。</summary>
         protected virtual UniTask OnAfterPanelInAsync(CancellationToken token) => UniTask.CompletedTask;
@@ -158,6 +175,12 @@ namespace VocaNerd
                     await UniTask.Yield(PlayerLoopTiming.Update, token);
                 }
             }
+
+            if (!inward)
+            {
+                await FadeAsync(canvasGroup, 1f, 0f, fadeDuration, token);
+            }
+
 
             SetPositions(inward ? _slideHome : offscreen);
         }
@@ -209,19 +232,6 @@ namespace VocaNerd
         private static float EaseInCubic(float t) => t * t * t;
 
         // -------- Next / Back --------
-
-        private static InputAction MakeAction(string name, params string[] bindings)
-        {
-            var action = new InputAction(name, InputActionType.Button);
-            foreach (var binding in bindings) action.AddBinding(binding);
-            return action;
-        }
-
-        private static void InvokeForPlayerOne(InputAction.CallbackContext ctx, Action action)
-        {
-            if (!PlayerDevices.IsPlayerOne(ctx.control.device)) return;
-            action?.Invoke();
-        }
 
         private void SetInputEnabled(bool value)
         {

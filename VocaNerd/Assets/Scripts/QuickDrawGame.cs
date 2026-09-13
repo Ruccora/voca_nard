@@ -103,15 +103,13 @@ namespace VocaNerd
             if (_isSetup) return;
             _isSetup = true;
 
-            _p1Action = new InputAction("Player1", InputActionType.Button);
-            _p1Action.AddBinding("<Keyboard>/a");
-            _p1Action.AddBinding(GamepadButtons.A);
-            _p1Action.performed += OnP1;
+            // 1P/2P で同じボタン (A) を張っておき、どちらのパッドかは PlayerDevices で振り分ける。
+            // 同じパスを共有する都合で PassThrough にしている (理由は PlayerInputAction)。
+            _p1Action = PlayerInputAction.Make("Player1", "<Keyboard>/a", GamepadButtons.A);
+            _p2Action = PlayerInputAction.Make("Player2", "<Keyboard>/l", GamepadButtons.A);
 
-            _p2Action = new InputAction("Player2", InputActionType.Button);
-            _p2Action.AddBinding("<Keyboard>/l");
-            _p2Action.AddBinding(GamepadButtons.A);
-            _p2Action.performed += OnP2;
+            PlayerInputAction.OnPress(_p1Action, 1, () => HandlePress(1));
+            PlayerInputAction.OnPress(_p2Action, 2, () => HandlePress(2));
 
             _resultInput = new ResultInput(OnResultRetry, OnResultExit);
 
@@ -450,18 +448,6 @@ namespace VocaNerd
         }
 
         // -------- 入力処理 --------
-        private void OnP1(InputAction.CallbackContext ctx)
-        {
-            if (!PlayerDevices.IsForPlayer(ctx, 1)) return;
-            HandlePress(1);
-        }
-
-        private void OnP2(InputAction.CallbackContext ctx)
-        {
-            if (!PlayerDevices.IsForPlayer(ctx, 2)) return;
-            HandlePress(2);
-        }
-
         private void HandlePress(int player)
         {
             if (_pressSignal == null) return;

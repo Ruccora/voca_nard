@@ -42,6 +42,16 @@ namespace VocaNerd
         [Tooltip("アプリ全体のフレームレート上限。0 以下なら変更しない")]
         [SerializeField] private int targetFrameRate = 24;
 
+        [Header("Resolution")]
+        [Tooltip("解像度を固定する。ウィンドウでもフルスクリーンでもこのサイズで描画する")]
+        [SerializeField] private bool lockResolution = true;
+        [SerializeField] private int lockedWidth = 1600;
+        [SerializeField] private int lockedHeight = 1200;
+        [Tooltip("フルスクリーン時のモード。ExclusiveFullScreen はディスプレイ側の解像度を切り替え、" +
+                 "FullScreenWindow は固定解像度で描いてディスプレイに引き伸ばす")]
+        [SerializeField] private FullScreenMode fullScreenMode = FullScreenMode.FullScreenWindow;
+
+        private bool _wasFullScreen;
         private GameObject _current;
         private CancellationTokenSource _transitionCts;
 
@@ -59,6 +69,7 @@ namespace VocaNerd
             }
             Instance = this;
             ApplyTargetFrameRate();
+            ApplyLockedResolution();
         }
 
         private void ApplyTargetFrameRate()
@@ -69,6 +80,37 @@ namespace VocaNerd
             // vSync が有効だとリフレッシュレート基準になり targetFrameRate が無視される
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = targetFrameRate;
+        }
+
+        /// <summary>
+        /// 描画解像度を lockedWidth x lockedHeight に固定する。
+        /// フルスクリーンに切り替えられてもディスプレイ解像度に引きずられないよう、
+        /// 切り替わりを検知して掛け直す (<see cref="Update"/>)。
+        ///
+        /// エディタの Game ビューは解像度をここから変えても意味がないので何もしない。
+        /// </summary>
+        private void ApplyLockedResolution()
+        {
+            if (!lockResolution) return;
+            if (lockedWidth <= 0 || lockedHeight <= 0) return;
+#if UNITY_EDITOR
+            return;
+#else
+            _wasFullScreen = Screen.fullScreen;
+            var mode = Screen.fullScreen ? fullScreenMode : FullScreenMode.Windowed;
+            if (Screen.width == lockedWidth && Screen.height == lockedHeight && Screen.fullScreenMode == mode)
+                return;
+
+            Screen.SetResolution(lockedWidth, lockedHeight, mode);
+#endif
+        }
+
+        private void Update()
+        {
+            // フルスクリーン切り替え (Cmd+F など) の直後は解像度がディスプレイ側に戻されるので掛け直す
+            if (!lockResolution) return;
+            if (Screen.fullScreen == _wasFullScreen) return;
+            ApplyLockedResolution();
         }
 
         private void Start()

@@ -87,7 +87,8 @@ namespace VocaNerd.EditorTools
         {
             if (videoFileNames.Count == 0)
             {
-                Debug.LogWarning("[MacBuildScript] No ExplainPanel video files were found.");
+                // VideoClip だけで完結している構成なら正常。コピーするものが無いだけ。
+                Debug.Log("[MacBuildScript] No StreamingAssets video files to copy (VideoClip only).");
                 return;
             }
 
@@ -117,6 +118,10 @@ namespace VocaNerd.EditorTools
 
             // 説明画面は ミニゲームごとの prefab (ExplainPanel) が持つ。そこに書かれた
             // videoFileName を集めて StreamingAssets にコピーする。
+            //
+            // Mac では VideoClip がビルドに埋め込まれるので videoFileName は任意。
+            // 空の prefab は「StreamingAssets を使わない」とみなして飛ばす
+            // (WebGL は URL 再生しかできないので、あちらでは空をエラーにしている)。
             foreach (var guid in AssetDatabase.FindAssets("t:Prefab"))
             {
                 var assetPath = AssetDatabase.GUIDToAssetPath(guid);
@@ -126,6 +131,9 @@ namespace VocaNerd.EditorTools
 
                 var explain = go.GetComponentInChildren<ExplainPanel>(true);
                 if (explain == null)
+                    continue;
+
+                if (string.IsNullOrWhiteSpace(explain.VideoFileName))
                     continue;
 
                 var fileName = NormalizeVideoFileName(explain.VideoFileName, assetPath);

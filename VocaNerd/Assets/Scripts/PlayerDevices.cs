@@ -8,12 +8,20 @@ namespace VocaNerd
     /// 入力デバイスを 1P / 2P に振り分ける共通ルール。
     ///
     /// - キーボードは 1 台しかないので 1P/2P 両方の入力として通す (P1 = A/D 系、P2 = 矢印系でキーを分けている)。
-    /// - Gamepad は「L + R を同時押しした順」で割り当てる。先に押したパッドが 1P、次が 2P。
+    /// - Gamepad は **枠 (1P/2P) に確定で入れる**。埋まり方は 2 通り:
+    ///     1. 起動時に繋がっているパッド / 後から挿されたパッドを、空いている若い枠へ自動で入れる
+    ///     2. 枠が空いている状態で L + R 同時押ししたパッドをその枠へ入れる
     ///   同じボタン (A/B) を 1P/2P 両方にバインドしておき、ここでデバイスを見て弾く。
-    /// - まだ誰も参加していないパッドは、空いている枠に接続順で仮に割り当てる。
-    ///   (参加操作を知らないまま遊び始めても動くようにするため。L+R を押せばその時点で確定する)
+    /// - それでも枠に入っていないパッドは、空き枠へ接続順で仮に割り当てる (最後の保険)。
     ///
-    /// パッドが抜かれたらその枠は空き、次に L+R を押したパッドが入る。
+    /// 確定させているのは、以前の「Gamepad.all の index をそのまま 1P/2P にする」方式だと
+    /// 1P のパッドを抜いた瞬間に 2P が 1P へ繰り上がり、抜き差しのたびに担当が入れ替わって
+    /// しまったため。枠を持たせておけば、片方を抜いてももう片方の担当は動かず、
+    /// 抜けたパッドを挿し直すと空いている元の枠に戻る。
+    ///
+    /// 同一機種のパッドは USB のディスクリプタが同じで個体を区別できないので、
+    /// 「どの物理パッドか」ではなく「どの枠が空いているか」で戻す方式にしている。
+    /// 割り当てをやり直したいときは <see cref="Reset"/>。
     /// </summary>
     public static class PlayerDevices
     {
@@ -114,6 +122,11 @@ namespace VocaNerd
             InputSystem.onDeviceChange -= OnDeviceChange;
             InputSystem.onDeviceChange += OnDeviceChange;
 
+            // 起動時に繋がっているパッドはそのまま接続順で枠に入れて確定させる。
+            // 仮割り当てのまま遊ばせると、抜き差しで担当が入れ替わって不安定なため。
+            foreach (var pad in Gamepad.all)
+                TryJoin(pad);
+
             var go = new GameObject("PlayerDeviceJoinWatcher");
             go.AddComponent<JoinWatcher>();
             UnityEngine.Object.DontDestroyOnLoad(go);
@@ -121,9 +134,23 @@ namespace VocaNerd
 
         private static void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
-            if (change != InputDeviceChange.Removed && change != InputDeviceChange.Disconnected) return;
-            if (_p1 == device) { _p1 = null; Debug.Log("[Input] Player 1 device removed"); }
-            if (_p2 == device) { _p2 = null; Debug.Log("[Input] Player 2 device removed"); }
+            switch (change)
+            {
+                // 挿されたら空き枠へ即確定。抜き差しで担当がずれないようにする。
+                case InputDeviceChange.Added:
+                case InputDeviceChange.Reconnected:
+                case InputDeviceChange.Enabled:
+                    if (device is Gamepad added) TryJoin(added);
+                    break;
+
+                case InputDeviceChange.Removed:
+                case InputDeviceChange.Disconnected:
+                case InputDeviceChange.Disabled:
+                    // 枠は空けるが、もう片方は動かさない → 挿し直せば元の枠に戻る
+                    if (_p1 == device) { _p1 = null; Debug.Log("[Input] Player 1 device removed"); }
+                    if (_p2 == device) { _p2 = null; Debug.Log("[Input] Player 2 device removed"); }
+                    break;
+            }
         }
 
         private class JoinWatcher : MonoBehaviour

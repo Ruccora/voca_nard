@@ -70,6 +70,10 @@ namespace VocaNerd
         [SerializeField] private CanvasGroup player2KeyAGroup;
         [Tooltip("P2 の B 画像 (演出中はキャラの 4 フレームと連動。プレイ中は次に押すキーとして常時表示)")]
         [SerializeField] private CanvasGroup player2KeyBGroup;
+        [Tooltip("P1 のラベルをまとめた親 (例: P1AB)。飛び始めで丸ごと非表示にし、ラウンド開始で戻す")]
+        [SerializeField] private GameObject player1LabelRoot;
+        [Tooltip("P2 のラベルをまとめた親 (例: P2AB)。飛び始めで丸ごと非表示にし、ラウンド開始で戻す")]
+        [SerializeField] private GameObject player2LabelRoot;
         [Tooltip("Ready 画像の RectTransform。prefab で設定したスケールが登場時スケールになる")]
         [SerializeField] private RectTransform readyRect;
         [Tooltip("Ready 画像の CanvasGroup (FadeIn に使う)")]
@@ -254,15 +258,16 @@ namespace VocaNerd
 
             // 画面の A / B 表示に合わせて、パッドも A / B で交互連打 (割り当ては GamepadButtons)。
             // 1P/2P で同じボタンを張っておき、どちらのパッドかは PlayerDevices で振り分ける。
-            _p1Left = MakeAction("P1Left", "<Keyboard>/a", GamepadButtons.A);
-            _p1Right = MakeAction("P1Right", "<Keyboard>/d", GamepadButtons.B);
-            _p2Left = MakeAction("P2Left", "<Keyboard>/leftArrow", GamepadButtons.A);
-            _p2Right = MakeAction("P2Right", "<Keyboard>/rightArrow", GamepadButtons.B);
+            // 同じパスを共有する都合で PassThrough にしている (理由は PlayerInputAction)。
+            _p1Left = PlayerInputAction.Make("P1Left", "<Keyboard>/a", GamepadButtons.A);
+            _p1Right = PlayerInputAction.Make("P1Right", "<Keyboard>/d", GamepadButtons.B);
+            _p2Left = PlayerInputAction.Make("P2Left", "<Keyboard>/leftArrow", GamepadButtons.A);
+            _p2Right = PlayerInputAction.Make("P2Right", "<Keyboard>/rightArrow", GamepadButtons.B);
 
-            _p1Left.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 1)) HandlePress(1, -1); };
-            _p1Right.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 1)) HandlePress(1, +1); };
-            _p2Left.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 2)) HandlePress(2, -1); };
-            _p2Right.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 2)) HandlePress(2, +1); };
+            PlayerInputAction.OnPress(_p1Left, 1, () => HandlePress(1, -1));
+            PlayerInputAction.OnPress(_p1Right, 1, () => HandlePress(1, +1));
+            PlayerInputAction.OnPress(_p2Left, 2, () => HandlePress(2, -1));
+            PlayerInputAction.OnPress(_p2Right, 2, () => HandlePress(2, +1));
 
             _resultInput = new ResultInput(OnResultRetry, OnResultExit);
 
@@ -300,13 +305,6 @@ namespace VocaNerd
             _p2Left?.Dispose();
             _p2Right?.Dispose();
             _resultInput?.Dispose();
-        }
-
-        private static InputAction MakeAction(string name, params string[] bindings)
-        {
-            var a = new InputAction(name, InputActionType.Button);
-            foreach (var binding in bindings) a.AddBinding(binding);
-            return a;
         }
 
         private void EnableInputs()
@@ -457,7 +455,7 @@ namespace VocaNerd
             SetGroupAlpha(readyGroup, 0f);
 
             await UniTask.WhenAll(
-                LerpScaleAsync(readyRect, _readyHomeScale, readyEndScale, readyScaleDuration, EaseOutCubic, token),
+                LerpScaleAsync(readyRect, _readyHomeScale, readyEndScale, readyScaleDuration, Linear, token),
                 FadeGroupAsync(readyGroup, 0f, 1f, readyFadeInDuration, token));
 
             if (readyHoldDuration > 0f)
@@ -492,7 +490,7 @@ namespace VocaNerd
                 token.ThrowIfCancellationRequested();
                 elapsed += Time.deltaTime;
                 var t = Mathf.Clamp01(elapsed / duration);
-                SetScale(goRect, Mathf.Lerp(from, to, EaseOutCubic(t)));
+                SetScale(goRect, Mathf.Lerp(from, to, t));
                 var fade = fadeDuration <= 0f ? 1f : Mathf.Clamp01((elapsed - fadeStart) / fadeDuration);
                 SetGroupAlpha(goGroup, 1f - fade);
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
@@ -513,6 +511,13 @@ namespace VocaNerd
         {
             SetGroupAlpha(player1LabelGroup, 0f);
             SetGroupAlpha(player2LabelGroup, 0f);
+        }
+
+        // ラベルの親ごと表示 / 非表示する。alpha と違って配下すべてが確実に消える。
+        private void SetLabelRootsActive(bool value)
+        {
+            if (player1LabelRoot != null) player1LabelRoot.SetActive(value);
+            if (player2LabelRoot != null) player2LabelRoot.SetActive(value);
         }
 
         // A/B ラベル。Ready 開始時に消え、ゲーム開始後は「次に押すキー」として出し直す。
@@ -567,6 +572,9 @@ namespace VocaNerd
 
             // 飛び始め: ここから 1番目のフレームから連続アニメーションさせ続ける
             StartFlyAnimation();
+
+            // 飛んだらラベル (1P/2P・A/B) は役目が終わりなので親ごと消す。戻すのは ResetRoundView。
+            SetLabelRootsActive(false);
 
             // 飛び始めたらタイマーの役目は終わりなので消す
             if (timerNumber != null) timerNumber.Clear();
@@ -632,7 +640,7 @@ namespace VocaNerd
             try
             {
                 var from = character.anchoredPosition.y;
-                await LerpAnchoredYAsync(character, from, winnerRiseY, winnerRiseDuration, EaseOutCubic, token);
+                await LerpAnchoredYAsync(character, from, winnerRiseY, winnerRiseDuration, Linear, token);
             }
             catch (OperationCanceledException) { }
         }
@@ -654,7 +662,7 @@ namespace VocaNerd
                     // 勝者と同じ位置まで上がる。パワーが上昇尺より短ければその範囲で上がりきる。
                     var rise = Mathf.Min(winnerRiseDuration, flySeconds);
                     var from = character.anchoredPosition.y;
-                    await LerpAnchoredYAsync(character, from, winnerRiseY, rise, EaseOutCubic, token);
+                    await LerpAnchoredYAsync(character, from, winnerRiseY, rise, Linear, token);
 
                     // パワーが尽きるまで滞空。ただし勝利演出が始まったらそこで打ち切って落下へ。
                     var remain = flySeconds - rise;
@@ -676,7 +684,7 @@ namespace VocaNerd
                 _loserFell = true;
 
                 var y = character.anchoredPosition.y;
-                await LerpAnchoredYAsync(character, y, loserFallY, loserFallDuration, EaseInQuad, token);
+                await LerpAnchoredYAsync(character, y, loserFallY, loserFallDuration, Linear, token);
                 if (character != null) character.gameObject.SetActive(false);
             }
             catch (OperationCanceledException) { }
@@ -689,19 +697,19 @@ namespace VocaNerd
             if (groundRect != null)
             {
                 var y0 = groundRect.anchoredPosition.y;
-                await LerpAnchoredYAsync(groundRect, y0, y0 + groundRiseHeight, groundRiseDuration, EaseOutCubic, token);
+                await LerpAnchoredYAsync(groundRect, y0, y0 + groundRiseHeight, groundRiseDuration, Linear, token);
             }
 
             // 2) 地面: prefab のスケールから groundEndScale (絶対値) まで縮小
             var gFrom = groundRect != null ? groundRect.localScale.x : 1f;
-            await LerpScaleAsync(groundRect, gFrom, groundEndScale, groundShrinkDuration, EaseInOutSine, token);
+            await LerpScaleAsync(groundRect, gFrom, groundEndScale, groundShrinkDuration, Linear, token);
 
             // 3) 地面: プレイヤー移動量に合わせて下に移動して消える
             var moveAmount = Mathf.Clamp(maxPower * groundMoveUnitPerPower, groundMoveMin, groundMoveMax);
             if (groundRect != null)
             {
                 var y1 = groundRect.anchoredPosition.y;
-                await LerpAnchoredYAsync(groundRect, y1, y1 - moveAmount, groundDescendDuration, EaseInCubic, token);
+                await LerpAnchoredYAsync(groundRect, y1, y1 - moveAmount, groundDescendDuration, Linear, token);
                 groundRect.gameObject.SetActive(false);
             }
 
@@ -719,14 +727,14 @@ namespace VocaNerd
             {
                 earthRect.gameObject.SetActive(true);
                 SetAnchoredY(earthRect, earthStartY);
-                await LerpAnchoredYAsync(earthRect, earthStartY, earthRiseY, earthRiseDuration, EaseOutCubic, token);
+                await LerpAnchoredYAsync(earthRect, earthStartY, earthRiseY, earthRiseDuration, Linear, token);
             }
 
             // 6) 地球: 上がりきってから縮む (白 FadeIn の前)
             if (earthRect != null && earthShrinkDuration > 0f)
             {
                 var eFrom = earthRect.localScale.x;
-                await LerpScaleAsync(earthRect, eFrom, earthEndScale, earthShrinkDuration, EaseInOutSine, token);
+                await LerpScaleAsync(earthRect, eFrom, earthEndScale, earthShrinkDuration, Linear, token);
             }
 
             // 7) 一定秒数経過
@@ -825,7 +833,7 @@ namespace VocaNerd
             {
                 var from = _winnerChar.localScale.x;
                 await LerpScaleAsync(_winnerChar, from, winnerEffectEndScale,
-                    winnerEffectScaleDuration, EaseOutCubic, token);
+                    winnerEffectScaleDuration, Linear, token);
             }
             catch (OperationCanceledException) { }
         }
@@ -843,7 +851,7 @@ namespace VocaNerd
                 token.ThrowIfCancellationRequested();
                 elapsed += Time.deltaTime;
                 if (elapsed >= period) elapsed -= period; // 位相を 1 周でループ
-                var offset = Mathf.Sin(elapsed / period * 2f * Mathf.PI) * winnerEffectMoveDistance;
+                var offset = TriangleWave(elapsed / period) * winnerEffectMoveDistance;
                 SetAnchoredX(_winnerChar, homeX + offset);
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }
@@ -888,7 +896,7 @@ namespace VocaNerd
                 token.ThrowIfCancellationRequested();
                 elapsed += Time.deltaTime;
                 var t = Mathf.Clamp01(elapsed / duration);
-                SetScale(starsRect, Mathf.Lerp(fromScale, starsFadeOutEndScale, EaseInOutSine(t)));
+                SetScale(starsRect, Mathf.Lerp(fromScale, starsFadeOutEndScale, t));
                 SetStarsAlpha(Mathf.Lerp(fromAlpha, 0f, t));
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
             }
@@ -946,7 +954,7 @@ namespace VocaNerd
             {
                 token.ThrowIfCancellationRequested();
                 elapsed += Time.deltaTime;
-                var t = EaseInOutSine(Mathf.Clamp01(elapsed / duration));
+                var t = Mathf.Clamp01(elapsed / duration);
                 SetScale(starsRect, Mathf.Lerp(starsFrom, starsTo, t));
                 SetScale(_shrinkCharA, Mathf.Lerp(aFrom, charTo, t));
                 SetScale(_shrinkCharB, Mathf.Lerp(bFrom, charTo, t));
@@ -1001,6 +1009,8 @@ namespace VocaNerd
         private async UniTask PlayExitEffectAsync(CancellationToken token)
         {
             _phase = Phase.Exiting;
+            // 最後に流している BGM を止める
+            Audio.StopBgm();
             await UniTask.Yield(PlayerLoopTiming.Update, token);
         }
 
@@ -1135,6 +1145,8 @@ namespace VocaNerd
             if (timerNumber != null) timerNumber.Clear();
 
             // 開始演出の初期化 (ラベルは非表示。Ready/Go は透明のまま開始スケールに戻す)
+            // 飛んだときに消したラベルの親は、ここで表示に戻す (再戦でも出るように)
+            SetLabelRootsActive(true);
             HideOpeningLabels();
             SetGroupAlpha(readyGroup, 0f);
             SetGroupAlpha(goGroup, 0f);
@@ -1225,10 +1237,18 @@ namespace VocaNerd
         }
 
         // -------- Tween helpers --------
-        private static float EaseOutCubic(float t) => 1f - Mathf.Pow(1f - t, 3f);
-        private static float EaseInCubic(float t) => t * t * t;
-        private static float EaseInQuad(float t) => t * t;
-        private static float EaseInOutSine(float t) => -(Mathf.Cos(Mathf.PI * t) - 1f) * 0.5f;
+        // このゲームの演出は全て等速 (Linear)。緩急を付けたくなったらここに ease を足して
+        // Lerp 系の引数を差し替える。
+        private static float Linear(float t) => t;
+
+        // 等速の往復 (三角波)。1 周期で 0 → +1 → 0 → -1 → 0 をたどる。
+        private static float TriangleWave(float phase)
+        {
+            var p = Mathf.Repeat(phase, 1f);
+            if (p < 0.25f) return p * 4f;         // 0 → +1
+            if (p < 0.75f) return 2f - p * 4f;    // +1 → -1
+            return p * 4f - 4f;                   // -1 → 0
+        }
 
         private async UniTask LerpAnchoredYAsync(RectTransform rt, float from, float to, float duration, Func<float, float> easing, CancellationToken token)
         {

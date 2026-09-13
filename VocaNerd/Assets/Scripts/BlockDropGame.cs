@@ -91,24 +91,25 @@ namespace VocaNerd
 
             // 左右移動は十字キー / 左スティック、叩くのは A / B (割り当ては GamepadButtons)。
             // 1P/2P で同じボタンを張っておき、どちらのパッドかは PlayerDevices で振り分ける。
-            _p1Left = MakeAction("P1Left", "<Keyboard>/a", "<Gamepad>/dpad/left", "<Gamepad>/leftStick/left");
-            _p1Right = MakeAction("P1Right", "<Keyboard>/d", "<Gamepad>/dpad/right", "<Gamepad>/leftStick/right");
-            _p1Knock = MakeAction("P1Knock", "<Keyboard>/w", GamepadButtons.A);
-            _p1KnockAlt = MakeAction("P1KnockAlt", "<Keyboard>/s", GamepadButtons.B);
+            // 同じパスを共有する都合で PassThrough にしている (理由は PlayerInputAction)。
+            _p1Left = PlayerInputAction.Make("P1Left", "<Keyboard>/a", "<Gamepad>/dpad/left", "<Gamepad>/leftStick/left");
+            _p1Right = PlayerInputAction.Make("P1Right", "<Keyboard>/d", "<Gamepad>/dpad/right", "<Gamepad>/leftStick/right");
+            _p1Knock = PlayerInputAction.Make("P1Knock", "<Keyboard>/w", GamepadButtons.A);
+            _p1KnockAlt = PlayerInputAction.Make("P1KnockAlt", "<Keyboard>/s", GamepadButtons.B);
 
-            _p2Left = MakeAction("P2Left", "<Keyboard>/leftArrow", "<Gamepad>/dpad/left", "<Gamepad>/leftStick/left");
-            _p2Right = MakeAction("P2Right", "<Keyboard>/rightArrow", "<Gamepad>/dpad/right", "<Gamepad>/leftStick/right");
-            _p2Knock = MakeAction("P2Knock", "<Keyboard>/upArrow", GamepadButtons.A);
-            _p2KnockAlt = MakeAction("P2KnockAlt", "<Keyboard>/downArrow", GamepadButtons.B);
+            _p2Left = PlayerInputAction.Make("P2Left", "<Keyboard>/leftArrow", "<Gamepad>/dpad/left", "<Gamepad>/leftStick/left");
+            _p2Right = PlayerInputAction.Make("P2Right", "<Keyboard>/rightArrow", "<Gamepad>/dpad/right", "<Gamepad>/leftStick/right");
+            _p2Knock = PlayerInputAction.Make("P2Knock", "<Keyboard>/upArrow", GamepadButtons.A);
+            _p2KnockAlt = PlayerInputAction.Make("P2KnockAlt", "<Keyboard>/downArrow", GamepadButtons.B);
 
-            _p1Left.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 1)) OnMove(1, PlayerSide.Left); };
-            _p1Right.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 1)) OnMove(1, PlayerSide.Right); };
-            _p1Knock.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 1)) OnKnock(1); };
-            _p1KnockAlt.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 1)) OnKnock(1); };
-            _p2Left.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 2)) OnMove(2, PlayerSide.Left); };
-            _p2Right.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 2)) OnMove(2, PlayerSide.Right); };
-            _p2Knock.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 2)) OnKnock(2); };
-            _p2KnockAlt.performed += ctx => { if (PlayerDevices.IsForPlayer(ctx, 2)) OnKnock(2); };
+            PlayerInputAction.OnPress(_p1Left, 1, () => OnMove(1, PlayerSide.Left));
+            PlayerInputAction.OnPress(_p1Right, 1, () => OnMove(1, PlayerSide.Right));
+            PlayerInputAction.OnPress(_p1Knock, 1, () => OnKnock(1));
+            PlayerInputAction.OnPress(_p1KnockAlt, 1, () => OnKnock(1));
+            PlayerInputAction.OnPress(_p2Left, 2, () => OnMove(2, PlayerSide.Left));
+            PlayerInputAction.OnPress(_p2Right, 2, () => OnMove(2, PlayerSide.Right));
+            PlayerInputAction.OnPress(_p2Knock, 2, () => OnKnock(2));
+            PlayerInputAction.OnPress(_p2KnockAlt, 2, () => OnKnock(2));
 
             _resultInput = new ResultInput(OnResultRetry, OnResultExit);
 
@@ -136,13 +137,6 @@ namespace VocaNerd
             _p1Left?.Dispose(); _p1Right?.Dispose(); _p1Knock?.Dispose(); _p1KnockAlt?.Dispose();
             _p2Left?.Dispose(); _p2Right?.Dispose(); _p2Knock?.Dispose(); _p2KnockAlt?.Dispose();
             _resultInput?.Dispose();
-        }
-
-        private static InputAction MakeAction(string name, params string[] bindings)
-        {
-            var a = new InputAction(name, InputActionType.Button);
-            foreach (var binding in bindings) a.AddBinding(binding);
-            return a;
         }
 
         private void EnableInputs()
@@ -290,6 +284,8 @@ namespace VocaNerd
         private async UniTask PlayExitEffectAsync(CancellationToken token)
         {
             _phase = Phase.Exiting;
+            // 最後に流している BGM を止める
+            Audio.StopBgm();
             await UniTask.Yield(PlayerLoopTiming.Update, token);
         }
 

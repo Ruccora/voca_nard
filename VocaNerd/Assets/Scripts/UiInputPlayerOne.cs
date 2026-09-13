@@ -23,6 +23,7 @@ namespace VocaNerd
     {
         private InputActionAsset _maskedActions;
         private InputActionAsset _ownedActions;
+        private InputDevice _appliedPlayerOne;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
@@ -46,8 +47,15 @@ namespace VocaNerd
             Restore();
         }
 
-        // パッドの抜き差しで 1P が繰り上がる / 増えるので、そのたびに掛け直す
+        // パッドの抜き差しで 1P が変わるので、そのたびに掛け直す
         private void OnDeviceChange(InputDevice device, InputDeviceChange change) => Apply();
+
+        // 1P の枠は PlayerDevices 側 (L+R 参加 / 自動割り当て) でも変わる。
+        // 初期化順に依存したくないので、イベントを待たずに変化を拾って掛け直す。
+        private void Update()
+        {
+            if (ResolvePlayerOne() != _appliedPlayerOne) Apply();
+        }
 
         private void Apply()
         {
@@ -58,14 +66,26 @@ namespace VocaNerd
             if (actions == null) return;
 
             _maskedActions = actions;
+            _appliedPlayerOne = ResolvePlayerOne();
 
             var devices = new List<InputDevice>();
             AddIfNew(devices, Keyboard.current);
             AddIfNew(devices, Mouse.current);
             AddIfNew(devices, Pointer.current);
-            if (Gamepad.all.Count > 0) AddIfNew(devices, Gamepad.all[0]);
+            AddIfNew(devices, _appliedPlayerOne);
 
             actions.devices = devices.ToArray();
+        }
+
+        // Gamepad.all[0] ではなく PlayerDevices が確定させた 1P を使う
+        // (接続順は抜き差しで変わるが、枠は変わらない)。
+        // まだ枠が決まっていない段階で UI が一切効かなくなると困るので、
+        // その場合だけ接続順の先頭にフォールバックする。
+        private static InputDevice ResolvePlayerOne()
+        {
+            var assigned = PlayerDevices.DeviceOf(1);
+            if (assigned != null) return assigned;
+            return Gamepad.all.Count > 0 ? Gamepad.all[0] : null;
         }
 
         /// <summary>

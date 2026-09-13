@@ -681,8 +681,23 @@ Idle → Intro → Countdown (該当時) → Playing → Winner → WaitForExit 
 ### 10.6 1P/2P のデバイス振り分け (`PlayerDevices.cs`)
 - **要件**: 同じボタン (A/B) を 1P/2P 両方にバインドしつつ、押したパッドで持ち主を決める
 - **実装**: キーボードは 1P/2P 両方に有効 (キーで分離)。Gamepad は接続順 `Gamepad.all[0]` = 1P、`[1]` = 2P
-- 各ゲームは `performed` で `PlayerDevices.IsForPlayer(ctx, player)` を通してから処理する
+- 各ゲームは `PlayerInputAction.Make` / `OnPress` でアクションを作る。`OnPress` の中で
+  押下エッジの判定と `PlayerDevices.IsForPlayer(device, player)` を通す
 - **注意**: 接続順ベースなので、1P のパッドを抜き差しすると 2P のパッドが 1P に繰り上がる
+
+### 10.6.1 なぜ PassThrough なのか (`PlayerInputAction.cs`)
+- **背景**: `<Gamepad>/...` は接続中の**全パッド**に解決されるので、1P/2P に同じパスを張ると
+  1 つのアクションに複数の control がぶら下がる。`InputActionType.Button` はこの状態で
+  Input System の衝突解決 (conflict resolution) が有効になり、
+  「今アクションを駆動している control より強く押されたか」しか通さなくなる
+- **症状**: ボタンの actuation はどちらも 1.0 なので、2P が押している最中の 1P の押下は
+  「アクションの状態が変わらない」と判断されて**捨てられる**。2 人が同じボタンを叩く
+  連打 / 早押しで片方の入力が恒常的に消える
+- **実装**: `PlayerInputAction.Make` は `InputActionType.PassThrough` でアクションを作る。
+  PassThrough は衝突解決を行わず、control ごとに独立して `performed` が飛ぶ
+- **注意**: PassThrough は値が変わるたびに `performed` が来る (離したときも来る) ので、
+  押した瞬間だけを取り出すのは `PlayerInputAction.OnPress` の責務。
+  生の `performed` を直接購読しないこと
 
 ### 10.7 パッド操作の割り当て
 | ゲーム | 操作 | キーボード (1P / 2P) | Gamepad |

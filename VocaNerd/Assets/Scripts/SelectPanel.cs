@@ -48,15 +48,11 @@ namespace VocaNerd
 
             SetupNavigation();
 
-            // B (buttonSouth) でタイトルに戻る。操作できるのは 1P だけ。
-            _backAction = new InputAction("SelectBack", InputActionType.Button);
-            _backAction.AddBinding(GamepadButtons.B);
-            _backAction.AddBinding("<Keyboard>/escape");
-            _backAction.AddBinding("<Keyboard>/backspace");
-            _backAction.performed += ctx =>
-            {
-                if (PlayerDevices.IsPlayerOne(ctx.control.device)) OnBack();
-            };
+            // B でタイトルに戻る。操作できるのは 1P だけ。
+            // 2P のパッドも同じパスに解決されるので PassThrough (理由は PlayerInputAction)。
+            _backAction = PlayerInputAction.Make("SelectBack",
+                GamepadButtons.B, "<Keyboard>/escape", "<Keyboard>/backspace");
+            PlayerInputAction.OnPress(_backAction, 1, OnBack);
 
             if (introScaleUpRect != null) _introScaleUpHome = introScaleUpRect.localScale;
         }

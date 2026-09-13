@@ -54,8 +54,12 @@ namespace VocaNerd
             var player = PlayerDevices.IsForPlayer(device, 1) ? "1P"
                 : PlayerDevices.IsForPlayer(device, 2) ? "2P" : "-";
 
+            // HID レイアウト (ZhiXuGamepad 等) の bit を直すときはこの位置がそのまま答えになる。
+            var block = control.stateBlock;
+            var bit = $"byte {block.byteOffset} / bit {block.bitOffset}";
+
             Debug.Log($"[InputProbe] 押された control = {control.path}  " +
-                      $"(name: {control.name}, 表示名: {control.displayName})  " +
+                      $"(name: {control.name}, 表示名: {control.displayName}, {bit})  " +
                       $"device: {device.displayName} / layout: {device.layout} / {player}");
         }
 
@@ -66,11 +70,27 @@ namespace VocaNerd
             foreach (var device in InputSystem.devices)
                 sb.AppendLine("  - " + Describe(device));
 
-            sb.AppendLine($"  Gamepad.all = {Gamepad.all.Count} 台 (接続順 [0] が 1P)");
+            sb.AppendLine($"  Gamepad.all = {Gamepad.all.Count} 台 (接続順 [0] が 1P / [1] が 2P)");
             for (var i = 0; i < Gamepad.all.Count; i++)
                 sb.AppendLine($"    [{i}] {Describe(Gamepad.all[i])}");
 
+            // Gamepad になり損ねた入力デバイス = バインドに乗らない = そのプレイヤーが動かない
+            foreach (var device in InputSystem.devices)
+            {
+                if (device is Gamepad) continue;
+                if (device is Keyboard || device is Mouse || device is Pointer) continue;
+                sb.AppendLine($"  !! Gamepad として認識されていません: {Describe(device)}");
+                sb.AppendLine("     → VID/PID を XboxCloneGamepad / ZhiXuGamepad の matcher に足す必要があります");
+            }
+
             Debug.Log(sb.ToString());
+        }
+
+        [System.Serializable]
+        private struct HidCapabilities
+        {
+            public int vendorId;
+            public int productId;
         }
 
         private static string Describe(InputDevice device)
@@ -78,8 +98,23 @@ namespace VocaNerd
             if (device == null) return "(null)";
 
             var d = device.description;
-            return $"{device.displayName} | layout: {device.layout} | interface: {d.interfaceName} | " +
-                   $"product: {d.product} | manufacturer: {d.manufacturer} | capabilities: {d.capabilities}";
+            var ids = string.Empty;
+            if (!string.IsNullOrEmpty(d.capabilities))
+            {
+                try
+                {
+                    var caps = JsonUtility.FromJson<HidCapabilities>(d.capabilities);
+                    if (caps.vendorId != 0 || caps.productId != 0)
+                        ids = $" | VID: 0x{caps.vendorId:X4} PID: 0x{caps.productId:X4}";
+                }
+                catch
+                {
+                    // capabilities が HID の形式でないデバイス (キーボード等) は素通り
+                }
+            }
+
+            return $"{device.displayName} | layout: {device.layout} | interface: {d.interfaceName}{ids} | " +
+                   $"product: {d.product} | manufacturer: {d.manufacturer}";
         }
     }
 }

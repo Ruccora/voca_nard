@@ -72,6 +72,20 @@ namespace VocaNerd
             return UniTask.CompletedTask;
         }
 
+        /// <summary>
+        /// In が始まる時点で必ず動画を頭に戻す。Stop() は再生位置を先頭に戻すかわりに
+        /// prepare 済みの状態も落とすので、In が流れている間に prepare をやり直しておく。
+        /// </summary>
+        protected override void OnBeforePanelIn()
+        {
+            if (videoPlayer == null)
+                return;
+
+            videoPlayer.Stop();
+            if (HasVideoSource())
+                videoPlayer.Prepare();
+        }
+
         protected override async UniTask OnAfterPanelInAsync(CancellationToken token)
         {
             if (videoPlayer == null || !HasVideoSource())
@@ -101,6 +115,8 @@ namespace VocaNerd
                     return;
                 }
 
+                // prepare の過程で位置が動いていても、必ず先頭から流す
+                videoPlayer.frame = 0;
                 videoPlayer.Play();
             }
             catch (OperationCanceledException)
